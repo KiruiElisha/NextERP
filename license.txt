@@ -1,0 +1,2 @@
+GNU GENERAL PUBLIC LICENSE, Version 3. See https://www.gnu.org/licenses/gpl-3.0.txt
+NextERP builds on Frappe and ERPNext, which are licensed under the GPL v3.

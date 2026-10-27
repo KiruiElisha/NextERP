@@ -1,0 +1,9 @@
+*.pyc
+__pycache__/
+*.egg-info
+node_modules/
+dist/
+desktop/target/
+desktop/ui/dist/
+.DS_Store
+desktop/src-tauri/gen/

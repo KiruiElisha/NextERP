@@ -1,0 +1,33 @@
+name: CI
+
+# The desktop engine's tests and a build of the interface, on every push. The server app's tests
+# need a bench with ERPNext and the ESG app: run them with `bench --site <site> run-tests --app nexterp`.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop
+      # Only the engine: it has no window, so it needs none of the webview libraries.
+      - run: cargo test -p nexterp-core --release
+        working-directory: desktop
+
+  ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/ui/package-lock.json
+      - run: npm ci && npm run build
+        working-directory: desktop/ui
