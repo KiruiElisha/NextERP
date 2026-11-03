@@ -15,7 +15,24 @@ use session::AppState;
 /// How often the cache catches up while the app is open, on top of syncing after every write.
 const SYNC_EVERY: Duration = Duration::from_secs(5 * 60);
 
+/// WebKitGTK's GPU paths that leave a blank window (its DMA-BUF renderer, on NVIDIA and some Wayland
+/// setups) or end the app after a few minutes (explicit sync on NVIDIA under Wayland: "Error 71").
+/// Set before GTK starts; a value the user already exported wins.
+#[cfg(target_os = "linux")]
+fn safe_linux_rendering() {
+    for (name, value) in [
+        ("WEBKIT_DISABLE_DMABUF_RENDERER", "1"),
+        ("__NV_DISABLE_EXPLICIT_SYNC", "1"),
+    ] {
+        if std::env::var_os(name).is_none() {
+            std::env::set_var(name, value); // first thing in main: no other thread reads the environment yet
+        }
+    }
+}
+
 fn main() {
+    #[cfg(target_os = "linux")]
+    safe_linux_rendering();
     tauri::Builder::default()
         .manage(AppState::default())
         .setup(|app| {
