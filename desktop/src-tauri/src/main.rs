@@ -40,6 +40,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             commands::session,
             commands::sign_in,
+            commands::cloud,
+            commands::open_cloud_page,
             commands::sign_out,
             commands::refresh_boot,
             commands::sync_now,

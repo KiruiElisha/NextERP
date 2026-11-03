@@ -5,5 +5,6 @@ app_description = "ERPNext on the desktop: the server side of the desktop app (s
 app_email = "ronoelisha625@gmail.com"
 app_license = "gpl-3.0"
 
-# The desktop app is ERPNext with ESG built in: both must be on the site.
-required_apps = ["erpnext", "ghg"]
+# The desktop app is ERPNext; ESG (ghg) shows when the site has it (api/esg.py checks), so sites on a
+# bench without ghg (Nergaa Cloud's public one, for now) can still run the app.
+required_apps = ["erpnext"]

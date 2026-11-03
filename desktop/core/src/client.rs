@@ -63,6 +63,27 @@ impl Client {
         self.sid = None;
     }
 
+    /// A write that may start a session (signing in with an emailed code): keeps the `sid` it sets.
+    pub async fn post_keeping_session(&mut self, method: &str, args: &Value) -> Result<Value> {
+        let res = self
+            .http
+            .post(self.url(method))
+            .header("Accept", "application/json")
+            .json(args)
+            .send()
+            .await?;
+        if let Some(sid) = res
+            .headers()
+            .get_all("set-cookie")
+            .iter()
+            .filter_map(|h| h.to_str().ok())
+            .find_map(session_cookie)
+        {
+            self.sid = Some(sid);
+        }
+        read(res).await
+    }
+
     /// A read: arguments go in the query string, as Frappe expects for GET.
     pub async fn get(&self, method: &str, args: &Value) -> Result<Value> {
         let req = self.http.get(self.url(method)).query(&query_pairs(args));

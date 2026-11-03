@@ -12,7 +12,7 @@ stock, numbering and the ledger.
 
 | Path | What it is |
 |---|---|
-| `nexterp/` | Frappe app for the server. Sync API, home summary, quick entry and the ESG door. Requires ERPNext and the ESG app (`ghg`). |
+| `nexterp/` | Frappe app for the server. Sync API, home summary, quick entry and the ESG door. Requires ERPNext; the ESG screens appear when the ESG app (`ghg`) is on the site too. |
 | `desktop/core/` | Rust library. The local SQLite cache with full-text search, the Frappe HTTP client and the sync engine. No UI, so it is tested on its own. |
 | `desktop/src-tauri/` | The Tauri shell: the window, the menu, and the commands the UI calls. |
 | `desktop/ui/` | The interface: Vue 3, Vite and Tailwind, bundled into the app so it opens without waiting on the server. |
@@ -34,12 +34,19 @@ stock, numbering and the ledger.
 - **The site** can be a cloud site or ERPNext running locally (for example in Docker): the app signs
   in to whatever address it is given.
 
+## A new site from the app
+
+"No site yet? Create one on Nergaa Cloud" on the sign-in screen signs up or signs in to Nergaa Cloud with an
+emailed code, creates a site with the apps the user picks (plus `nexterp`), finishes ERPNext's setup wizard
+with the company name and the password they chose, then signs in to it. The server side is
+`nergaa_cloud/desktop.py` in nergaa-cloud; `NERGAA_CLOUD=https://…` points the app at another Press.
+
 ## Server setup
 
 ```bash
 bench get-app https://github.com/KiruiElisha/ghg
 bench get-app https://github.com/KiruiElisha/NextERP
-bench --site <site> install-app nexterp   # installs after erpnext and ghg
+bench --site <site> install-app nexterp   # after erpnext; install ghg first for the ESG screens
 ```
 
 ## Desktop development

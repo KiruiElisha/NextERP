@@ -58,6 +58,67 @@ pub async fn sign_in(
     Ok(boot)
 }
 
+/// Nergaa Cloud, where the app creates new sites. NERGAA_CLOUD points it elsewhere for testing.
+fn cloud_base() -> String {
+    std::env::var("NERGAA_CLOUD").unwrap_or_else(|_| "https://cloud.nergaa.cloud".into())
+}
+
+/// The methods the create-a-site screens may call on Nergaa Cloud (nergaa_cloud/desktop.py).
+const CLOUD_METHODS: [&str; 7] = [
+    "is_available",
+    "desktop_start",
+    "desktop_verify",
+    "desktop_options",
+    "desktop_create_site",
+    "desktop_site_status",
+    "desktop_finish",
+];
+
+/// One step of creating a site on Nergaa Cloud. Starting over drops the old Nergaa Cloud session;
+/// verifying the emailed code keeps the session it starts for the steps after it.
+#[tauri::command]
+pub async fn cloud(state: State<'_, AppState>, method: String, args: Value) -> Result<Value> {
+    if !CLOUD_METHODS.contains(&method.as_str()) {
+        return Err(Error::Server(format!(
+            "{method} is not a Nergaa Cloud step"
+        )));
+    }
+    let held = state.cloud.lock().map_err(|_| Error::SignedOut)?.clone();
+    let mut client = match held {
+        Some(c) if method != "desktop_start" => c,
+        _ => Client::new(&cloud_base(), None)?,
+    };
+    let path = format!("press.api.nergaa.{method}");
+    let answer = client.post_keeping_session(&path, &args).await?;
+    if let Ok(mut slot) = state.cloud.lock() {
+        *slot = Some(client);
+    }
+    Ok(answer)
+}
+
+/// A Nergaa Cloud page (the top-up, when a plan needs paying for first), signed in as the cloud step is.
+#[tauri::command]
+pub fn open_cloud_page(app: AppHandle, state: State<'_, AppState>, path: String) -> Result<()> {
+    let sid = state
+        .cloud
+        .lock()
+        .map_err(|_| Error::SignedOut)?
+        .as_ref()
+        .and_then(|c| c.sid().map(str::to_string))
+        .ok_or(Error::SignedOut)?;
+    let joiner = if path.contains('?') { '&' } else { '?' };
+    let url = format!("{}{path}{joiner}sid={sid}", cloud_base())
+        .parse()
+        .map_err(|_| Error::Server("Not a valid Nergaa Cloud address".into()))?;
+    let label = format!("cloud-{}", app.webview_windows().len());
+    WebviewWindowBuilder::new(&app, label, WebviewUrl::External(url))
+        .title("Nergaa Cloud")
+        .inner_size(1100.0, 780.0)
+        .build()
+        .map_err(|e| Error::Server(e.to_string()))?;
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn sign_out(app: AppHandle, state: State<'_, AppState>) -> Result<()> {
     if let Ok(s) = state.current() {

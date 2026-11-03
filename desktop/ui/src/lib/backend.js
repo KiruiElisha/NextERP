@@ -33,6 +33,10 @@ export const search = (text, limit = 20) => call('search', { text, limit })
 export const getDoc = (doctype, name, fresh = false) => call('get_doc', { doctype, name, fresh })
 export const openDesk = (path) => call('open_desk', { path })
 
+/** A step of creating a site on Nergaa Cloud (nergaa_cloud/desktop.py), and its pages. */
+export const cloud = (method, args = {}) => call('cloud', { method, args })
+export const openCloudPage = (path) => call('open_cloud_page', { path })
+
 /**
  * The remembered answer at once, then the site's: `show` runs once or twice, so a screen opens
  * with figures even offline and updates when the fresh ones arrive.
