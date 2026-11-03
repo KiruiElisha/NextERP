@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import frappe
+from frappe.sessions import get_csrf_token
 
 from nexterp import __version__
 from nexterp.api.esg import esg_allowed
@@ -27,6 +28,8 @@ def boot() -> dict:
 		"selling_price_list": frappe.db.get_single_value("Selling Settings", "selling_price_list"),
 		"manifest": readable(),
 		"esg": esg_allowed(),
+		# the app sends it back on every write, so a Desk window opened on this session can't break them
+		"csrf_token": get_csrf_token(),
 		"can_create": {
 			dt: bool(frappe.has_permission(dt, "create"))
 			for dt in ("Sales Invoice", "Customer", "Item", "Payment Entry")

@@ -40,6 +40,7 @@ pub async fn sign_in(
     let mut client = Client::new(&site, None)?;
     client.login(user.trim(), &password).await?;
     let boot = client.get("nexterp.api.boot.boot", &Value::Null).await?;
+    client.take_csrf(&boot);
     let user = boot["user"].as_str().unwrap_or(user.trim()).to_string();
     let dir = data_dir(&app)?;
     let store = session::open_store(&dir, client.base(), &user)?;
@@ -90,6 +91,7 @@ pub async fn cloud(state: State<'_, AppState>, method: String, args: Value) -> R
     };
     let path = format!("press.api.nergaa.{method}");
     let answer = client.post_keeping_session(&path, &args).await?;
+    client.take_csrf(&answer);
     if let Ok(mut slot) = state.cloud.lock() {
         *slot = Some(client);
     }
@@ -136,10 +138,12 @@ pub async fn refresh_boot(state: State<'_, AppState>) -> Result<Value> {
     let s = state.current()?;
     let boot = s.client.get("nexterp.api.boot.boot", &Value::Null).await?;
     lock(&s.store)?.set_kv("boot", &boot.to_string())?;
+    let mut client = s.client.clone();
+    client.take_csrf(&boot);
     let fresh = Session {
         boot: boot.clone(),
         manifest: session::manifest_of(&boot),
-        client: s.client.clone(),
+        client,
         store: s.store.clone(),
         site: s.site.clone(),
         user: s.user.clone(),

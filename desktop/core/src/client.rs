@@ -12,6 +12,9 @@ pub struct Client {
     http: reqwest::Client,
     base: String,
     sid: Option<String>,
+    /// Frappe's CSRF token for this session, once the site has made one (a Desk page opened with the
+    /// same session does): without it, every write after that is refused as "Invalid Request".
+    csrf: Option<String>,
 }
 
 impl Client {
@@ -25,6 +28,7 @@ impl Client {
             http,
             base: normalise(site),
             sid,
+            csrf: None,
         })
     }
 
@@ -34,6 +38,26 @@ impl Client {
 
     pub fn sid(&self) -> Option<&str> {
         self.sid.as_deref()
+    }
+
+    /// The session's CSRF token, as the site's answer gives it (`csrf_token`); absent leaves it as is.
+    pub fn take_csrf(&mut self, answer: &Value) {
+        if let Some(token) = answer.get("csrf_token").and_then(Value::as_str) {
+            self.csrf = Some(token.to_string());
+        }
+    }
+
+    /// Who we are to the site on every request: the session cookie and, once there is one, the token.
+    fn signed(&self, req: RequestBuilder) -> RequestBuilder {
+        let req = req.header("Accept", "application/json");
+        let req = match &self.sid {
+            Some(sid) => req.header("Cookie", format!("sid={sid}")),
+            None => req,
+        };
+        match &self.csrf {
+            Some(token) => req.header("X-Frappe-CSRF-Token", token),
+            None => req,
+        }
     }
 
     pub async fn login(&mut self, user: &str, password: &str) -> Result<()> {
@@ -66,10 +90,7 @@ impl Client {
     /// A write that may start a session (signing in with an emailed code): keeps the `sid` it sets.
     pub async fn post_keeping_session(&mut self, method: &str, args: &Value) -> Result<Value> {
         let res = self
-            .http
-            .post(self.url(method))
-            .header("Accept", "application/json")
-            .json(args)
+            .signed(self.http.post(self.url(method)).json(args))
             .send()
             .await?;
         if let Some(sid) = res
@@ -102,12 +123,7 @@ impl Client {
     }
 
     async fn send(&self, req: RequestBuilder) -> Result<Value> {
-        let req = req.header("Accept", "application/json");
-        let req = match &self.sid {
-            Some(sid) => req.header("Cookie", format!("sid={sid}")),
-            None => req,
-        };
-        let res = req.send().await?;
+        let res = self.signed(req).send().await?;
         match res.status() {
             StatusCode::UNAUTHORIZED => Err(Error::SignedOut),
             // A guest is refused with the same 403 as a real permission error: ask who we are.
@@ -224,6 +240,20 @@ fn normalise(site: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn every_request_after_sign_in_carries_the_session_cookie_and_the_csrf_token() {
+        let mut client = Client::new("erp.example.com", Some("abc123".into())).unwrap();
+        client.take_csrf(&serde_json::json!({"csrf_token": "tok"}));
+        let req = client
+            .signed(client.http.post(client.url("x")))
+            .build()
+            .unwrap();
+        assert_eq!(req.headers()["Cookie"], "sid=abc123");
+        assert_eq!(req.headers()["X-Frappe-CSRF-Token"], "tok");
+        client.take_csrf(&serde_json::json!({"other": 1})); // an answer without one keeps the token
+        assert_eq!(client.csrf.as_deref(), Some("tok"));
+    }
 
     #[test]
     fn a_bare_address_is_taken_as_https() {

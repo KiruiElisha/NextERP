@@ -98,8 +98,10 @@ pub fn restore(dir: &Path) -> Option<Session> {
         serde_json::from_str(&fs::read_to_string(dir.join("session.json")).ok()?).ok()?;
     let store = open_store(dir, &saved.site, &saved.user).ok()?;
     let boot: Value = serde_json::from_str(&store.get_kv("boot").ok()??).ok()?;
+    let mut client = Client::new(&saved.site, Some(saved.sid)).ok()?;
+    client.take_csrf(&boot);
     Some(Session {
-        client: Client::new(&saved.site, Some(saved.sid)).ok()?,
+        client,
         manifest: manifest_of(&boot),
         site: saved.site,
         user: saved.user,
