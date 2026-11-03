@@ -59,6 +59,15 @@ pub async fn sign_in(
     Ok(boot)
 }
 
+/// The menu for the screen the UI shows: File appears once a site is signed in.
+#[tauri::command]
+pub fn set_menu(app: AppHandle, signed_in: bool) -> Result<()> {
+    let menu = crate::menu(&app, signed_in).map_err(|e| Error::Server(e.to_string()))?;
+    app.set_menu(menu)
+        .map_err(|e| Error::Server(e.to_string()))?;
+    Ok(())
+}
+
 /// Nergaa Cloud, where the app creates new sites. NERGAA_CLOUD points it elsewhere for testing.
 fn cloud_base() -> String {
     std::env::var("NERGAA_CLOUD").unwrap_or_else(|_| "https://cloud.nergaa.cloud".into())

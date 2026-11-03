@@ -19,7 +19,9 @@ export function canRead(doctype) {
 }
 
 function apply(info) {
-  session.signedIn = Boolean(info)
+  const signedIn = Boolean(info)
+  if (signedIn !== session.signedIn || !session.ready) call('set_menu', { signedIn }).catch(() => {})
+  session.signedIn = signedIn
   session.site = info?.site || ''
   session.user = info?.user || ''
   session.boot = info?.boot || null

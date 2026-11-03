@@ -40,7 +40,8 @@ fn main() {
                 let restored = session::restore(&dir).map(std::sync::Arc::new);
                 app.state::<AppState>().replace(restored);
             }
-            app.set_menu(menu(app.handle())?)?;
+            let signed_in = app.state::<AppState>().current().is_ok();
+            app.set_menu(menu(app.handle(), signed_in)?)?;
             app.on_menu_event(|app, event| {
                 // The UI owns what each item does: it knows the screen it is on.
                 let _ = app.emit("menu", event.id().as_ref());
@@ -59,6 +60,7 @@ fn main() {
             commands::sign_in,
             commands::cloud,
             commands::open_cloud_page,
+            commands::set_menu,
             commands::sign_out,
             commands::refresh_boot,
             commands::sync_now,
@@ -76,7 +78,9 @@ fn main() {
         .expect("error while running the ERPNext desktop app");
 }
 
-fn menu(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
+/// The window's menu. File (new invoice, search, sync, Desk, sign out) only once a site is signed in:
+/// before that its items have nothing to act on.
+pub fn menu(app: &tauri::AppHandle, signed_in: bool) -> tauri::Result<Menu<tauri::Wry>> {
     let item =
         |id: &str, label: &str, accel: Option<&str>| MenuItem::with_id(app, id, label, true, accel);
     let file = Submenu::with_items(
@@ -116,5 +120,9 @@ fn menu(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             &PredefinedMenuItem::fullscreen(app, None)?,
         ],
     )?;
-    Menu::with_items(app, &[&file, &edit, &view])
+    if signed_in {
+        Menu::with_items(app, &[&file, &edit, &view])
+    } else {
+        Menu::with_items(app, &[&edit, &view])
+    }
 }
