@@ -1,7 +1,7 @@
 <template>
   <div class="flex h-full bg-white">
     <!-- Brand side: what the app is, in a glance -->
-    <aside class="relative hidden w-[46%] max-w-[640px] overflow-hidden bg-gradient-to-br from-brand-700 via-[#1B3A9E] to-[#0E1F5C] text-white lg:flex lg:flex-col">
+    <aside v-if="!creating" class="relative hidden w-[46%] max-w-[640px] overflow-hidden bg-gradient-to-br from-brand-700 via-[#1B3A9E] to-[#0E1F5C] text-white lg:flex lg:flex-col">
       <svg class="pointer-events-none absolute inset-0 h-full w-full opacity-[0.07]" aria-hidden="true">
         <defs>
           <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
