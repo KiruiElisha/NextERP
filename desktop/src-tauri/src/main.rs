@@ -92,6 +92,7 @@ pub fn menu(app: &tauri::AppHandle, signed_in: bool) -> tauri::Result<Menu<tauri
             &item("search", "Search…", Some("CmdOrCtrl+K"))?,
             &item("sync", "Sync now", Some("CmdOrCtrl+Shift+S"))?,
             &item("desk", "Open ERPNext Desk", Some("CmdOrCtrl+Shift+D"))?,
+            &item("switch", "Switch App…", Some("CmdOrCtrl+Shift+O"))?,
             &PredefinedMenuItem::separator(app)?,
             &item("sign-out", "Sign out", None)?,
             &PredefinedMenuItem::quit(app, None)?,

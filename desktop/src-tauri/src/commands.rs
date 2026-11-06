@@ -303,10 +303,15 @@ pub fn clear_cache(app: AppHandle, state: State<'_, AppState>) -> Result<()> {
     Ok(())
 }
 
-/// ERPNext's own Desk for anything without a screen here, in a window of the app, already
-/// signed in: Frappe accepts the session id in the address (it then appears in that request's log).
+/// ERPNext's own Desk for anything without a screen here, or another installed app at its route
+/// (`title` names its window), in a window of the app, already signed in: Frappe accepts the session id in the address (it then appears in that request's log).
 #[tauri::command]
-pub fn open_desk(app: AppHandle, state: State<'_, AppState>, path: Option<String>) -> Result<()> {
+pub fn open_desk(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    path: Option<String>,
+    title: Option<String>,
+) -> Result<()> {
     let s = state.current()?;
     let path = path.unwrap_or_else(|| "/app".into());
     let joiner = if path.contains('?') { '&' } else { '?' };
@@ -322,7 +327,7 @@ pub fn open_desk(app: AppHandle, state: State<'_, AppState>, path: Option<String
         .map_err(|_| Error::Server("Not a valid Desk address".into()))?;
     let label = format!("desk-{}", app.webview_windows().len());
     WebviewWindowBuilder::new(&app, label, WebviewUrl::External(url))
-        .title("ERPNext Desk")
+        .title(title.as_deref().unwrap_or("ERPNext Desk"))
         .inner_size(1280.0, 820.0)
         .build()
         .map_err(|e| Error::Server(e.to_string()))?;

@@ -90,6 +90,88 @@ MANIFEST: dict[str, dict] = {
 		"title": "supplier_name",
 		"search": ["supplier_name"],
 	},
+	"Quotation": {
+		"fields": [
+			"party_name",
+			"customer_name",
+			"company",
+			"transaction_date",
+			"grand_total",
+			"currency",
+			"status",
+			"docstatus",
+		],
+		"title": "customer_name",
+		"search": ["customer_name", "party_name"],
+	},
+	"Delivery Note": {
+		"fields": [
+			"customer",
+			"customer_name",
+			"company",
+			"posting_date",
+			"grand_total",
+			"currency",
+			"status",
+			"per_billed",
+			"docstatus",
+		],
+		"title": "customer_name",
+		"search": ["customer_name"],
+	},
+	"Purchase Receipt": {
+		"fields": [
+			"supplier",
+			"supplier_name",
+			"company",
+			"posting_date",
+			"grand_total",
+			"currency",
+			"status",
+			"per_billed",
+			"docstatus",
+		],
+		"title": "supplier_name",
+		"search": ["supplier_name"],
+	},
+	"Material Request": {
+		"fields": [
+			"title",
+			"material_request_type",
+			"company",
+			"transaction_date",
+			"schedule_date",
+			"status",
+			"per_ordered",
+			"docstatus",
+		],
+		"title": "title",
+		"search": ["title"],
+	},
+	"Stock Entry": {
+		"fields": [
+			"stock_entry_type",
+			"purpose",
+			"company",
+			"posting_date",
+			"from_warehouse",
+			"to_warehouse",
+			"total_amount",
+			"docstatus",
+		],
+		"title": "stock_entry_type",
+		"search": ["stock_entry_type"],
+	},
+	"Journal Entry": {
+		"fields": ["title", "voucher_type", "company", "posting_date", "total_debit", "docstatus"],
+		"title": "title",
+		"search": ["title"],
+	},
+	"Employee": {
+		"fields": ["employee_name", "department", "designation", "company", "status", "cell_number"],
+		"title": "employee_name",
+		"search": ["employee_name", "cell_number"],
+	},
 	"Payment Entry": {
 		"fields": [
 			"payment_type",
@@ -113,5 +195,5 @@ def readable() -> dict[str, dict]:
 	return {
 		doctype: {**spec, "fields": ["name", "modified", *spec["fields"]]}
 		for doctype, spec in MANIFEST.items()
-		if frappe.has_permission(doctype, "read")
+		if frappe.db.table_exists(doctype) and frappe.has_permission(doctype, "read")
 	}

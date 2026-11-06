@@ -10,6 +10,8 @@ export const router = createRouter({
     { path: '/doc/:slug/:name', component: () => import('./pages/DocPage.vue'), props: true },
     { path: '/new/sales-invoice', component: () => import('./pages/NewInvoice.vue') },
     { path: '/esg', component: () => import('./pages/Esg.vue') },
+    { path: '/reports', component: () => import('./pages/Reports.vue') },
+    { path: '/reports/:dept', component: () => import('./pages/Reports.vue'), props: true },
     { path: '/settings', component: () => import('./pages/Settings.vue') },
   ],
 })

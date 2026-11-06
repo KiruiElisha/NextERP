@@ -5,7 +5,7 @@ from __future__ import annotations
 import frappe
 from frappe.sessions import get_csrf_token
 
-from nexterp import __version__
+from nexterp import __version__, apps, reports
 from nexterp.api.esg import esg_allowed
 from nexterp.manifest import readable
 
@@ -28,6 +28,11 @@ def boot() -> dict:
 		"selling_price_list": frappe.db.get_single_value("Selling Settings", "selling_price_list"),
 		"manifest": readable(),
 		"esg": esg_allowed(),
+		# the app picker and switcher: installed apps with a screen, ERPNext (drawn here) first
+		"apps": apps.screens(),
+		"installed_apps": apps.installed(),
+		# the Reports group: standard reports this user may run, by department
+		"reports": reports.allowed(),
 		# the app sends it back on every write, so a Desk window opened on this session can't break them
 		"csrf_token": get_csrf_token(),
 		"can_create": {

@@ -10,18 +10,21 @@
       </main>
     </div>
     <CommandPalette v-model="palette" />
+    <AppPicker v-if="picker.open" />
   </div>
   <Toasts />
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Sidebar from './components/Sidebar.vue'
 import TopBar from './components/TopBar.vue'
 import CommandPalette from './components/CommandPalette.vue'
 import Toasts from './components/Toasts.vue'
 import SignIn from './pages/SignIn.vue'
+import AppPicker from './components/AppPicker.vue'
+import { onSignedIn, picker } from './lib/apps'
 import { call, on, openDesk } from './lib/backend'
 import { session, signOut, start } from './lib/session'
 
@@ -34,9 +37,17 @@ const MENU = {
   search: () => (palette.value = true),
   sync: () => call('sync_now'),
   desk: () => openDesk('/app'),
+  switch: () => (picker.open = true),
   'sign-out': () => signOut(),
   reload: () => window.location.reload(),
 }
+
+// Once a site is signed in (on launch or from the sign-in screen), the app picker for that site.
+// The boot remembered from the last launch may predate the site's app list; the refreshed one has it.
+watch(
+  () => (session.signedIn ? `${session.site}|${(session.boot?.apps || []).length}` : ''),
+  (key) => key && onSignedIn(router),
+)
 
 onMounted(async () => {
   await start()
