@@ -10,6 +10,7 @@
         </div>
         <input ref="box" v-model="text" class="input w-64" :placeholder="`Search ${(meta?.plural || '').toLowerCase()}…`" @keydown.down.prevent="move(1)"
           @keydown.up.prevent="move(-1)" @keydown.enter.prevent="open(rows[active])" />
+        <RouterLink :to="listRoute(doctype)" class="btn-subtle" title="Filters, saved views, bulk edit and export, from the site"><SlidersHorizontal class="size-4" /> More</RouterLink>
         <RouterLink v-if="canCreate" :to="formRoute(doctype, 'new')" class="btn-primary"><Plus class="size-4" /> New</RouterLink>
       </div>
     </div>
@@ -45,12 +46,12 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus } from 'lucide-vue-next'
+import { Plus, SlidersHorizontal } from 'lucide-vue-next'
 import { list, on } from '@/lib/backend'
 import { DOCTYPES, bySlug, statusOf } from '@/lib/doctypes'
 import { date, money } from '@/lib/format'
 import { session } from '@/lib/session'
-import { formRoute, getMeta } from '@/lib/forms'
+import { formRoute, getMeta, listRoute } from '@/lib/forms'
 
 const props = defineProps({ slug: { type: String, required: true } })
 const router = useRouter()

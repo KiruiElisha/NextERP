@@ -41,7 +41,8 @@
               <ExternalLink class="size-3 text-slate-300" />
             </button>
             <RouterLink v-else :to="item.to" class="nav" :class="isActive(item) && 'active'">
-              <component :is="icon(item.icon)" class="size-4" /> <span class="truncate">{{ item.name }}</span>
+              <component :is="icon(item.icon)" class="size-4" /> <span class="flex-1 truncate">{{ item.name }}</span>
+              <span v-if="item.badge && waiting" class="rounded-full bg-brand-600 px-1.5 text-[10px] font-semibold tabular-nums text-white">{{ waiting > 99 ? '99+' : waiting }}</span>
             </RouterLink>
           </template>
 
@@ -87,11 +88,12 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { AppWindow, CreditCard, ChevronDown, ChevronRight, ChevronsUpDown, ExternalLink, LayoutGrid, List, LogOut, Settings,
-  ArrowLeftRight, Banknote, BookOpen, Boxes, BrainCircuit, Building2, CalendarDays, ClipboardCheck, ClipboardList, Clock, Contact, Factory, FilePlus, FileText, FolderKanban, FolderTree, HandCoins, Handshake, Landmark, Layers, LayoutDashboard, Leaf, Library, LifeBuoy, ListChecks, MapPin, MessagesSquare, PackageCheck, Receipt, Scale, ScanLine, ShieldCheck, ShoppingCart, Sparkles, Store, Tag, Tags, Target, TrendingUp, Truck, UserCheck, Users, WalletCards, Warehouse } from 'lucide-vue-next'
+  ArrowLeftRight, Banknote, BookOpen, Boxes, BrainCircuit, Building2, CalendarDays, ClipboardCheck, ClipboardList, Clock, Contact, Factory, FilePlus, FileText, FolderKanban, FolderTree, HandCoins, Handshake, Inbox, Landmark, Layers, LayoutDashboard, Leaf, Library, LifeBuoy, ListChecks, MapPin, MessagesSquare, PackageCheck, Receipt, Scale, ScanLine, ShieldCheck, ShoppingCart, Sparkles, Store, Tag, Tags, Target, TrendingUp, Truck, UserCheck, Users, WalletCards, Warehouse } from 'lucide-vue-next'
 import { DOCTYPES, NAV } from '@/lib/doctypes'
+import { badge, refreshCounts } from '@/lib/work'
 import { openDesk } from '@/lib/backend'
 import { openApp, picker, siteApps } from '@/lib/apps'
 import { listRoute } from '@/lib/forms'
@@ -104,7 +106,7 @@ const userMenu = ref(false)
 
 const DEPARTMENT_ICONS = { sales: 'TrendingUp', purchases: 'ShoppingCart', inventory: 'Boxes', accounts: 'Landmark', people: 'Users' }
 // Named imports only, so the bundle carries just these icons.
-const ICONS = { ArrowLeftRight, Banknote, BookOpen, Boxes, BrainCircuit, Building2, CalendarDays, ClipboardCheck, ClipboardList, Clock, Contact, Factory, FilePlus, FileText, FolderKanban, FolderTree, HandCoins, Handshake, Landmark, Layers, LayoutDashboard, Leaf, Library, LifeBuoy, ListChecks, MapPin, MessagesSquare, PackageCheck, Receipt, Scale, ScanLine, ShieldCheck, ShoppingCart, Sparkles, Store, Tag, Tags, Target, TrendingUp, Truck, UserCheck, Users, WalletCards, Warehouse }
+const ICONS = { ArrowLeftRight, Banknote, BookOpen, Boxes, BrainCircuit, Building2, CalendarDays, ClipboardCheck, ClipboardList, Clock, Contact, Factory, FilePlus, FileText, FolderKanban, FolderTree, HandCoins, Handshake, Inbox, Landmark, Layers, LayoutDashboard, Leaf, Library, LifeBuoy, ListChecks, MapPin, MessagesSquare, PackageCheck, Receipt, Scale, ScanLine, ShieldCheck, ShoppingCart, Sparkles, Store, Tag, Tags, Target, TrendingUp, Truck, UserCheck, Users, WalletCards, Warehouse }
 const icon = (name) => ICONS[name] || FileText
 
 const installed = computed(() => new Set(session.boot?.installed_apps || []))
@@ -141,6 +143,15 @@ const groups = computed(() =>
 )
 
 const apps = computed(() => siteApps())
+
+// The Inbox badge: approvals, assignments and unread notifications, checked every two minutes.
+const waiting = computed(() => badge.approvals + badge.assigned + badge.unread)
+let poll = null
+onMounted(() => {
+  refreshCounts()
+  poll = setInterval(refreshCounts, 120000)
+})
+onBeforeUnmount(() => clearInterval(poll))
 
 // Groups open, report departments closed, until the user folds them: remembered on this computer.
 const KEY = 'erpnext:sidebar-sections'

@@ -13,6 +13,7 @@ import json
 import frappe
 from frappe import _
 from frappe.model.utils.user_settings import get_user_settings, update_user_settings
+from frappe.model.workflow import get_workflow_name
 
 # What a field carries to the app: enough to draw it, check it and know when it shows.
 FIELD_KEYS = (
@@ -55,6 +56,7 @@ PERMISSION_TYPES = (
 	"print",
 	"email",
 	"share",
+	"export",
 )
 
 
@@ -81,6 +83,7 @@ def _describe(meta, parenttype: str | None = None) -> dict:
 		"fields": fields,
 		"istable": meta.istable,
 		"is_submittable": meta.is_submittable,
+		"allow_auto_repeat": meta.allow_auto_repeat,
 		"title_field": meta.title_field or None,
 		"image_field": meta.image_field or None,
 		"is_tree": meta.is_tree,
@@ -105,6 +108,7 @@ def meta(doctype: str) -> dict:
 		if df.fieldtype in ("Table", "Table MultiSelect")
 	}
 	out["perms"] = {p: bool(frappe.has_permission(doctype, p)) for p in PERMISSION_TYPES}
+	out["has_workflow"] = bool(get_workflow_name(doctype))
 	out["print_formats"] = ["Standard"] + frappe.get_all(
 		"Print Format", filters={"doc_type": doctype, "disabled": 0}, pluck="name", order_by="name"
 	)

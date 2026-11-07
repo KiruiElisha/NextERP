@@ -20,7 +20,11 @@
 
         <template v-if="doc && meta && !offline">
           <button v-if="canSave" class="btn-primary" :disabled="busy" title="Ctrl+S" @click="save()"><Save class="size-4" /> {{ doc.docstatus === 1 ? 'Update' : 'Save' }}</button>
-          <button v-if="canSubmit" class="btn-primary bg-emerald-600 hover:bg-emerald-700" :disabled="busy" @click="confirmThen('Submit', `Submit ${doc.name}? A submitted document can only be cancelled, not edited.`)">
+          <template v-if="flow && !dirty">
+            <span class="shrink-0 rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700" title="Workflow state">{{ flow.state }}</span>
+            <button v-for="a in flow.actions" :key="a.action" class="btn-primary bg-violet-600 hover:bg-violet-700" :disabled="busy" :title="`Moves it to ${a.next_state}`" @click="takeAction(a.action)">{{ a.action }}</button>
+          </template>
+          <button v-if="canSubmit && !flow" class="btn-primary bg-emerald-600 hover:bg-emerald-700" :disabled="busy" @click="confirmThen('Submit', `Submit ${doc.name}? A submitted document can only be cancelled, not edited.`)">
             <CheckCircle2 class="size-4" /> Submit
           </button>
           <button v-if="doc.docstatus === 2 && perms.amend" class="btn-primary" :disabled="busy" @click="amend"><CopyPlus class="size-4" /> Amend</button>
@@ -30,6 +34,7 @@
               <button v-if="!isNew && session.boot?.ai?.enabled" class="menu" @click="router.push({ path: '/assistant', query: { doctype, name: doc.name } })"><Sparkles class="size-4" /> Ask the assistant</button>
               <button v-if="!isNew && perms.print" class="menu" @click="open('print')"><Printer class="size-4" /> Print or PDF</button>
               <button v-if="!isNew && perms.email" class="menu" @click="open('email')"><Mail class="size-4" /> Email</button>
+              <button v-if="!isNew && meta.allow_auto_repeat" class="menu" @click="open('repeat')"><Repeat class="size-4" /> Repeat…</button>
               <button v-if="!isNew && perms.create" class="menu" @click="duplicate"><Copy class="size-4" /> Duplicate</button>
               <button class="menu" @click="open('fields')"><SlidersHorizontal class="size-4" /> Choose fields…</button>
               <button class="menu" @click="toggleAll"><LayoutList class="size-4" /> {{ all ? 'Usual fields only' : 'Show every field' }}</button>
@@ -73,6 +78,7 @@
 
     <FieldPicker v-if="dialog === 'fields'" :meta="meta" @close="dialog = null" @saved="layoutKey++" />
     <EmailDialog v-if="dialog === 'email'" :doctype="doctype" :name="doc.name" @close="dialog = null" @sent="reload" />
+    <RepeatDialog v-if="dialog === 'repeat'" :doctype="doctype" :name="doc.name" @close="dialog = null" />
     <PrintDialog v-if="dialog === 'print'" :doctype="doctype" :name="doc.name" :formats="meta.print_formats" :initial="meta.default_print_format" @close="dialog = null" />
   </div>
 </template>
@@ -80,13 +86,15 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, Ban, CheckCircle2, ChevronRight, Copy, CopyPlus, LayoutList, Mail, MoreHorizontal, Printer, RefreshCw, Save, SlidersHorizontal, Sparkles, Trash2 } from 'lucide-vue-next'
+import { ArrowLeft, Ban, CheckCircle2, ChevronRight, Copy, CopyPlus, LayoutList, Mail, MoreHorizontal, Printer, RefreshCw, Repeat, Save, SlidersHorizontal, Sparkles, Trash2 } from 'lucide-vue-next'
 import FormLayout from '@/components/form/FormLayout.vue'
 import Timeline from '@/components/form/Timeline.vue'
 import PartySummary from '@/components/form/PartySummary.vue'
 import FieldPicker from '@/components/form/FieldPicker.vue'
 import EmailDialog from '@/components/form/EmailDialog.vue'
 import PrintDialog from '@/components/form/PrintDialog.vue'
+import RepeatDialog from '@/components/form/RepeatDialog.vue'
+import { applyAction, workflowOf } from '@/lib/work'
 import { toast } from '@/components/Toasts.vue'
 import { takeDraft } from '@/lib/ai'
 import { session } from '@/lib/session'
@@ -110,6 +118,20 @@ const offline = ref(false)
 const showInvalid = ref(false)
 const menu = ref(false)
 const dialog = ref(null)
+// The document's workflow, when it has one: its state and the actions this user may take.
+const flow = ref(null)
+async function takeAction(action) {
+  busy.value = true
+  try {
+    await applyAction(props.doctype, doc.value.name, action)
+    toast(`${doc.value.name}: ${action}`)
+    await reload()
+  } catch (e) {
+    toast(e.message, true)
+  } finally {
+    busy.value = false
+  }
+}
 const layoutKey = ref(0)
 
 const isNew = computed(() => props.name === 'new' || Boolean(doc.value?.__islocal))
@@ -203,6 +225,7 @@ async function reload() {
     setDoc(r.doc)
     docinfo.value = r.docinfo
     docPerms.value = r.perms
+    flow.value = meta.value?.has_workflow ? await workflowOf(props.doctype, props.name).catch(() => null) : null
   } catch (e) {
     if (e.kind === 'Network') return showCached(e)
     error.value = e.message
