@@ -5,7 +5,7 @@
  "issingle": 1,
  "custom": 0,
  "creation": "2026-11-07 00:00:00",
- "modified": "2026-11-07 00:00:00",
+ "modified": "2026-11-07 12:00:00",
  "owner": "Administrator",
  "modified_by": "Administrator",
  "description": "Payments and AI for the NextERP desktop app.",
@@ -78,6 +78,62 @@
    "label": "Callback token",
    "read_only": 1,
    "description": "Part of the address Safaricom calls back; made automatically."
+  },
+  {
+   "fieldname": "ai_section",
+   "fieldtype": "Section Break",
+   "label": "AI assistant",
+   "description": "The assistant answers from the site's records with each user's own permissions, and drafts documents for them to check and save. It never saves or changes anything itself."
+  },
+  {
+   "fieldname": "ai_enabled",
+   "fieldtype": "Check",
+   "label": "Turn on the assistant"
+  },
+  {
+   "fieldname": "ai_provider",
+   "fieldtype": "Select",
+   "label": "Provider",
+   "options": "Anthropic (Claude)\nOpenAI\nGoogle Gemini\nGroq\nOpenAI-compatible (local or other)",
+   "default": "Anthropic (Claude)"
+  },
+  {
+   "fieldname": "ai_model",
+   "fieldtype": "Data",
+   "label": "Model",
+   "description": "For Claude, blank means claude-opus-5-5. For the others, the provider's model name (for a local server, the one it serves)."
+  },
+  {
+   "fieldname": "ai_base_url",
+   "fieldtype": "Data",
+   "label": "Server address",
+   "depends_on": "eval:doc.ai_provider=='OpenAI-compatible (local or other)'",
+   "description": "Its OpenAI-style address, for example http://localhost:11434/v1 for Ollama."
+  },
+  {
+   "fieldname": "ai_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ai_api_key",
+   "fieldtype": "Password",
+   "label": "API key",
+   "description": "Kept encrypted on the site; never sent to the app."
+  },
+  {
+   "fieldname": "ai_role",
+   "fieldtype": "Link",
+   "label": "Only for users with role",
+   "options": "Role",
+   "description": "Blank: every user who signs in to the app."
+  },
+  {
+   "fieldname": "ai_daily_limit",
+   "fieldtype": "Int",
+   "label": "Questions per user per day",
+   "default": "100",
+   "non_negative": 1,
+   "description": "0 means no limit."
   }
  ],
  "permissions": [
@@ -100,6 +156,15 @@
   "mpesa_consumer_secret",
   "mpesa_passkey",
   "mpesa_mode_of_payment",
-  "mpesa_callback_token"
+  "mpesa_callback_token",
+  "ai_section",
+  "ai_enabled",
+  "ai_provider",
+  "ai_model",
+  "ai_base_url",
+  "ai_column",
+  "ai_api_key",
+  "ai_role",
+  "ai_daily_limit"
  ]
 }

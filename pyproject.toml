@@ -7,7 +7,10 @@ description = "ERPNext on the desktop: the server side of the desktop app (sync,
 requires-python = ">=3.10"
 readme = "README.md"
 dynamic = ["version"]
-dependencies = []
+dependencies = [
+    # the assistant's Claude provider (nexterp/api/ai.py); the others use requests
+    "anthropic>=2.6,<3",
+]
 
 [build-system]
 requires = ["flit_core >=3.4,<4"]

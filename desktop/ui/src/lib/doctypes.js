@@ -48,6 +48,7 @@ export const NAV = [
     items: [
       { name: 'Dashboard', to: '/home', icon: 'LayoutDashboard' },
       { name: 'Business Intelligence', to: '/insights', icon: 'BrainCircuit' },
+      { name: 'Assistant', to: '/assistant', icon: 'Sparkles', ai: true },
     ],
   },
   { label: 'Reports', reports: true, items: [{ name: 'All Reports', to: '/reports', icon: 'Library', exact: true }] },

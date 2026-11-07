@@ -27,6 +27,7 @@
           <div class="relative">
             <button class="btn-subtle" :aria-expanded="menu" @click="menu = !menu"><MoreHorizontal class="size-4" /></button>
             <div v-if="menu" class="absolute right-0 top-full z-30 mt-1 w-56 rounded-xl border border-slate-200 bg-white p-1 shadow-xl" @mouseleave="menu = false">
+              <button v-if="!isNew && session.boot?.ai?.enabled" class="menu" @click="router.push({ path: '/assistant', query: { doctype, name: doc.name } })"><Sparkles class="size-4" /> Ask the assistant</button>
               <button v-if="!isNew && perms.print" class="menu" @click="open('print')"><Printer class="size-4" /> Print or PDF</button>
               <button v-if="!isNew && perms.email" class="menu" @click="open('email')"><Mail class="size-4" /> Email</button>
               <button v-if="!isNew && perms.create" class="menu" @click="duplicate"><Copy class="size-4" /> Duplicate</button>
@@ -79,7 +80,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, Ban, CheckCircle2, ChevronRight, Copy, CopyPlus, LayoutList, Mail, MoreHorizontal, Printer, RefreshCw, Save, SlidersHorizontal, Trash2 } from 'lucide-vue-next'
+import { ArrowLeft, Ban, CheckCircle2, ChevronRight, Copy, CopyPlus, LayoutList, Mail, MoreHorizontal, Printer, RefreshCw, Save, SlidersHorizontal, Sparkles, Trash2 } from 'lucide-vue-next'
 import FormLayout from '@/components/form/FormLayout.vue'
 import Timeline from '@/components/form/Timeline.vue'
 import PartySummary from '@/components/form/PartySummary.vue'
@@ -87,6 +88,8 @@ import FieldPicker from '@/components/form/FieldPicker.vue'
 import EmailDialog from '@/components/form/EmailDialog.vue'
 import PrintDialog from '@/components/form/PrintDialog.vue'
 import { toast } from '@/components/Toasts.vue'
+import { takeDraft } from '@/lib/ai'
+import { session } from '@/lib/session'
 import { call, getDoc, site } from '@/lib/backend'
 import { DOCTYPES, statusOf } from '@/lib/doctypes'
 import { NO_VALUE, amendDoc, compute, deleteDoc, duplicateDoc, fetchLinked, formRoute, getMeta, isMandatory, isVisible, listRoute, loadDoc, newDoc, saveDoc, saveLayout } from '@/lib/forms'
@@ -167,7 +170,8 @@ async function start() {
     meta.value = await getMeta(props.doctype)
     if (props.name === 'new') {
       // An amended or duplicated copy arrives ready; otherwise a fresh document with the defaults.
-      const copy = seed
+      // ...or a draft the assistant prepared, which the user checks here before saving.
+      const copy = seed || takeDraft(props.doctype)
       seed = null
       const d = copy || (await newDoc(props.doctype))
       if (!copy) prefill(d)

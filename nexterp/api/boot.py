@@ -6,6 +6,7 @@ import frappe
 from frappe.sessions import get_csrf_token
 
 from nexterp import __version__, apps, reports
+from nexterp.api.ai import status as ai_status
 from nexterp.api.esg import esg_allowed
 from nexterp.manifest import readable
 
@@ -28,6 +29,8 @@ def boot() -> dict:
 		"selling_price_list": frappe.db.get_single_value("Selling Settings", "selling_price_list"),
 		"manifest": readable(),
 		"esg": esg_allowed(),
+		# the assistant: on for this user or not, and its provider (never its key)
+		"ai": ai_status(),
 		# the app picker and switcher: installed apps with a screen, ERPNext (drawn here) first
 		"apps": apps.screens(),
 		"installed_apps": apps.installed(),

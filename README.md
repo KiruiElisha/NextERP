@@ -41,6 +41,16 @@ emailed code, creates a site with the apps the user picks (plus `nexterp`), fini
 with the company name and the password they chose, then signs in to it. The server side is
 `nergaa_cloud/desktop.py` in nergaa-cloud; `NERGAA_CLOUD=https://…` points the app at another Press.
 
+## The assistant
+
+Overview → Assistant answers questions about the business from the site's records and drafts
+documents (a quotation, an order, a payment) that open unsaved in the normal form to be checked and
+saved. A System Manager turns it on in **NextERP Settings**: Claude (Anthropic), OpenAI, Gemini,
+Groq or any OpenAI-style server, including a local one (Ollama, LM Studio, vLLM), with who may use
+it and a daily limit per user. The server does everything (`nexterp/api/ai.py`): the model reads
+only through `frappe.get_list` and `has_permission` as the signed-in user, never saves, and the key
+never leaves the site. Conversations are kept in the app's memory only.
+
 ## Server setup
 
 ```bash
