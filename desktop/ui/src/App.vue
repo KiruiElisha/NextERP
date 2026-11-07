@@ -1,6 +1,10 @@
 <template>
   <div v-if="!session.ready" class="flex h-full items-center justify-center text-sm text-slate-400">Opening…</div>
   <SignIn v-else-if="!session.signedIn" />
+  <div v-else-if="route.meta.bare" class="h-full">
+    <router-view />
+    <AppPicker v-if="picker.open" />
+  </div>
   <div v-else class="flex h-full">
     <Sidebar />
     <div class="flex min-w-0 flex-1 flex-col">
@@ -17,7 +21,7 @@
 
 <script setup>
 import { onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import Sidebar from './components/Sidebar.vue'
 import TopBar from './components/TopBar.vue'
 import CommandPalette from './components/CommandPalette.vue'
@@ -29,6 +33,7 @@ import { call, on, openDesk } from './lib/backend'
 import { session, signOut, start } from './lib/session'
 
 const router = useRouter()
+const route = useRoute()
 const palette = ref(false)
 
 // The native menu's items: the window owns them, this screen decides what they do.

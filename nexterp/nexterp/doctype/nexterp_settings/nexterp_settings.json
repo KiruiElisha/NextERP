@@ -1,0 +1,105 @@
+{
+ "doctype": "DocType",
+ "name": "NextERP Settings",
+ "module": "NextERP",
+ "issingle": 1,
+ "custom": 0,
+ "creation": "2026-11-07 00:00:00",
+ "modified": "2026-11-07 00:00:00",
+ "owner": "Administrator",
+ "modified_by": "Administrator",
+ "description": "Payments and AI for the NextERP desktop app.",
+ "fields": [
+  {
+   "fieldname": "mpesa_section",
+   "fieldtype": "Section Break",
+   "label": "M-Pesa (Daraja)"
+  },
+  {
+   "fieldname": "mpesa_enabled",
+   "fieldtype": "Check",
+   "label": "Take M-Pesa payments at the till"
+  },
+  {
+   "fieldname": "mpesa_environment",
+   "fieldtype": "Select",
+   "label": "Environment",
+   "options": "Sandbox\nProduction",
+   "default": "Sandbox"
+  },
+  {
+   "fieldname": "mpesa_transaction_type",
+   "fieldtype": "Select",
+   "label": "Paid to",
+   "options": "Paybill\nTill (Buy Goods)",
+   "default": "Paybill"
+  },
+  {
+   "fieldname": "mpesa_shortcode",
+   "fieldtype": "Data",
+   "label": "Business short code",
+   "description": "The paybill number, or for a till the store number Safaricom gave with it."
+  },
+  {
+   "fieldname": "mpesa_till_number",
+   "fieldtype": "Data",
+   "label": "Till number",
+   "depends_on": "eval:doc.mpesa_transaction_type=='Till (Buy Goods)'"
+  },
+  {
+   "fieldname": "mpesa_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mpesa_consumer_key",
+   "fieldtype": "Password",
+   "label": "Consumer key"
+  },
+  {
+   "fieldname": "mpesa_consumer_secret",
+   "fieldtype": "Password",
+   "label": "Consumer secret"
+  },
+  {
+   "fieldname": "mpesa_passkey",
+   "fieldtype": "Password",
+   "label": "Passkey"
+  },
+  {
+   "fieldname": "mpesa_mode_of_payment",
+   "fieldtype": "Link",
+   "label": "Mode of payment",
+   "options": "Mode of Payment",
+   "description": "The mode M-Pesa payments are recorded under on invoices."
+  },
+  {
+   "fieldname": "mpesa_callback_token",
+   "fieldtype": "Data",
+   "label": "Callback token",
+   "read_only": 1,
+   "description": "Part of the address Safaricom calls back; made automatically."
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1
+  }
+ ],
+ "field_order": [
+  "mpesa_section",
+  "mpesa_enabled",
+  "mpesa_environment",
+  "mpesa_transaction_type",
+  "mpesa_shortcode",
+  "mpesa_till_number",
+  "mpesa_column",
+  "mpesa_consumer_key",
+  "mpesa_consumer_secret",
+  "mpesa_passkey",
+  "mpesa_mode_of_payment",
+  "mpesa_callback_token"
+ ]
+}

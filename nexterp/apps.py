@@ -97,6 +97,7 @@ NAV_DOCTYPES = (
 	"Asset",
 	"Asset Category",
 	"Asset Movement",
+	"POS Profile",
 	"BOM",
 	"Work Order",
 	"Job Card",

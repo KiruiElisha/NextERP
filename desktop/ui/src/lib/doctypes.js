@@ -48,6 +48,7 @@ export const NAV = [
   {
     label: 'Sales',
     items: [
+      { name: 'Point of Sale', to: '/pos', icon: 'Store', create: 'Sales Invoice' },
       { name: 'New invoice', to: '/form/Sales%20Invoice/new', icon: 'FilePlus', create: 'Sales Invoice' },
       { doctype: 'Quotation', icon: 'FileText' },
       { doctype: 'Sales Order', icon: 'ClipboardList' },

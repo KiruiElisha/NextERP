@@ -16,6 +16,7 @@ export const router = createRouter({
     { path: '/esg', component: () => import('./pages/Esg.vue') },
     { path: '/reports', component: () => import('./pages/Reports.vue') },
     { path: '/reports/:dept', component: () => import('./pages/Reports.vue'), props: true },
+    { path: '/pos', component: () => import('./pages/Pos.vue'), meta: { bare: true } },
     { path: '/report/:name', component: () => import('./pages/ReportRunner.vue'), props: true },
     { path: '/settings', component: () => import('./pages/Settings.vue') },
   ],
