@@ -137,7 +137,11 @@ def compute(doc: str | dict) -> dict:
 	"""
 	data = frappe.parse_json(doc) if isinstance(doc, str) else doc
 	d = frappe.get_doc(data)
-	_require(d.doctype, "write" if not d.is_new() else "create", d if not d.is_new() else None)
+	if d.is_new():
+		_require(d.doctype, "create")
+	else:
+		# the stored document decides, not the values sent (an owner or company could be made up)
+		frappe.get_doc(d.doctype, d.name).check_permission("write")
 	frappe.db.savepoint("nexterp_compute")
 	try:
 		d.run_method("before_validate")
@@ -282,17 +286,33 @@ def search(
 		**given,
 	}
 	return search_link(
-		doctype, txt or "", filters=merged, page_length=int(page_length), reference_doctype=parent_doctype
+		doctype,
+		txt or "",
+		filters=merged,
+		page_length=max(1, min(int(page_length), 50)),
+		reference_doctype=parent_doctype,
 	)
 
 
 @frappe.whitelist()
 def fetch(doctype: str, name: str, fields: str | list) -> dict:
 	"""The values a link brings with it (fields set with fetch_from), as Desk fetches them."""
-	_require(doctype)
+	if not (
+		frappe.has_permission(doctype, "select", doc=name) or frappe.has_permission(doctype, "read", doc=name)
+	):
+		frappe.throw(_("You are not allowed to read {0}").format(_(doctype)), frappe.PermissionError)
 	wanted = frappe.parse_json(fields) if isinstance(fields, str) else fields
 	m = frappe.get_meta(doctype)
-	readable = [f for f in wanted if f == "name" or m.has_field(f)]
+	levels = set(m.get_permlevel_access("read") or [0])
+	readable = []
+	for f in (wanted or [])[:50]:
+		if f == "name":
+			readable.append(f)
+			continue
+		df = m.get_field(f) if isinstance(f, str) else None
+		# only fields at a permission level the user may read, never a password
+		if df and df.fieldtype != "Password" and (df.permlevel or 0) in levels:
+			readable.append(f)
 	return frappe.db.get_value(doctype, name, readable, as_dict=True) or {}
 
 

@@ -24,6 +24,8 @@ import frappe
 from frappe import _
 from frappe.utils import cint, getdate, nowdate
 
+from nexterp.limits import per_user
+
 CLAUDE = "Anthropic (Claude)"
 COMPATIBLE = "OpenAI-compatible (local or other)"
 PROVIDERS = {
@@ -115,6 +117,7 @@ def ask(messages: str | list, context: str | dict | None = None) -> dict:
 			_("You have asked {0} questions today, the most allowed. Try again tomorrow.").format(limit)
 		)
 
+	per_user("ai-ask", 10, 60)
 	history = _history(messages)
 	frappe.cache.set_value(_usage_key(), _used() + 1, expires_in_sec=2 * 24 * 3600)
 

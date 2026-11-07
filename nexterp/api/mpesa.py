@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import base64
 import hmac
-import json
 import math
 import re
 
@@ -19,6 +18,8 @@ import frappe
 import requests
 from frappe import _
 from frappe.utils import cint, flt, get_url, now_datetime, time_diff_in_seconds
+
+from nexterp.limits import per_user
 
 REQUEST = "NextERP Mpesa Request"
 BASES = {"Sandbox": "https://sandbox.safaricom.co.ke", "Production": "https://api.safaricom.co.ke"}
@@ -42,14 +43,22 @@ def _token(s) -> str:
 	cached = frappe.cache.get_value(key)
 	if cached:
 		return cached
-	res = requests.get(
-		f"{_base(s)}/oauth/v1/generate?grant_type=client_credentials",
-		auth=(s.get_password("mpesa_consumer_key"), s.get_password("mpesa_consumer_secret")),
-		timeout=20,
-	)
+	try:
+		res = requests.get(
+			f"{_base(s)}/oauth/v1/generate?grant_type=client_credentials",
+			auth=(s.get_password("mpesa_consumer_key"), s.get_password("mpesa_consumer_secret")),
+			timeout=20,
+		)
+	except requests.RequestException:
+		frappe.throw(_("Safaricom can't be reached just now. Try again, or take another payment method."))
 	if res.status_code != 200:
 		frappe.throw(_("Safaricom refused the M-Pesa credentials. Check them in NextERP Settings."))
-	token = res.json().get("access_token")
+	try:
+		token = (res.json() or {}).get("access_token")
+	except (ValueError, AttributeError):
+		token = None
+	if not token:  # never cache an empty token
+		frappe.throw(_("Safaricom's answer had no access token. Try again shortly."))
 	frappe.cache.set_value(key, token, expires_in_sec=3300)
 	return token
 
@@ -76,6 +85,7 @@ def stk_push(phone: str, amount: float, reference: str | None = None, pos_profil
 	"""Prompt the customer's phone for the amount. Returns the request the till then waits on."""
 	if not frappe.has_permission(REQUEST, "create"):
 		frappe.throw(_("You are not allowed to take M-Pesa payments"), frappe.PermissionError)
+	per_user("mpesa-stk", 20, 60)  # a phone prompt reaches a customer: no floods
 	s = settings()
 	msisdn = normalise_phone(phone)
 	shillings = math.ceil(flt(amount))
@@ -106,7 +116,12 @@ def stk_push(phone: str, amount: float, reference: str | None = None, pos_profil
 		)
 	except requests.RequestException:
 		frappe.throw(_("Safaricom can't be reached just now. Try again, or take another payment method."))
-	data = res.json() if res.content else {}
+	try:
+		data = res.json() if res.content else {}
+	except ValueError:  # an HTML error page from a gateway
+		data = {}
+	if not isinstance(data, dict):
+		data = {}
 	if res.status_code != 200 or str(data.get("ResponseCode")) != "0":
 		frappe.throw(
 			data.get("errorMessage")
@@ -212,7 +227,7 @@ def _query(doc) -> None:
 			timeout=20,
 		)
 		data = res.json() if res.content else {}
-	except (requests.RequestException, json.JSONDecodeError):
+	except (requests.RequestException, ValueError):
 		return
 	if "ResultCode" in data:
 		apply_result(doc.name, data, "Status query")

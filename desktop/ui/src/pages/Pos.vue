@@ -628,6 +628,7 @@ function newSale() {
 function printReceipt() {
   const frame = document.createElement('iframe')
   frame.style.cssText = 'position:fixed;width:0;height:0;border:0'
+  frame.sandbox = 'allow-same-origin allow-modals' // printable, but nothing in it can run
   frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:80mm auto;margin:4mm}body{font:12px ui-monospace,monospace;width:72mm;margin:0}div{display:block}.flex{display:flex;justify-content:space-between;gap:8px}.text-center{text-align:center}.border-t{border-top:1px dashed #999;margin:6px 0}.font-semibold{font-weight:700}.truncate{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}</style></head><body>${receiptBox.value.innerHTML}</body></html>`
   frame.onload = () => {
     frame.contentWindow.print()

@@ -41,7 +41,7 @@
       <div v-if="error" class="m-6 card p-5 text-sm text-red-700">{{ error }}</div>
       <div v-else-if="!info" class="m-6 h-40 animate-pulse rounded-xl bg-slate-100" />
       <template v-else>
-        <p v-if="message" class="mx-6 mt-4 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800" v-html="message" />
+        <p v-if="message" class="mx-6 mt-4 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800" v-html="sanitize(message)" />
         <div v-if="summary.length" class="mx-6 mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
           <div v-for="s in summary" :key="s.label" class="card p-3">
             <div class="text-xs text-slate-500">{{ s.label }}</div>
@@ -80,6 +80,7 @@
 </template>
 
 <script setup>
+import { sanitize } from '@/lib/sanitize'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ArrowLeft, FileSpreadsheet, Play, Printer } from 'lucide-vue-next'
@@ -214,6 +215,7 @@ function print() {
   const filterLine = Object.entries(result.value?.filters || {}).map(([k, v]) => `${esc(k.replace(/_/g, ' '))}: ${esc([].concat(v).join(', '))}`).join(' · ')
   const frame = document.createElement('iframe')
   frame.style.cssText = 'position:fixed;width:0;height:0;border:0'
+  frame.sandbox = 'allow-same-origin allow-modals' // printable, but nothing in it can run
   frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(props.name)}</title><style>body{font:11px system-ui,sans-serif;margin:24px}h1{font-size:16px;margin:0}p{color:#64748b;margin:4px 0 12px}table{width:100%;border-collapse:collapse}th{border-bottom:2px solid #cbd5e1;padding:4px 6px;font-size:10px;text-transform:uppercase;color:#475569}td{border-bottom:1px solid #e2e8f0;padding:3px 6px}.t td{font-weight:600;border-top:2px solid #cbd5e1}</style></head><body><h1>${esc(props.name)}</h1><p>${filterLine}</p><table><thead><tr>${head}</tr></thead><tbody>${body}${foot}</tbody></table></body></html>`
   frame.onload = () => {
     frame.contentWindow.print()

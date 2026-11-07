@@ -14,10 +14,13 @@ from frappe.utils import cint, flt, nowdate
 
 from nexterp.api.mpesa import REQUEST
 
-SALE_KEY = "nexterp:pos:sale:{}"
+SALE_KEY = "nexterp:pos:sale:{}:{}"  # user, till sale id: one cashier's id never answers another's
 
 
 def _profile(name: str):
+	# The till's data (items, prices, stock) is for people who may sell.
+	if not frappe.has_permission("Sales Invoice", "create"):
+		frappe.throw(_("You are not allowed to make sales"), frappe.PermissionError)
 	p = frappe.get_doc("POS Profile", name)
 	if p.disabled:
 		frappe.throw(_("The POS profile {0} is disabled").format(name))
@@ -201,10 +204,12 @@ def complete(
 		frappe.throw(_("You are not allowed to make sales"), frappe.PermissionError)
 	if not sale_id or len(sale_id) > 64:
 		frappe.throw(_("Missing sale id"))
-	key = SALE_KEY.format(sale_id)
+	key = SALE_KEY.format(frappe.session.user, sale_id)
 	done = frappe.cache.get_value(key)
 	if done:
-		return _receipt(frappe.get_doc("Sales Invoice", done))
+		si = frappe.get_doc("Sales Invoice", done)
+		si.check_permission("read")
+		return _receipt(si)
 	p = _profile(profile)
 	lines = frappe.parse_json(items) if isinstance(items, str) else items
 	pays = frappe.parse_json(payments) if isinstance(payments, str) else payments

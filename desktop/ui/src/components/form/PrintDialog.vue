@@ -16,7 +16,7 @@
       </div>
       <div class="relative flex-1 bg-slate-100">
         <p v-if="loading" class="absolute inset-0 flex items-center justify-center text-sm text-slate-400">Preparing the print…</p>
-        <iframe ref="frame" class="h-full w-full bg-white" :srcdoc="html" title="Print preview" />
+        <iframe ref="frame" class="h-full w-full bg-white" :srcdoc="html" title="Print preview" sandbox="allow-same-origin allow-modals" />
       </div>
     </div>
   </div>

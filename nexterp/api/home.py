@@ -14,67 +14,82 @@ def _require_company(company: str | None) -> str:
 	return company
 
 
-def _sum(sql: str, values: dict) -> float:
-	return flt(frappe.db.sql(sql, values)[0][0])
+def _can(doctype: str) -> bool:
+	return bool(frappe.has_permission(doctype, "read"))
+
+
+def _sum(doctype: str, expr: str, filters: dict) -> float:
+	"""A total through frappe.get_list: the user's permissions and User Permissions apply."""
+	rows = frappe.get_list(doctype, filters=filters, fields=[f"sum({expr}) as v"])
+	return flt(rows[0].v) if rows else 0.0
 
 
 @frappe.whitelist()
 def summary(company: str | None = None) -> dict:
+	"""Each figure only from records the user may read; one they can't read shows as None, not 0."""
 	company = _require_company(company)
 	today = getdate(nowdate())
 	month = get_first_day(today)
-	values = {
-		"company": company,
-		"month": month,
-		"prev": add_months(month, -1),
-		"since": add_days(today, -29),
-	}
-	sold = (
-		"select sum(base_grand_total) from `tabSales Invoice` where docstatus = 1 and company = %(company)s"
-	)
-	return {
+	prev, since = add_months(month, -1), add_days(today, -29)
+	base = {"company": company, "docstatus": 1}
+	sales = _can("Sales Invoice")
+	out = {
 		"company": company,
 		"currency": frappe.get_cached_value("Company", company, "default_currency"),
-		"sales_month": _sum(sold + " and posting_date >= %(month)s", values),
-		"sales_prev_month": _sum(sold + " and posting_date >= %(prev)s and posting_date < %(month)s", values),
-		"receivable": _sum(
-			"select sum(outstanding_amount) from `tabSales Invoice` where docstatus = 1 and company = %(company)s",
-			values,
-		),
-		"payable": _sum(
-			"select sum(outstanding_amount) from `tabPurchase Invoice` where docstatus = 1 and company = %(company)s",
-			values,
-		),
-		"cash": _sum(
-			"""select sum(gle.debit - gle.credit) from `tabGL Entry` gle
-			join `tabAccount` acc on acc.name = gle.account
-			where gle.is_cancelled = 0 and gle.company = %(company)s and acc.account_type in ('Bank', 'Cash')""",
-			values,
-		),
-		"daily_sales": _daily_sales(values),
-		"top_customers": frappe.db.sql(
-			"""select customer_name as label, sum(base_grand_total) as amount from `tabSales Invoice`
-			where docstatus = 1 and company = %(company)s and posting_date >= %(month)s
-			group by customer_name order by amount desc limit 5""",
-			values,
-			as_dict=True,
-		),
-	}
-
-
-def _daily_sales(values: dict) -> list[dict]:
-	rows = dict(
-		frappe.db.sql(
-			"""select posting_date, sum(base_grand_total) from `tabSales Invoice`
-			where docstatus = 1 and company = %(company)s and posting_date >= %(since)s
-			group by posting_date""",
-			values,
+		"sales_month": _sum("Sales Invoice", "base_grand_total", {**base, "posting_date": [">=", month]})
+		if sales
+		else None,
+		"sales_prev_month": _sum(
+			"Sales Invoice",
+			"base_grand_total",
+			{**base, "posting_date": ["between", [prev, add_days(month, -1)]]},
 		)
+		if sales
+		else None,
+		"receivable": _sum("Sales Invoice", "outstanding_amount", base) if sales else None,
+		"payable": _sum("Purchase Invoice", "outstanding_amount", base) if _can("Purchase Invoice") else None,
+		"cash": _cash(company) if _can("GL Entry") and _can("Account") else None,
+		"daily_sales": _daily_sales(base, since) if sales else [],
+		"top_customers": [
+			{"label": r.customer_name, "amount": flt(r.amount)}
+			for r in frappe.get_list(
+				"Sales Invoice",
+				filters={**base, "posting_date": [">=", month]},
+				fields=["customer_name", "sum(base_grand_total) as amount"],
+				group_by="customer_name",
+				order_by="amount desc",
+				limit_page_length=5,
+			)
+		]
+		if sales
+		else [],
+	}
+	return out
+
+
+def _cash(company: str) -> float:
+	accounts = frappe.get_list(
+		"Account",
+		filters={"company": company, "is_group": 0, "account_type": ["in", ["Bank", "Cash"]]},
+		pluck="name",
 	)
+	if not accounts:
+		return 0.0
+	return _sum(
+		"GL Entry", "debit - credit", {"company": company, "is_cancelled": 0, "account": ["in", accounts]}
+	)
+
+
+def _daily_sales(base: dict, since) -> list[dict]:
+	rows = {
+		str(r.posting_date): flt(r.v)
+		for r in frappe.get_list(
+			"Sales Invoice",
+			filters={**base, "posting_date": [">=", since]},
+			fields=["posting_date", "sum(base_grand_total) as v"],
+			group_by="posting_date",
+		)
+	}
 	return [
-		{
-			"date": str(add_days(values["since"], i)),
-			"amount": flt(rows.get(getdate(add_days(values["since"], i)))),
-		}
-		for i in range(30)
+		{"date": str(add_days(since, i)), "amount": rows.get(str(add_days(since, i)), 0.0)} for i in range(30)
 	]

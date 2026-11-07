@@ -39,7 +39,7 @@ def counts(limit: int = 30) -> list[dict]:
 			"item_group",
 		],
 		order_by="creation desc",
-		limit_page_length=int(limit),
+		limit_page_length=max(1, min(int(limit), 200)),
 	)
 
 

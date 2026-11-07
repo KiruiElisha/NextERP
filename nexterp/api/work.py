@@ -395,7 +395,10 @@ def repeat(
 	notify: int = 0,
 ) -> dict:
 	"""Make the document repeat: ERPNext's Auto Repeat creates the next ones on schedule."""
-	_require(doctype)
+	# Auto Repeat makes the new documents itself, as the system: so only someone who may create
+	# them, and read the one they come from, may set it up.
+	_require(doctype, "create")
+	frappe.get_doc(doctype, name).check_permission("read")
 	if not frappe.get_meta(doctype).allow_auto_repeat:
 		frappe.throw(_("{0} can't repeat").format(doctype))
 	if frequency not in FREQUENCIES:

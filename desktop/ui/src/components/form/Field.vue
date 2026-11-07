@@ -61,6 +61,7 @@
 </template>
 
 <script setup>
+import { escapeHtml, sanitize } from '@/lib/sanitize'
 import { computed, ref } from 'vue'
 import { Paperclip, X } from 'lucide-vue-next'
 import LinkField from './LinkField.vue'
@@ -118,15 +119,9 @@ const shown = computed(() => {
 })
 const fileName = computed(() => String(value.value || '').split('/').pop())
 
-// Text Editor values are HTML from the site; only plain formatting is kept on screen.
+// Text Editor values are HTML from the site; only plain formatting is kept on screen (lib/sanitize).
 function safe(v) {
-  const s = String(v ?? '')
-  if (props.df.fieldtype !== 'Text Editor') return s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c])
-  const div = document.createElement('div')
-  div.innerHTML = s
-  div.querySelectorAll('script,style,iframe,object,embed,link,meta').forEach((n) => n.remove())
-  div.querySelectorAll('*').forEach((n) => [...n.attributes].forEach((a) => (/^on/i.test(a.name) || /javascript:/i.test(a.value)) && n.removeAttribute(a.name)))
-  return div.innerHTML
+  return props.df.fieldtype === 'Text Editor' ? sanitize(v) : escapeHtml(v)
 }
 
 function set(v) {

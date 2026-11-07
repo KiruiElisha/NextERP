@@ -374,17 +374,7 @@ pub fn open_desk(
 ) -> Result<()> {
     let s = state.current()?;
     let path = path.unwrap_or_else(|| "/app".into());
-    let joiner = if path.contains('?') { '&' } else { '?' };
-    let address = format!(
-        "{}{}{}sid={}",
-        s.site,
-        path,
-        joiner,
-        s.client.sid().unwrap_or_default()
-    );
-    let url = address
-        .parse()
-        .map_err(|_| Error::Server("Not a valid Desk address".into()))?;
+    let url = desk_url(&s.site, &path, &s.client.sid().unwrap_or_default())?;
     let label = format!("desk-{}", app.webview_windows().len());
     WebviewWindowBuilder::new(&app, label, WebviewUrl::External(url))
         .title(title.as_deref().unwrap_or("ERPNext Desk"))
@@ -392,6 +382,23 @@ pub fn open_desk(
         .build()
         .map_err(|e| Error::Server(e.to_string()))?;
     Ok(())
+}
+
+/// The Desk address for a path on the signed-in site, with the session so Desk opens signed in.
+/// Only a path on that same site is accepted: the session id must never go to another host (a
+/// "path" like "@evil.example/" or "//evil.example/" would otherwise send it there).
+fn desk_url(site: &str, path: &str, sid: &str) -> Result<tauri::Url> {
+    let bad = || Error::Server("Not a valid Desk address".into());
+    if !path.starts_with('/') || path.starts_with("//") || path.contains('\\') {
+        return Err(bad());
+    }
+    let base: tauri::Url = site.parse().map_err(|_| bad())?;
+    let mut url = base.join(path).map_err(|_| bad())?;
+    if url.origin() != base.origin() {
+        return Err(bad());
+    }
+    url.query_pairs_mut().append_pair("sid", sid);
+    Ok(url)
 }
 
 /// A file from the site (a document's PDF) saved in the computer's Downloads folder. A name
@@ -457,4 +464,30 @@ pub fn open_checkout(app: AppHandle, url: String) -> Result<()> {
         .build()
         .map_err(|e| Error::Server(e.to_string()))?;
     Ok(())
+}
+
+#[cfg(test)]
+mod desk_tests {
+    use super::desk_url;
+
+    #[test]
+    fn desk_paths_stay_on_the_site() {
+        let ok = desk_url("https://acme.nergaa.cloud", "/app/item?x=1", "abc").unwrap();
+        assert_eq!(
+            ok.as_str(),
+            "https://acme.nergaa.cloud/app/item?x=1&sid=abc"
+        );
+        for evil in [
+            "@evil.example/x",
+            "//evil.example/x",
+            "/\\evil.example",
+            "https://evil.example/",
+            "app",
+        ] {
+            assert!(
+                desk_url("https://acme.nergaa.cloud", evil, "abc").is_err(),
+                "{evil}"
+            );
+        }
+    }
 }

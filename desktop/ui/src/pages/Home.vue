@@ -76,7 +76,8 @@ const kpis = computed(() => [
   { label: 'Customers owe', value: data.value.receivable, hint: 'Outstanding sales invoices' },
   { label: 'You owe suppliers', value: data.value.payable, hint: 'Outstanding purchase invoices' },
   { label: 'Cash and bank', value: data.value.cash, hint: data.value.currency },
-])
+  // a figure from records the user can't read comes back as null: no tile rather than a false 0
+].filter((k) => k.value !== null && k.value !== undefined))
 const peak = computed(() => Math.max(...(data.value?.daily_sales || []).map((d) => d.amount), 1))
 const bar = (v) => Math.max((v / peak.value) * 150, v ? 3 : 1)
 const topCustomer = computed(() => Math.max(...(data.value?.top_customers || []).map((c) => c.amount), 1))

@@ -48,6 +48,7 @@
 </template>
 
 <script setup>
+import { sanitize } from '@/lib/sanitize'
 import { computed, ref } from 'vue'
 import { FileText, MessageSquare, Paperclip, Plus, Users } from 'lucide-vue-next'
 import { call, site } from '@/lib/backend'
@@ -68,14 +69,8 @@ const assignee = ref('')
 const uploading = ref(false)
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
-// Comment and email bodies are HTML from the site: plain formatting only.
-function clean(html) {
-  const div = document.createElement('div')
-  div.innerHTML = String(html || '')
-  div.querySelectorAll('script,style,iframe,object,embed,link,meta,img').forEach((n) => n.remove())
-  div.querySelectorAll('*').forEach((n) => [...n.attributes].forEach((a) => a.name !== 'href' && n.removeAttribute(a.name)))
-  return div.innerHTML
-}
+// Comment and email bodies are HTML from the site: plain formatting only (lib/sanitize).
+const clean = sanitize
 function changes(v) {
   try {
     const d = JSON.parse(v.data || '{}')
