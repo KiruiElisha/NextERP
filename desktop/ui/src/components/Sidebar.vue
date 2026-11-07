@@ -173,7 +173,7 @@ watch(
   { immediate: true },
 )
 
-const openReport = (name) => openDesk(`/app/query-report/${encodeURIComponent(name)}`)
+const openReport = (name) => router.push(`/report/${encodeURIComponent(name)}`)
 const logo = (a) => (a.logo?.startsWith('/') ? `${session.site}${a.logo}` : a.logo)
 
 function pick(a) {

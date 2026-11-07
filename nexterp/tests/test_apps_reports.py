@@ -34,3 +34,23 @@ class TestAppsAndReports(FrappeTestCase):
 			for row in page["rows"]:
 				for field in MANIFEST[doctype]["fields"]:
 					self.assertIn(field, row, f"{doctype}.{field}")
+
+	def test_a_reports_script_comes_with_what_its_defaults_need(self):
+		s = reports.script("General Ledger")
+		self.assertIn('frappe.query_reports["General Ledger"]', s["script"])
+		self.assertIn("party_account_types", s)
+		frappe.set_user("Guest")
+		self.assertRaises(frappe.PermissionError, reports.script, "General Ledger")
+
+	def test_only_report_helper_scripts_are_handed_out(self):
+		self.assertIn(
+			"erpnext.financial_statements", reports.asset("assets/erpnext/js/financial_statements.js")
+		)
+		for bad in (
+			"assets/erpnext/js/../../hooks.py",
+			"/etc/passwd",
+			"assets/frappe/../../../sites/common_site_config.json",
+			"assets/nosuchapp/js/x.js",
+			"assets/erpnext/js/missing.js",
+		):
+			self.assertRaises(frappe.ValidationError, reports.asset, bad)
