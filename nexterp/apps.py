@@ -98,6 +98,7 @@ NAV_DOCTYPES = (
 	"Asset Category",
 	"Asset Movement",
 	"POS Profile",
+	"NextERP Stock Count",
 	"BOM",
 	"Work Order",
 	"Job Card",

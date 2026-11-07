@@ -86,6 +86,7 @@ export const NAV = [
       { doctype: 'Material Request', icon: 'ClipboardList' },
       { doctype: 'Stock Entry', icon: 'ArrowLeftRight' },
       { list: 'Pick List', name: 'Pick Lists', icon: 'ListChecks' },
+      { name: 'Stock Take', to: '/stock-take', icon: 'ScanLine', read: 'NextERP Stock Count' },
       { list: 'Stock Reconciliation', name: 'Stock Reconciliations', icon: 'ClipboardCheck' },
       { list: 'Batch', name: 'Batches', icon: 'Layers' },
       { list: 'Warehouse', name: 'Warehouses', icon: 'Warehouse' },

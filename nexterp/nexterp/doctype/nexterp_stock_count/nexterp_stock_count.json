@@ -1,0 +1,123 @@
+{
+ "doctype": "DocType",
+ "name": "NextERP Stock Count",
+ "module": "NextERP",
+ "custom": 0,
+ "autoname": "naming_series:",
+ "track_changes": 1,
+ "creation": "2026-11-07 00:00:00",
+ "modified": "2026-11-07 00:00:00",
+ "owner": "Administrator",
+ "modified_by": "Administrator",
+ "description": "A stock take of one warehouse, counted by several people at once and posted as a Stock Reconciliation.",
+ "title_field": "warehouse",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "STC-.YYYY.-",
+   "default": "STC-.YYYY.-",
+   "reqd": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Open\nPosted\nCancelled",
+   "default": "Open",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "item_group",
+   "fieldtype": "Link",
+   "label": "Only items in",
+   "options": "Item Group",
+   "description": "Leave empty to count everything in the warehouse."
+  },
+  {
+   "fieldname": "stock_reconciliation",
+   "fieldtype": "Link",
+   "label": "Stock reconciliation",
+   "options": "Stock Reconciliation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "posted_on",
+   "fieldtype": "Datetime",
+   "label": "Posted on",
+   "read_only": 1
+  },
+  {
+   "fieldname": "lines_section",
+   "fieldtype": "Section Break",
+   "label": "Counted"
+  },
+  {
+   "fieldname": "lines",
+   "fieldtype": "Table",
+   "label": "Lines",
+   "options": "NextERP Stock Count Line"
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "Stock Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "Stock User",
+   "read": 1,
+   "write": 1,
+   "create": 1
+  }
+ ],
+ "field_order": [
+  "naming_series",
+  "company",
+  "warehouse",
+  "status",
+  "column",
+  "item_group",
+  "stock_reconciliation",
+  "posted_on",
+  "lines_section",
+  "lines"
+ ]
+}

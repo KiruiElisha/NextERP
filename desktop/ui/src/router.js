@@ -17,6 +17,8 @@ export const router = createRouter({
     { path: '/reports', component: () => import('./pages/Reports.vue') },
     { path: '/reports/:dept', component: () => import('./pages/Reports.vue'), props: true },
     { path: '/pos', component: () => import('./pages/Pos.vue'), meta: { bare: true } },
+    { path: '/stock-take', component: () => import('./pages/StockTake.vue') },
+    { path: '/stock-take/:name', component: () => import('./pages/StockTake.vue'), props: true },
     { path: '/report/:name', component: () => import('./pages/ReportRunner.vue'), props: true },
     { path: '/settings', component: () => import('./pages/Settings.vue') },
   ],
