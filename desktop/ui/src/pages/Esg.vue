@@ -53,7 +53,42 @@
           </tbody>
         </table>
       </section>
+
+      <!-- The ESG app's reduction targets and its GRI 305 disclosure, without leaving the app. -->
+      <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <section class="card p-4">
+          <h2 class="text-sm font-semibold text-slate-900">Reduction targets</h2>
+          <p v-if="!targets.length" class="mt-2 text-sm text-slate-400">No targets set yet. Add one in the ESG app's targets.</p>
+          <div v-for="t in targets" :key="t.name" class="mt-3">
+            <div class="flex items-baseline justify-between gap-2 text-sm">
+              <span class="truncate font-medium text-slate-800">{{ t.target_name }}<span class="text-xs font-normal text-slate-400"> · {{ t.scope || 'All scopes' }} · {{ t.target_year || t.target_period }}</span></span>
+              <span class="shrink-0 text-xs font-medium" :class="t.on_track ? 'text-leaf-600' : 'text-amber-600'">{{ t.on_track ? 'On track' : 'Behind' }}</span>
+            </div>
+            <div class="mt-1.5 h-2 rounded-full bg-slate-100"><div class="h-2 rounded-full" :class="t.on_track ? 'bg-leaf-500' : 'bg-amber-500'" :style="{ width: `${Math.min(100, Math.max(0, ((t.actual_reduction_percent || 0) / (t.reduction_percent || 1)) * 100))}%` }" /></div>
+            <div class="mt-1 text-xs text-slate-400">{{ (t.actual_reduction_percent ?? 0).toFixed(1) }}% cut of the {{ t.reduction_percent }}% aimed for</div>
+          </div>
+        </section>
+        <section class="card flex flex-col p-4">
+          <h2 class="text-sm font-semibold text-slate-900">GRI 305 emissions disclosure</h2>
+          <p class="mt-1 text-sm text-slate-500">The disclosure the ESG app prepares from these figures: scopes, intensity, reductions and methods.</p>
+          <div class="mt-auto flex gap-2 pt-4">
+            <button class="btn-subtle" :disabled="griBusy" @click="previewGri"><FileText class="size-4" /> {{ griBusy ? 'Preparing…' : 'Preview' }}</button>
+            <button class="btn-primary bg-leaf-600 hover:bg-leaf-500" :disabled="pdfBusy" @click="saveGri"><Download class="size-4" /> {{ pdfBusy ? 'Saving…' : 'Save PDF' }}</button>
+          </div>
+        </section>
+      </div>
     </template>
+
+    <div v-if="gri" class="fixed inset-0 z-50 flex flex-col bg-slate-900/50 p-6 backdrop-blur-sm">
+      <div class="mx-auto flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-3">
+          <Leaf class="size-4 text-leaf-600" /><h3 class="flex-1 font-semibold text-slate-900">GRI 305 · {{ session.company }}</h3>
+          <button class="btn-primary bg-leaf-600 hover:bg-leaf-500" :disabled="pdfBusy" @click="saveGri"><Download class="size-4" /> Save PDF</button>
+          <button class="btn-ghost" @click="gri = ''"><X class="size-4" /></button>
+        </div>
+        <iframe class="flex-1 bg-white" :srcdoc="gri" title="GRI 305 disclosure" sandbox="allow-same-origin" />
+      </div>
+    </div>
 
     <div v-if="recording" class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/30" @mousedown.self="recording = false">
       <form class="card w-full max-w-md space-y-3 p-5 shadow-2xl" @submit.prevent="record">
@@ -82,9 +117,9 @@
 
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
-import { Leaf, Plus } from 'lucide-vue-next'
+import { Download, FileText, Leaf, Plus, X } from 'lucide-vue-next'
 import { toast } from '@/components/Toasts.vue'
-import { cachedThenFresh, site } from '@/lib/backend'
+import { cachedThenFresh, call, site } from '@/lib/backend'
 import { date, today } from '@/lib/format'
 import { session } from '@/lib/session'
 
@@ -105,6 +140,36 @@ async function load() {
     (d) => (data.value = d)).catch((e) => (error.value = e.message))
 }
 watch([year, () => session.company], load, { immediate: true })
+
+// The ESG app's targets and GRI 305 disclosure (ghg.api), shown and saved here.
+const targets = ref([])
+const gri = ref('')
+const griBusy = ref(false)
+const pdfBusy = ref(false)
+watch(() => session.company, async () => {
+  targets.value = await site('ghg.api.targets.get_targets_with_progress', { company: session.company }).catch(() => [])
+}, { immediate: true })
+async function previewGri() {
+  griBusy.value = true
+  try {
+    gri.value = (await site('ghg.api.gri.preview_gri_305_html', { company: session.company })).html
+  } catch (e) {
+    toast(e.message, true)
+  } finally {
+    griBusy.value = false
+  }
+}
+async function saveGri() {
+  pdfBusy.value = true
+  try {
+    const path = await call('save_file', { method: 'ghg.api.gri.export_gri_305_pdf', args: { company: session.company }, filename: `GRI 305 ${session.company}.pdf` })
+    toast(`Saved ${path}`)
+  } catch (e) {
+    toast(e.message, true)
+  } finally {
+    pdfBusy.value = false
+  }
+}
 
 watch(recording, async (open) => {
   if (open && !options.value) options.value = await site('nexterp.api.esg.capture_options', { company: session.company }).catch(() => null)

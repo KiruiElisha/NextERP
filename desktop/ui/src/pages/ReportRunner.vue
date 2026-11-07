@@ -81,6 +81,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { ArrowLeft, FileSpreadsheet, Play, Printer } from 'lucide-vue-next'
 import LinkField from '@/components/form/LinkField.vue'
 import ReportChart from '@/components/ReportChart.vue'
@@ -90,6 +91,7 @@ import { formRoute } from '@/lib/forms'
 import { cellOf, defaults, isNumeric, loadReport, runReport } from '@/lib/reports'
 
 const props = defineProps({ name: { type: String, required: true } })
+const route = useRoute()
 
 const info = ref(null)
 const filters = ref([])
@@ -101,7 +103,10 @@ const exporting = ref(false)
 const took = ref(null)
 const sort = ref(null)
 
-const rows = computed(() => (result.value?.result || []).filter((r) => r && (Array.isArray(r) || Object.keys(r).length)))
+// ERPNext's runner appends its own total row (a list starting "Total") for reports that ask for one.
+const isTotal = (r) => Array.isArray(r) && /^'?Total'?$/.test(String(r[0] ?? ''))
+const rows = computed(() => (result.value?.result || []).filter((r) => r && !isTotal(r) && (Array.isArray(r) || Object.keys(r).length)))
+const serverTotal = computed(() => (result.value?.result || []).find(isTotal) || null)
 const columns = computed(() => result.value?.columns || [])
 const shownColumns = computed(() => columns.value.filter((c) => !c.hidden))
 const ready = computed(() => filters.value.every((f) => !f.reqd || (values.value[f.fieldname] !== undefined && values.value[f.fieldname] !== '' && values.value[f.fieldname] !== null)))
@@ -120,14 +125,12 @@ function sortBy(c) {
   sort.value = sort.value?.index === c.index ? (sort.value.desc ? null : { index: c.index, desc: true }) : { index: c.index, desc: false }
 }
 
-// ERPNext adds the total row in the browser; so does the app, for reports that ask for one.
+// The total row as ERPNext worked it out, by column.
 const totals = computed(() => {
-  if (!info.value?.add_total_row || !rows.value.length) return null
+  const t = serverTotal.value
+  if (!t || !rows.value.length) return null
   const out = {}
-  for (const c of columns.value) {
-    if (!isNumeric(c) || c.fieldtype === 'Percent') continue
-    out[c.index] = rows.value.filter((r) => !indent(r)).reduce((t, r) => t + (Number(cellOf(r, c)) || 0), 0)
-  }
+  for (const c of columns.value) if (isNumeric(c) && t[c.index] !== '' && t[c.index] !== null && t[c.index] !== undefined) out[c.index] = t[c.index]
   return out
 })
 
@@ -143,11 +146,12 @@ function show(v, c) {
   if (t === 'Percent') return `${fmt(1).format(Number(v))}%`
   if (t === 'Date' && /^\d{4}-\d{2}-\d{2}/.test(String(v))) return new Date(`${String(v).slice(0, 10)}T00:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
   if (t === 'Check') return v ? '✓' : ''
-  return String(v).replace(/<[^>]+>/g, '')
+  // ERPNext quotes its summary rows' labels ('Opening', 'Total'): shown without the quotes.
+  return String(v).replace(/<[^>]+>/g, '').replace(/^'(.*)'$/, '$1')
 }
 function linkOf(r, c) {
   const v = cellOf(r, c)
-  if (!v || typeof v !== 'string') return null
+  if (!v || typeof v !== 'string' || /^'.*'$/.test(v)) return null
   if (c.fieldtype === 'Link' && c.options) return formRoute(c.options, v)
   if (c.fieldtype === 'Dynamic Link' && c.options) {
     const dt = Array.isArray(r) ? r[columns.value.find((x) => x.fieldname === c.options)?.index] : r[c.options]
@@ -227,7 +231,14 @@ watch(() => props.name, async () => {
     const r = await loadReport(props.name)
     info.value = r.info
     filters.value = r.filters
-    values.value = defaults(r.filters)
+    // Filters given in the address (a dashboard opening the ledger of one account) override the defaults.
+    const given = {}
+    for (const f of r.filters) {
+      const v = route.query[f.fieldname]
+      if (v === undefined || v === null || v === '') continue
+      given[f.fieldname] = f.fieldtype === 'MultiSelectList' ? [].concat(v) : Array.isArray(v) ? v[0] : v
+    }
+    values.value = { ...defaults(r.filters), ...given }
     if (ready.value) run()
   } catch (e) {
     error.value = e.message

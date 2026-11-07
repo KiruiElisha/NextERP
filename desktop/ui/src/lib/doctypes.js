@@ -43,7 +43,13 @@ export const DOCTYPES = {
 // (`doctype`), any other its list from the site (`list`, pages/GenericList.vue) when the site says the
 // user may read it (boot.readable). `desk` is kept for the rare ERPNext tool that is not a document.
 export const NAV = [
-  { label: 'Overview', items: [{ name: 'Dashboard', to: '/home', icon: 'LayoutDashboard' }] },
+  {
+    label: 'Overview',
+    items: [
+      { name: 'Dashboard', to: '/home', icon: 'LayoutDashboard' },
+      { name: 'Business Intelligence', to: '/insights', icon: 'BrainCircuit' },
+    ],
+  },
   { label: 'Reports', reports: true, items: [{ name: 'All Reports', to: '/reports', icon: 'Library', exact: true }] },
   {
     label: 'Sales',
