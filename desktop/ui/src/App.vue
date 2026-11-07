@@ -33,7 +33,7 @@ const palette = ref(false)
 
 // The native menu's items: the window owns them, this screen decides what they do.
 const MENU = {
-  'new-invoice': () => router.push('/new/sales-invoice'),
+  'new-invoice': () => router.push('/form/Sales%20Invoice/new'),
   search: () => (palette.value = true),
   sync: () => call('sync_now'),
   desk: () => openDesk('/app'),

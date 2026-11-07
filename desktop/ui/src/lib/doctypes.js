@@ -38,28 +38,40 @@ export const DOCTYPES = {
     columns: [party('party_name', 'Party'), { field: 'payment_type', label: 'Type' }, day('posting_date'), amount('paid_amount', 'Amount'), { field: 'mode_of_payment', label: 'Mode' }] },
 }
 
-// The sidebar, grouped as the JEMKAS staff app is: Overview, Reports, then one group per module in the
-// order the paperwork happens. Only standard ERPNext (and HRMS) screens: a cached doctype opens its list
-// here (`doctype`), anything else opens in a Desk window (`desk`). `app` hides an item unless that app is
-// installed on the site; items the user can't read are dropped (see Sidebar.vue).
+// The sidebar: Overview, Reports, then one group per ERPNext module, in the order the paperwork happens.
+// Only standard ERPNext (and HRMS) screens, all drawn here: a cached doctype opens its fast local list
+// (`doctype`), any other its list from the site (`list`, pages/GenericList.vue) when the site says the
+// user may read it (boot.readable). `desk` is kept for the rare ERPNext tool that is not a document.
 export const NAV = [
   { label: 'Overview', items: [{ name: 'Dashboard', to: '/home', icon: 'LayoutDashboard' }] },
   { label: 'Reports', reports: true, items: [{ name: 'All Reports', to: '/reports', icon: 'Library', exact: true }] },
   {
     label: 'Sales',
     items: [
-      { name: 'New invoice', to: '/new/sales-invoice', icon: 'FilePlus', create: 'Sales Invoice' },
+      { name: 'New invoice', to: '/form/Sales%20Invoice/new', icon: 'FilePlus', create: 'Sales Invoice' },
       { doctype: 'Quotation', icon: 'FileText' },
       { doctype: 'Sales Order', icon: 'ClipboardList' },
       { doctype: 'Delivery Note', icon: 'Truck' },
       { doctype: 'Sales Invoice', icon: 'Receipt' },
       { doctype: 'Customer', icon: 'Users' },
       { doctype: 'Payment Entry', icon: 'Banknote' },
+      { list: 'Price List', name: 'Price Lists', icon: 'Tags' },
+    ],
+  },
+  {
+    label: 'CRM',
+    items: [
+      { list: 'Lead', name: 'Leads', icon: 'Target' },
+      { list: 'Opportunity', name: 'Opportunities', icon: 'Handshake' },
+      { list: 'Contact', name: 'Contacts', icon: 'Contact' },
+      { list: 'Address', name: 'Addresses', icon: 'MapPin' },
     ],
   },
   {
     label: 'Purchases',
     items: [
+      { list: 'Request for Quotation', name: 'Supplier Inquiries', icon: 'MessagesSquare' },
+      { list: 'Supplier Quotation', name: 'Supplier Offers', icon: 'Tags' },
       { doctype: 'Purchase Order', icon: 'ShoppingCart' },
       { doctype: 'Purchase Receipt', icon: 'PackageCheck' },
       { doctype: 'Purchase Invoice', icon: 'Receipt' },
@@ -72,8 +84,11 @@ export const NAV = [
       { doctype: 'Item', icon: 'Tag' },
       { doctype: 'Material Request', icon: 'ClipboardList' },
       { doctype: 'Stock Entry', icon: 'ArrowLeftRight' },
-      { name: 'Stock Reconciliations', desk: '/app/stock-reconciliation', icon: 'ClipboardCheck' },
-      { name: 'Warehouses', desk: '/app/warehouse/view/tree', icon: 'Warehouse' },
+      { list: 'Pick List', name: 'Pick Lists', icon: 'ListChecks' },
+      { list: 'Stock Reconciliation', name: 'Stock Reconciliations', icon: 'ClipboardCheck' },
+      { list: 'Batch', name: 'Batches', icon: 'Layers' },
+      { list: 'Warehouse', name: 'Warehouses', icon: 'Warehouse' },
+      { list: 'Item Group', name: 'Item Groups', icon: 'FolderTree' },
     ],
   },
   {
@@ -81,18 +96,53 @@ export const NAV = [
     items: [
       { doctype: 'Payment Entry', icon: 'Banknote' },
       { doctype: 'Journal Entry', icon: 'BookOpen' },
-      { name: 'Chart of Accounts', desk: '/app/account/view/tree', icon: 'Scale' },
+      { list: 'Payment Request', name: 'Payment Requests', icon: 'HandCoins' },
+      { list: 'Account', name: 'Chart of Accounts', icon: 'Scale' },
+      { list: 'Cost Center', name: 'Cost Centres', icon: 'FolderTree' },
+      { list: 'Bank Account', name: 'Bank Accounts', icon: 'Landmark' },
+      { list: 'Budget', name: 'Budgets', icon: 'Target' },
+      // A tool screen of ERPNext's, not a document: the one item still opened in Desk.
       { name: 'Bank Reconciliation', desk: '/app/bank-reconciliation-tool', icon: 'Landmark' },
+    ],
+  },
+  {
+    label: 'Assets',
+    items: [
+      { list: 'Asset', name: 'Assets', icon: 'Building2' },
+      { list: 'Asset Movement', name: 'Asset Movements', icon: 'ArrowLeftRight' },
+      { list: 'Asset Category', name: 'Asset Categories', icon: 'FolderTree' },
+    ],
+  },
+  {
+    label: 'Manufacturing',
+    items: [
+      { list: 'BOM', name: 'Bills of Materials', icon: 'Layers' },
+      { list: 'Work Order', name: 'Work Orders', icon: 'Factory' },
+      { list: 'Job Card', name: 'Job Cards', icon: 'ClipboardList' },
+      { list: 'Quality Inspection', name: 'Quality Inspections', icon: 'ShieldCheck' },
+    ],
+  },
+  {
+    label: 'Projects',
+    items: [
+      { list: 'Project', name: 'Projects', icon: 'FolderKanban' },
+      { list: 'Task', name: 'Tasks', icon: 'ListChecks' },
+      { list: 'Timesheet', name: 'Timesheets', icon: 'Clock' },
+      { list: 'Issue', name: 'Issues', icon: 'LifeBuoy' },
     ],
   },
   {
     label: 'People',
     items: [
       { doctype: 'Employee', icon: 'Contact' },
-      { name: 'Leave Applications', desk: '/app/leave-application', icon: 'CalendarDays', app: 'hrms' },
-      { name: 'Attendance', desk: '/app/attendance', icon: 'UserCheck', app: 'hrms' },
-      { name: 'Expense Claims', desk: '/app/expense-claim', icon: 'HandCoins', app: 'hrms' },
-      { name: 'Payroll', desk: '/app/salary-slip', icon: 'WalletCards', app: 'hrms' },
+      { list: 'Leave Application', name: 'Leave Applications', icon: 'CalendarDays' },
+      { list: 'Attendance', name: 'Attendance', icon: 'UserCheck' },
+      { list: 'Expense Claim', name: 'Expense Claims', icon: 'HandCoins' },
+      { list: 'Employee Advance', name: 'Employee Advances', icon: 'HandCoins' },
+      { list: 'Payroll Entry', name: 'Payroll', icon: 'WalletCards' },
+      { list: 'Salary Slip', name: 'Salary Slips', icon: 'Receipt' },
+      { list: 'Department', name: 'Departments', icon: 'Building2' },
+      { list: 'Holiday List', name: 'Holiday Lists', icon: 'CalendarDays' },
     ],
   },
   { label: 'Sustainability', esg: true, items: [{ name: 'ESG', to: '/esg', icon: 'Leaf' }] },

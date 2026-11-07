@@ -89,10 +89,11 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { AppWindow, ChevronDown, ChevronRight, ChevronsUpDown, ExternalLink, LayoutGrid, List, LogOut, Settings,
-  ArrowLeftRight, Banknote, BookOpen, Boxes, CalendarDays, ClipboardCheck, ClipboardList, Contact, FilePlus, FileText, HandCoins, Landmark, LayoutDashboard, Leaf, Library, PackageCheck, Receipt, Scale, ShoppingCart, Tag, TrendingUp, Truck, UserCheck, Users, WalletCards, Warehouse } from 'lucide-vue-next'
+  ArrowLeftRight, Banknote, BookOpen, Boxes, Building2, CalendarDays, ClipboardCheck, ClipboardList, Clock, Contact, Factory, FilePlus, FileText, FolderKanban, FolderTree, HandCoins, Handshake, Landmark, Layers, LayoutDashboard, Leaf, Library, LifeBuoy, ListChecks, MapPin, MessagesSquare, PackageCheck, Receipt, Scale, ShieldCheck, ShoppingCart, Tag, Tags, Target, TrendingUp, Truck, UserCheck, Users, WalletCards, Warehouse } from 'lucide-vue-next'
 import { DOCTYPES, NAV } from '@/lib/doctypes'
 import { openDesk } from '@/lib/backend'
 import { openApp, picker, siteApps } from '@/lib/apps'
+import { listRoute } from '@/lib/forms'
 import { canRead, session, signOut } from '@/lib/session'
 
 const route = useRoute()
@@ -102,20 +103,25 @@ const userMenu = ref(false)
 
 const DEPARTMENT_ICONS = { sales: 'TrendingUp', purchases: 'ShoppingCart', inventory: 'Boxes', accounts: 'Landmark', people: 'Users' }
 // Named imports only, so the bundle carries just these icons.
-const ICONS = { ArrowLeftRight, Banknote, BookOpen, Boxes, CalendarDays, ClipboardCheck, ClipboardList, Contact, FilePlus, FileText, HandCoins, Landmark, LayoutDashboard, Leaf, Library, PackageCheck, Receipt, Scale, ShoppingCart, Tag, TrendingUp, Truck, UserCheck, Users, WalletCards, Warehouse }
+const ICONS = { ArrowLeftRight, Banknote, BookOpen, Boxes, Building2, CalendarDays, ClipboardCheck, ClipboardList, Clock, Contact, Factory, FilePlus, FileText, FolderKanban, FolderTree, HandCoins, Handshake, Landmark, Layers, LayoutDashboard, Leaf, Library, LifeBuoy, ListChecks, MapPin, MessagesSquare, PackageCheck, Receipt, Scale, ShieldCheck, ShoppingCart, Tag, Tags, Target, TrendingUp, Truck, UserCheck, Users, WalletCards, Warehouse }
 const icon = (name) => ICONS[name] || FileText
 
 const installed = computed(() => new Set(session.boot?.installed_apps || []))
+const readable = computed(() => new Set(session.boot?.readable || []))
 const siteName = computed(() => (session.site || '').replace(/^https?:\/\//, ''))
 const initials = computed(() => (session.boot?.full_name || session.user || '?').split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase())
 
 function entry(item) {
   if (item.app && !installed.value.has(item.app)) return null
   if (item.create && !session.boot?.can_create?.[item.create]) return null
+  if (item.list) {
+    if (!readable.value.has(item.list)) return null
+    return { key: `l:${item.list}`, name: item.name, to: listRoute(item.list), icon: item.icon }
+  }
   if (item.doctype) {
     if (!canRead(item.doctype)) return null
     const d = DOCTYPES[item.doctype]
-    return { key: item.doctype, name: d.plural, to: `/list/${d.slug}`, icon: item.icon }
+    return { key: `${item.doctype}:${item.icon}`, name: d.plural, to: `/list/${d.slug}`, icon: item.icon }
   }
   return { key: item.to || item.desk, ...item }
 }

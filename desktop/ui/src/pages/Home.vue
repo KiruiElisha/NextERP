@@ -5,7 +5,7 @@
         <h1 class="text-xl font-semibold text-slate-900">Good {{ partOfDay }}, {{ firstName }}</h1>
         <p class="text-sm text-slate-500">{{ session.company }}<span v-if="stale" class="ml-2 text-amber-600">· showing the last figures, updating…</span></p>
       </div>
-      <RouterLink to="/new/sales-invoice" class="btn-primary"><Plus class="size-4" /> New invoice</RouterLink>
+      <RouterLink to="/form/Sales%20Invoice/new" class="btn-primary"><Plus class="size-4" /> New invoice</RouterLink>
     </div>
 
     <div v-if="error && !data" class="card p-6 text-sm text-red-700">{{ error }}</div>

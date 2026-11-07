@@ -49,3 +49,63 @@ def screens() -> list[dict]:
 
 def installed() -> list[str]:
 	return list(frappe.get_installed_apps())
+
+
+# Doctypes the app's sidebar opens natively beyond the ones it keeps on the computer (lib/doctypes NAV).
+NAV_DOCTYPES = (
+	"Lead",
+	"Opportunity",
+	"Contact",
+	"Address",
+	"Customer Group",
+	"Territory",
+	"Supplier Quotation",
+	"Request for Quotation",
+	"Pick List",
+	"Stock Reconciliation",
+	"Warehouse",
+	"Price List",
+	"Item Price",
+	"Item Group",
+	"Batch",
+	"Serial No",
+	"UOM",
+	"Product Bundle",
+	"Account",
+	"Cost Center",
+	"Mode of Payment",
+	"Payment Request",
+	"Sales Taxes and Charges Template",
+	"Purchase Taxes and Charges Template",
+	"Budget",
+	"Fiscal Year",
+	"Bank Account",
+	"Leave Application",
+	"Attendance",
+	"Expense Claim",
+	"Salary Slip",
+	"Payroll Entry",
+	"Employee Advance",
+	"Holiday List",
+	"Department",
+	"Designation",
+	"Shift Assignment",
+	"Job Applicant",
+	"Project",
+	"Task",
+	"Timesheet",
+	"Asset",
+	"Asset Category",
+	"Asset Movement",
+	"BOM",
+	"Work Order",
+	"Job Card",
+	"Workstation",
+	"Quality Inspection",
+	"Issue",
+)
+
+
+def readable() -> list[str]:
+	"""The NAV_DOCTYPES this site has and this user may read: the rest stay off their sidebar."""
+	return [dt for dt in NAV_DOCTYPES if frappe.db.table_exists(dt) and frappe.has_permission(dt, "read")]

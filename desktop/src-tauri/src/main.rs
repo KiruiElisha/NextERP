@@ -73,6 +73,7 @@ fn main() {
             commands::cache_status,
             commands::clear_cache,
             commands::open_desk,
+            commands::save_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running the ERPNext desktop app");

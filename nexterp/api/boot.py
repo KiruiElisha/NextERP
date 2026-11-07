@@ -31,6 +31,8 @@ def boot() -> dict:
 		# the app picker and switcher: installed apps with a screen, ERPNext (drawn here) first
 		"apps": apps.screens(),
 		"installed_apps": apps.installed(),
+		# doctypes beyond the cached ones the sidebar may open natively
+		"readable": apps.readable(),
 		# the Reports group: standard reports this user may run, by department
 		"reports": reports.allowed(),
 		# the app sends it back on every write, so a Desk window opened on this session can't break them

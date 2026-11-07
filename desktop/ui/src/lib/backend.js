@@ -25,8 +25,8 @@ export async function call(command, args = {}) {
   }
 }
 
-/** A whitelisted method on the site. `write` posts it and resyncs the cache afterwards. */
-export const site = (method, args = {}, write = false) => call('call', { method, args, write })
+/** A whitelisted method on the site. `write` posts it and resyncs the cache afterwards (unless `sync` is false). */
+export const site = (method, args = {}, write = false, sync = true) => call('call', { method, args, write, sync })
 
 export const list = (query) => call('list', { query })
 export const search = (text, limit = 20) => call('search', { text, limit })

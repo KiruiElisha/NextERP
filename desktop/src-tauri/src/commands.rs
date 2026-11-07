@@ -251,7 +251,7 @@ pub async fn get_doc(
     Ok(doc)
 }
 
-/// Any whitelisted method on the site. A write may name the doctype it changed, which then syncs.
+/// Any whitelisted method on the site. A write syncs the cache afterwards, unless `sync` is false.
 #[tauri::command]
 pub async fn call(
     app: AppHandle,
@@ -259,6 +259,7 @@ pub async fn call(
     method: String,
     args: Option<Value>,
     write: Option<bool>,
+    sync: Option<bool>,
 ) -> Result<Value> {
     let s = state.current()?;
     let args = args.unwrap_or(Value::Null);
@@ -267,7 +268,8 @@ pub async fn call(
     } else {
         s.client.get(&method, &args).await?
     };
-    if write.unwrap_or(false) {
+    // A dry run sent as a POST (a form's computed totals) changes nothing, so there's nothing to sync.
+    if write.unwrap_or(false) && sync.unwrap_or(true) {
         start_sync(app);
     }
     Ok(result)
@@ -332,4 +334,41 @@ pub fn open_desk(
         .build()
         .map_err(|e| Error::Server(e.to_string()))?;
     Ok(())
+}
+
+/// A file from the site (a document's PDF) saved in the computer's Downloads folder. A name
+/// already there gets " (2)", " (3)"... so nothing is overwritten. Returns the path written.
+#[tauri::command]
+pub async fn save_file(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    method: String,
+    args: Option<Value>,
+    filename: String,
+) -> Result<String> {
+    let s = state.current()?;
+    let bytes = s
+        .client
+        .get_bytes(&method, &args.unwrap_or(Value::Null))
+        .await?;
+    let dir = app
+        .path()
+        .download_dir()
+        .map_err(|e| Error::Cache(e.to_string()))?;
+    let safe: String = filename
+        .chars()
+        .map(|c| if "/\\:*?\"<>|".contains(c) { '-' } else { c })
+        .collect();
+    let (stem, ext) = match safe.rsplit_once('.') {
+        Some((a, b)) => (a.to_string(), format!(".{b}")),
+        None => (safe.clone(), String::new()),
+    };
+    let mut path = dir.join(&safe);
+    let mut n = 2;
+    while path.exists() {
+        path = dir.join(format!("{stem} ({n}){ext}"));
+        n += 1;
+    }
+    std::fs::write(&path, bytes).map_err(|e| Error::Cache(e.to_string()))?;
+    Ok(path.to_string_lossy().into_owned())
 }

@@ -111,6 +111,20 @@ impl Client {
         self.send(req).await
     }
 
+    /// A file the site sends back (a document's PDF): its bytes, or the site's reason for refusing.
+    pub async fn get_bytes(&self, method: &str, args: &Value) -> Result<Vec<u8>> {
+        let req = self.http.get(self.url(method)).query(&query_pairs(args));
+        let res = self.signed(req).send().await?;
+        match res.status() {
+            StatusCode::UNAUTHORIZED => Err(Error::SignedOut),
+            s if !s.is_success() => {
+                let body: Value = res.json().await.unwrap_or(Value::Null);
+                Err(Error::Server(server_message(&body)))
+            }
+            _ => Ok(res.bytes().await?.to_vec()),
+        }
+    }
+
     /// A write: arguments as a JSON body.
     pub async fn post(&self, method: &str, args: &Value) -> Result<Value> {
         let body = if args.is_null() {

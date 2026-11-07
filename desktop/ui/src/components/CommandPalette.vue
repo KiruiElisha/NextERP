@@ -24,7 +24,7 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search } from 'lucide-vue-next'
 import { call, search } from '@/lib/backend'
-import { slugOf } from '@/lib/doctypes'
+import { formRoute } from '@/lib/forms'
 
 const open = defineModel({ type: Boolean, default: false })
 const router = useRouter()
@@ -35,7 +35,7 @@ const active = ref(0)
 const took = ref(null)
 
 const COMMANDS = [
-  { title: 'New sales invoice', hint: 'Ctrl N', run: () => router.push('/new/sales-invoice') },
+  { title: 'New sales invoice', hint: 'Ctrl N', run: () => router.push(formRoute('Sales Invoice', 'new')) },
   { title: 'Sync now', hint: 'Command', run: () => call('sync_now') },
   { title: 'Go to ESG', hint: 'Command', run: () => router.push('/esg') },
   { title: 'Go to home', hint: 'Command', run: () => router.push('/home') },
@@ -45,7 +45,7 @@ const results = computed(() => {
   const q = text.value.trim().toLowerCase()
   const commands = COMMANDS.filter((c) => !q || c.title.toLowerCase().includes(q)).map((c) => ({ ...c, key: c.title }))
   const docs = hits.value.map((h) => ({ key: `${h.doctype}:${h.name}`, title: h.title, hint: `${h.doctype} · ${h.name}`,
-    run: () => router.push(`/doc/${slugOf(h.doctype)}/${encodeURIComponent(h.name)}`) }))
+    run: () => router.push(formRoute(h.doctype, h.name)) }))
   return q ? [...docs, ...commands] : commands
 })
 

@@ -10,7 +10,7 @@
         </div>
         <input ref="box" v-model="text" class="input w-64" :placeholder="`Search ${(meta?.plural || '').toLowerCase()}…`" @keydown.down.prevent="move(1)"
           @keydown.up.prevent="move(-1)" @keydown.enter.prevent="open(rows[active])" />
-        <RouterLink v-if="doctype === 'Sales Invoice'" to="/new/sales-invoice" class="btn-primary"><Plus class="size-4" /> New</RouterLink>
+        <RouterLink v-if="canCreate" :to="formRoute(doctype, 'new')" class="btn-primary"><Plus class="size-4" /> New</RouterLink>
       </div>
     </div>
 
@@ -50,6 +50,7 @@ import { list, on } from '@/lib/backend'
 import { DOCTYPES, bySlug, statusOf } from '@/lib/doctypes'
 import { date, money } from '@/lib/format'
 import { session } from '@/lib/session'
+import { formRoute, getMeta } from '@/lib/forms'
 
 const props = defineProps({ slug: { type: String, required: true } })
 const router = useRouter()
@@ -58,6 +59,9 @@ const PAGE = 100
 const doctype = computed(() => bySlug(props.slug))
 const meta = computed(() => DOCTYPES[doctype.value])
 const columns = computed(() => meta.value?.columns || [])
+// "New" shows when the site lets this user create the doctype (from its description, kept here).
+const canCreate = ref(false)
+watch(doctype, (dt) => dt && getMeta(dt).then((m) => (canCreate.value = Boolean(m?.perms?.create))).catch(() => (canCreate.value = false)), { immediate: true })
 const hasCompany = computed(() => session.boot?.manifest?.[doctype.value]?.fields.includes('company'))
 const isDocument = computed(() => session.boot?.manifest?.[doctype.value]?.fields.includes('docstatus'))
 
@@ -116,7 +120,7 @@ function move(by) {
 }
 
 function open(r) {
-  if (r) router.push(`/doc/${props.slug}/${encodeURIComponent(r.name)}`)
+  if (r) router.push(formRoute(doctype.value, r.name))
 }
 
 watch(() => props.slug, () => {
