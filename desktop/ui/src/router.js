@@ -13,6 +13,7 @@ export const router = createRouter({
     // Older addresses: a cached document and the quick invoice now open in the full form.
     { path: '/doc/:slug/:name', redirect: (to) => `/form/${encodeURIComponent(bySlug(to.params.slug) || to.params.slug)}/${encodeURIComponent(to.params.name)}` },
     { path: '/new/sales-invoice', redirect: '/form/Sales%20Invoice/new' },
+    { path: '/account', component: () => import('./pages/Account.vue') },
     { path: '/insights', component: () => import('./pages/Insights.vue') },
     { path: '/esg', component: () => import('./pages/Esg.vue') },
     { path: '/reports', component: () => import('./pages/Reports.vue') },

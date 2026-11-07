@@ -40,6 +40,10 @@ impl Client {
         self.sid.as_deref()
     }
 
+    pub fn csrf(&self) -> Option<&str> {
+        self.csrf.as_deref()
+    }
+
     /// The session's CSRF token, as the site's answer gives it (`csrf_token`); absent leaves it as is.
     pub fn take_csrf(&mut self, answer: &Value) {
         if let Some(token) = answer.get("csrf_token").and_then(Value::as_str) {

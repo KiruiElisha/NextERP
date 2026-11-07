@@ -22,7 +22,7 @@ pub struct Session {
 pub struct AppState {
     pub session: Mutex<Option<Arc<Session>>>,
     pub syncing: AtomicBool,
-    /// Signed in to Nergaa Cloud (Press) while creating a site; never saved to disk.
+    /// Signed in to Nergaa Cloud (Press). Kept in the signed-in site's cache store (commands::keep_cloud).
     pub cloud: Mutex<Option<Client>>,
 }
 

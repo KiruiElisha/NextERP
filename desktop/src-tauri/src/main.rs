@@ -60,6 +60,8 @@ fn main() {
             commands::sign_in,
             commands::cloud,
             commands::open_cloud_page,
+            commands::cloud_forget,
+            commands::open_checkout,
             commands::set_menu,
             commands::sign_out,
             commands::refresh_boot,

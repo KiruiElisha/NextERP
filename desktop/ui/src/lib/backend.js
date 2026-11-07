@@ -34,7 +34,17 @@ export const getDoc = (doctype, name, fresh = false) => call('get_doc', { doctyp
 export const openDesk = (path) => call('open_desk', { path })
 
 /** A step of creating a site on Nergaa Cloud (nergaa_cloud/desktop.py), and its pages. */
-export const cloud = (method, args = {}) => call('cloud', { method, args })
+export async function cloud(method, args = {}) {
+  // Nergaa Cloud's "signed out" is about the cloud session only: it shows the connect screen, and must
+  // never sign the user out of their ERPNext site (which call() does for a site's SignedOut).
+  try {
+    return await invoke('cloud', { method, args })
+  } catch (raw) {
+    const error = new AppError(raw)
+    if (error.kind === 'SignedOut') error.kind = 'CloudSignedOut'
+    throw error
+  }
+}
 export const openCloudPage = (path) => call('open_cloud_page', { path })
 
 /**

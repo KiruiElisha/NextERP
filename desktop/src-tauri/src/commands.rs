@@ -73,8 +73,9 @@ fn cloud_base() -> String {
     std::env::var("NERGAA_CLOUD").unwrap_or_else(|_| "https://cloud.nergaa.cloud".into())
 }
 
-/// The methods the create-a-site screens may call on Nergaa Cloud (nergaa_cloud/desktop.py).
-const CLOUD_METHODS: [&str; 7] = [
+/// The methods the app may call on Nergaa Cloud: creating a site (nergaa_cloud/desktop.py), the
+/// site's plan, invoices and apps (desktop_account.py), and topping up credits (payments/api.py).
+const CLOUD_METHODS: [&str; 19] = [
     "is_available",
     "desktop_start",
     "desktop_verify",
@@ -82,10 +83,63 @@ const CLOUD_METHODS: [&str; 7] = [
     "desktop_create_site",
     "desktop_site_status",
     "desktop_finish",
+    "desktop_me",
+    "desktop_account",
+    "desktop_site_apps",
+    "desktop_install_app",
+    "desktop_uninstall_app",
+    "desktop_change_plan",
+    "options",
+    "quote",
+    "start",
+    "status",
+    "confirm",
+    "history",
 ];
 
-/// One step of creating a site on Nergaa Cloud. Starting over drops the old Nergaa Cloud session;
-/// verifying the emailed code keeps the session it starts for the steps after it.
+const CLOUD_SID: &str = "cloud_sid";
+const CLOUD_CSRF: &str = "cloud_csrf";
+
+/// The Nergaa Cloud session kept for the signed-in site, if any: survives restarts, and is wiped with
+/// the site's cache when another user signs in on this computer.
+fn saved_cloud(state: &AppState) -> Option<Client> {
+    let s = state.current().ok()?;
+    let store = lock(&s.store).ok()?;
+    let sid = store.get_kv(CLOUD_SID).ok()??;
+    let mut client = Client::new(&cloud_base(), Some(sid)).ok()?;
+    if let Some(token) = store.get_kv(CLOUD_CSRF).ok()? {
+        client.take_csrf(&json!({ "csrf_token": token }));
+    }
+    Some(client)
+}
+
+fn keep_cloud(state: &AppState, client: &Client) {
+    if let (Ok(s), Some(sid)) = (state.current(), client.sid()) {
+        if let Ok(store) = lock(&s.store) {
+            let _ = store.set_kv(CLOUD_SID, sid);
+            if let Some(token) = client.csrf() {
+                let _ = store.set_kv(CLOUD_CSRF, token);
+            }
+        }
+    }
+}
+
+/// Disconnect from Nergaa Cloud: the kept session is forgotten.
+#[tauri::command]
+pub fn cloud_forget(state: State<'_, AppState>) -> Result<()> {
+    if let Ok(mut slot) = state.cloud.lock() {
+        *slot = None;
+    }
+    if let Ok(s) = state.current() {
+        let store = lock(&s.store)?;
+        store.set_kv(CLOUD_SID, "")?;
+        store.set_kv(CLOUD_CSRF, "")?;
+    }
+    Ok(())
+}
+
+/// A call to Nergaa Cloud. Starting over (desktop_start) drops the old session; verifying the emailed
+/// code starts one, kept for the calls after it and, for a signed-in site, across restarts.
 #[tauri::command]
 pub async fn cloud(state: State<'_, AppState>, method: String, args: Value) -> Result<Value> {
     if !CLOUD_METHODS.contains(&method.as_str()) {
@@ -94,6 +148,9 @@ pub async fn cloud(state: State<'_, AppState>, method: String, args: Value) -> R
         )));
     }
     let held = state.cloud.lock().map_err(|_| Error::SignedOut)?.clone();
+    let held = held
+        .or_else(|| saved_cloud(&state))
+        .filter(|c| c.sid().is_some_and(|s| !s.is_empty()));
     let mut client = match held {
         Some(c) if method != "desktop_start" => c,
         _ => Client::new(&cloud_base(), None)?,
@@ -101,6 +158,7 @@ pub async fn cloud(state: State<'_, AppState>, method: String, args: Value) -> R
     let path = format!("press.api.nergaa.{method}");
     let answer = client.post_keeping_session(&path, &args).await?;
     client.take_csrf(&answer);
+    keep_cloud(&state, &client);
     if let Ok(mut slot) = state.cloud.lock() {
         *slot = Some(client);
     }
@@ -371,4 +429,32 @@ pub async fn save_file(
     }
     std::fs::write(&path, bytes).map_err(|e| Error::Cache(e.to_string()))?;
     Ok(path.to_string_lossy().into_owned())
+}
+
+/// A payment provider's checkout (card or PayPal top-ups), in a window of the app: the one page that
+/// can't be drawn here, since card details are entered on the provider's own page. Only https pages
+/// on the providers' own domains are opened.
+#[tauri::command]
+pub fn open_checkout(app: AppHandle, url: String) -> Result<()> {
+    const PROVIDERS: [&str; 3] = ["paypal.com", "intasend.com", "sandbox.paypal.com"];
+    let parsed: tauri::Url = url
+        .parse()
+        .map_err(|_| Error::Server("Not a checkout address".into()))?;
+    let host = parsed.host_str().unwrap_or_default().to_ascii_lowercase();
+    let allowed = parsed.scheme() == "https"
+        && PROVIDERS
+            .iter()
+            .any(|p| host == *p || host.ends_with(&format!(".{p}")));
+    if !allowed {
+        return Err(Error::Server(format!(
+            "{host} isn't a payment provider the app opens"
+        )));
+    }
+    let label = format!("checkout-{}", app.webview_windows().len());
+    WebviewWindowBuilder::new(&app, label, WebviewUrl::External(parsed))
+        .title("Checkout")
+        .inner_size(900.0, 760.0)
+        .build()
+        .map_err(|e| Error::Server(e.to_string()))?;
+    Ok(())
 }

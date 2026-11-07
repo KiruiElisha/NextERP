@@ -68,6 +68,7 @@
 
     <div class="relative border-t border-slate-200 p-2 text-sm">
       <div v-if="userMenu" class="absolute inset-x-2 bottom-full z-30 mb-1 rounded-xl border border-slate-200 bg-white p-1 shadow-lg" @mouseleave="userMenu = false">
+        <RouterLink to="/account" class="menu" @click="userMenu = false"><CreditCard class="size-4 text-slate-400" /> Plan, billing and apps</RouterLink>
         <RouterLink to="/settings" class="menu" @click="userMenu = false"><Settings class="size-4 text-slate-400" /> Settings</RouterLink>
         <button class="menu" @click="openDesk('/app')"><ExternalLink class="size-4 text-slate-400" /> ERPNext Desk</button>
         <button class="menu" @click="choosePicker"><LayoutGrid class="size-4 text-slate-400" /> Switch app…</button>
@@ -88,7 +89,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { AppWindow, ChevronDown, ChevronRight, ChevronsUpDown, ExternalLink, LayoutGrid, List, LogOut, Settings,
+import { AppWindow, CreditCard, ChevronDown, ChevronRight, ChevronsUpDown, ExternalLink, LayoutGrid, List, LogOut, Settings,
   ArrowLeftRight, Banknote, BookOpen, Boxes, BrainCircuit, Building2, CalendarDays, ClipboardCheck, ClipboardList, Clock, Contact, Factory, FilePlus, FileText, FolderKanban, FolderTree, HandCoins, Handshake, Landmark, Layers, LayoutDashboard, Leaf, Library, LifeBuoy, ListChecks, MapPin, MessagesSquare, PackageCheck, Receipt, Scale, ScanLine, ShieldCheck, ShoppingCart, Store, Tag, Tags, Target, TrendingUp, Truck, UserCheck, Users, WalletCards, Warehouse } from 'lucide-vue-next'
 import { DOCTYPES, NAV } from '@/lib/doctypes'
 import { openDesk } from '@/lib/backend'
