@@ -97,7 +97,8 @@ class TestPos(FrappeTestCase):
 		with g, p:
 			return mpesa.stk_push("0712 345 678", amount, pos_profile=self.profile)
 
-	def callback(self, req, code=0, amount=600, token=None, receipt="QKX1A2B3C4"):
+	def callback(self, req, code=0, amount=600, token=None, receipt=None):
+		receipt = receipt or f"QK{uuid.uuid4().hex[:8].upper()}"
 		checkout = frappe.db.get_value(mpesa.REQUEST, req["name"], "checkout_request_id")
 		body = {
 			"Body": {
@@ -169,10 +170,7 @@ class TestPos(FrappeTestCase):
 	def test_safaricoms_callback_pays_the_request_and_the_sale_uses_it_once(self):
 		req = self.prompt()
 		self.callback(req)
-		self.assertEqual(
-			frappe.db.get_value(mpesa.REQUEST, req["name"], ["status", "receipt_number"]),
-			("Paid", "QKX1A2B3C4"),
-		)
+		self.assertEqual(frappe.db.get_value(mpesa.REQUEST, req["name"], "status"), "Paid")
 		pays = json.dumps([{"mode_of_payment": "NX M-Pesa", "amount": 600}])
 		r = pos.complete(
 			self.profile, uuid.uuid4().hex, json.dumps(self.cart()), pays, mpesa=json.dumps([req["name"]])
@@ -190,7 +188,7 @@ class TestPos(FrappeTestCase):
 
 	def test_mpesa_lines_cannot_claim_more_than_safaricom_confirmed(self):
 		req = self.prompt(amount=100)
-		self.callback(req, amount=100, receipt="QKX9Z8Y7X6")
+		self.callback(req, amount=100)
 		pays = json.dumps([{"mode_of_payment": "NX M-Pesa", "amount": 600}])
 		self.assertRaises(
 			frappe.ValidationError,
@@ -204,11 +202,17 @@ class TestPos(FrappeTestCase):
 
 	def test_paying_less_than_asked_fails_the_request(self):
 		req = self.prompt()
-		self.callback(req, amount=10, receipt="QKX5L4M3N2")
+		self.callback(req, amount=10)
 		self.assertEqual(frappe.db.get_value(mpesa.REQUEST, req["name"], "status"), "Failed")
 
 	def test_money_that_arrives_after_the_cashier_cancelled_is_still_recorded(self):
 		req = self.prompt()
 		mpesa.cancel(req["name"])
-		self.callback(req, receipt="QKX7P6Q5R4")
+		self.callback(req)
 		self.assertEqual(frappe.db.get_value(mpesa.REQUEST, req["name"], "status"), "Paid")
+
+	def test_a_receipt_already_recorded_never_pays_a_second_prompt(self):
+		first, second = self.prompt(), self.prompt()
+		self.callback(first, receipt="QKDUPLICATE1")
+		self.callback(second, receipt="QKDUPLICATE1")
+		self.assertEqual(frappe.db.get_value(mpesa.REQUEST, second["name"], "status"), "Failed")

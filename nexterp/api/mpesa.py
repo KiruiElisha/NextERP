@@ -164,10 +164,16 @@ def apply_result(name: str, result: dict, source: str) -> None:
 		if paid + 0.001 < flt(doc.amount):
 			doc.status = "Failed"
 			doc.result_desc = _("Paid {0}, less than the {1} asked").format(paid, doc.amount)
+		elif (receipt := items.get("MpesaReceiptNumber")) and frappe.db.exists(
+			REQUEST, {"receipt_number": receipt, "name": ["!=", doc.name]}
+		):
+			# One receipt pays once: a repeated or replayed answer never pays a second prompt.
+			doc.status = "Failed"
+			doc.result_desc = _("M-Pesa receipt {0} is already recorded on another payment").format(receipt)
 		else:
 			doc.status = "Paid"
 			doc.amount_paid = paid
-			doc.receipt_number = items.get("MpesaReceiptNumber") or doc.receipt_number
+			doc.receipt_number = receipt or doc.receipt_number
 	else:
 		doc.status = "Cancelled" if code == "1032" else "Failed" if doc.status == "Pending" else doc.status
 	doc.save(ignore_permissions=True)
