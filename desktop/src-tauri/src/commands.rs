@@ -249,6 +249,8 @@ pub fn start_sync(app: AppHandle) {
                     if let Ok(store) = lock(&s.store) {
                         let _ = store.set_kv("last_sync", &now_text());
                     }
+                    // The site answers again: send what was kept while it didn't.
+                    send_outbox(app.clone());
                 }
                 result
             }
@@ -259,6 +261,126 @@ pub fn start_sync(app: AppHandle) {
             "sync-done",
             json!({"error": outcome.err(), "at": now_text()}),
         );
+    });
+}
+
+// ── Drafts made while the site can't be reached ─────────────────────────────────────────────
+//
+// Only new documents, only as drafts: the server saves each with the user's own permissions and
+// ERPNext's validation, and never submits it. Each draft has an id from the app; the server
+// remembers the ids it has saved (NextERP Outbox Receipt), so a send retried after a lost answer
+// returns the same document instead of making a second one.
+
+fn valid_id(id: &str) -> bool {
+    (8..=64).contains(&id.len()) && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
+}
+
+#[tauri::command]
+pub fn outbox_add(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    id: String,
+    doctype: String,
+    doc: Value,
+    title: Option<String>,
+) -> Result<()> {
+    let s = state.current()?;
+    if !valid_id(&id) || doctype.is_empty() || doctype.len() > 140 || !doc.is_object() {
+        return Err(Error::Cache("this draft can't be kept".into()));
+    }
+    let now = now_text().parse::<i64>().unwrap_or(0);
+    lock(&s.store)?.outbox_add(
+        &s.user,
+        &id,
+        &doctype,
+        &doc,
+        title.as_deref().unwrap_or(""),
+        now,
+    )?;
+    let _ = app.emit("outbox", json!({"changed": id}));
+    Ok(())
+}
+
+#[tauri::command]
+pub fn outbox_list(state: State<'_, AppState>) -> Result<Vec<Value>> {
+    let s = state.current()?;
+    let list = lock(&s.store)?.outbox_list(&s.user)?;
+    Ok(list)
+}
+
+#[tauri::command]
+pub fn outbox_delete(app: AppHandle, state: State<'_, AppState>, id: String) -> Result<()> {
+    let s = state.current()?;
+    lock(&s.store)?.outbox_delete(&s.user, &id)?;
+    let _ = app.emit("outbox", json!({"changed": id}));
+    Ok(())
+}
+
+/// A draft opened again in a form is `editing` (the sender leaves it alone, so it can't be sent
+/// while it's being changed); leaving the form unsaved makes it `pending` again.
+#[tauri::command]
+pub fn outbox_mark(state: State<'_, AppState>, id: String, status: String) -> Result<()> {
+    if status != "editing" && status != "pending" {
+        return Err(Error::Cache("not a state a draft can be put in".into()));
+    }
+    let s = state.current()?;
+    lock(&s.store)?.outbox_mark(&s.user, &id, &status, None)?;
+    Ok(())
+}
+
+/// Send now; a draft the site refused is tried again only when asked (`retry`), after a fix.
+#[tauri::command]
+pub fn outbox_send(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    retry: Option<String>,
+) -> Result<()> {
+    let s = state.current()?;
+    if let Some(id) = retry {
+        lock(&s.store)?.outbox_mark(&s.user, &id, "pending", None)?;
+    }
+    send_outbox(app);
+    Ok(())
+}
+
+pub fn send_outbox(app: AppHandle) {
+    let state = app.state::<AppState>();
+    if state.sending.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    tauri::async_runtime::spawn(async move {
+        let state = app.state::<AppState>();
+        let mut sent = 0;
+        if let Ok(s) = state.current() {
+            let drafts = lock(&s.store)
+                .and_then(|st| st.outbox_list(&s.user))
+                .unwrap_or_default();
+            for d in drafts.into_iter().filter(|d| d["status"] == "pending") {
+                let id = d["id"].as_str().unwrap_or_default().to_string();
+                let args = json!({"doc": d["doc"], "doctype": d["doctype"], "client_id": id});
+                match s.client.post("nexterp.api.outbox.push", &args).await {
+                    Ok(saved) => {
+                        if let Ok(st) = lock(&s.store) {
+                            let _ = st.outbox_delete(&s.user, &id);
+                        }
+                        sent += 1;
+                        let _ = app.emit("outbox", json!({"sent": id, "saved": saved}));
+                    }
+                    // Still offline, or signed out: the rest wait for the next sync.
+                    Err(Error::Network(_)) | Err(Error::SignedOut) => break,
+                    Err(e) => {
+                        if let Ok(st) = lock(&s.store) {
+                            let _ = st.outbox_mark(&s.user, &id, "failed", Some(&e.to_string()));
+                        }
+                        let _ = app.emit("outbox", json!({"failed": id, "error": e.to_string()}));
+                    }
+                }
+            }
+        }
+        state.sending.store(false, Ordering::SeqCst);
+        if sent > 0 {
+            start_sync(app.clone()); // the saved drafts appear in the lists
+        }
     });
 }
 

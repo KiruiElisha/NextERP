@@ -1,5 +1,5 @@
 // Who is signed in, to which company, and how the cache is doing: shared by every screen.
-import { i18n, loadLanguage } from './i18n'
+import { __, i18n, loadLanguage } from './i18n'
 import { reactive } from 'vue'
 import { call, on, whenSignedOut } from './backend'
 
@@ -67,6 +67,9 @@ export async function signIn(site, user, password) {
 }
 
 export async function signOut() {
+  // Unsent drafts stay on this computer for this user, sent when they sign in again: say so.
+  const waiting = await call('outbox_list').catch(() => [])
+  if (waiting.length && !window.confirm(__('{0} drafts haven\'t reached the site yet. They stay on this computer and are sent when you sign in again. Sign out?', [waiting.length]))) return
   await call('sign_out').catch(() => {})
   apply(null)
   loadLanguage('en') // the sign-in screen belongs to nobody yet

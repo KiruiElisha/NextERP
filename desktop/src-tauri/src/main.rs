@@ -64,6 +64,11 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::session,
+            commands::outbox_add,
+            commands::outbox_list,
+            commands::outbox_delete,
+            commands::outbox_send,
+            commands::outbox_mark,
             commands::sign_in,
             commands::cloud,
             commands::open_cloud_page,

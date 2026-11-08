@@ -6,8 +6,12 @@
       <kbd class="ml-auto rounded border border-slate-200 bg-white px-1.5 text-[11px] text-slate-500">Ctrl K</kbd>
     </button>
     <div class="ml-auto flex items-center gap-3">
+      <RouterLink v-if="outbox.items.length" to="/outbox" class="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
+        :class="outbox.items.some((d) => d.status === 'failed') ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-800'">
+        <CloudUpload class="size-3.5" /> {{ __('{0} waiting to send', [outbox.items.length]) }}
+      </RouterLink>
       <button class="flex items-center gap-1.5 text-xs" :class="session.sync.error ? 'text-red-600' : 'text-slate-500'"
-        :title="session.sync.error || 'Sync now'" @click="call('sync_now')">
+        :title="session.sync.error || __('Sync now')" @click="call('sync_now')">
         <RefreshCw class="size-3.5" :class="session.sync.running && 'animate-spin'" />
         {{ session.sync.running ? __('Syncing {0}…', [__(session.sync.doctype)]) : session.sync.error ? __('Offline') : __('Synced {0}', [ago(session.sync.last)]) }}
       </button>
@@ -24,7 +28,8 @@
 
 <script setup>
 import { computed } from 'vue'
-import { RefreshCw, Search } from 'lucide-vue-next'
+import { RefreshCw, Search, CloudUpload } from 'lucide-vue-next'
+import { outbox } from '@/lib/outbox'
 import { call } from '@/lib/backend'
 import { ago } from '@/lib/format'
 import { session, setCompany } from '@/lib/session'

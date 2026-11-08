@@ -43,4 +43,8 @@ export function ago(ms) {
   return rel.format(-Math.round(s / 86400), 'day')
 }
 
-export const today = () => new Date().toISOString().slice(0, 10)
+// Today on this computer's calendar (not UTC's: in Nairobi, UTC is still yesterday until 3 am).
+export function today() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}

@@ -27,6 +27,8 @@ import Sidebar from './components/Sidebar.vue'
 import TopBar from './components/TopBar.vue'
 import UpdateBanner from './components/UpdateBanner.vue'
 import { watchForUpdates } from './lib/updates'
+import { watchOutbox } from './lib/outbox'
+import { toast } from './components/Toasts.vue'
 import CommandPalette from './components/CommandPalette.vue'
 import Toasts from './components/Toasts.vue'
 import SignIn from './pages/SignIn.vue'
@@ -59,6 +61,7 @@ watch(
 
 onMounted(async () => {
   watchForUpdates()
+  watchOutbox(toast)
   await start()
   on('menu', (id) => session.signedIn && MENU[id]?.())
   window.addEventListener('keydown', (e) => {

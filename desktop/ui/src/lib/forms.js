@@ -3,6 +3,7 @@
 import { reactive } from 'vue'
 import { call, list, site } from './backend'
 import { canRead, session } from './session'
+import { today } from './format'
 
 const metas = reactive({})
 const pending = {}
@@ -163,7 +164,24 @@ export async function saveLayout(doctype, change) {
 
 // ── Documents ──────────────────────────────────────────────────────────────────────────────
 
-export const newDoc = (doctype) => site('nexterp.api.forms.new', { doctype }).then((d) => ({ ...d, __islocal: 1 }))
+// A new document with the site's defaults; the last one is kept, so a new draft can be started offline.
+export async function newDoc(doctype) {
+  const key = `new:${session.site}:${doctype}`
+  try {
+    const d = await site('nexterp.api.forms.new', { doctype })
+    call('remember', { key, value: { ...d, __kept_on: today() } }).catch(() => {})
+    return { ...d, __islocal: 1 }
+  } catch (e) {
+    if (e.kind !== 'Network') throw e
+    const held = await call('cached', { key }).catch(() => null)
+    if (!held) throw e
+    // Dates the template got on the day it was kept are today's now (a posting date, an order date).
+    const d = { ...held }
+    for (const [k, v] of Object.entries(d)) if (v === held.__kept_on) d[k] = today()
+    delete d.__kept_on
+    return { ...d, __islocal: 1, __offline: 1 }
+  }
+}
 export const loadDoc = (doctype, name) => site('nexterp.api.forms.load', { doctype, name })
 export const compute = (doc) => site('nexterp.api.forms.compute', { doc: strip(doc) }, true, false)
 export const saveDoc = (doc, action = 'Save') => site('nexterp.api.forms.save', { doc: strip(doc), action }, true)

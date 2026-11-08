@@ -1,4 +1,6 @@
 ", choosing Claude, OpenAI, Gemini, Groq or a local model, and who may use it.",", ukichagua Claude, OpenAI, Gemini, Groq au modeli ya ndani, na nani anaweza kuitumia."
+"A draft kept on this computer. Save to send it to the site, or keep it here if the site is still away.","Rasimu iliyohifadhiwa kwenye kompyuta hii. Hifadhi ili uitume kwenye tovuti, au ibaki hapa ikiwa tovuti bado haipatikani."
+A kept draft was refused: {0},Rasimu iliyohifadhiwa imekataliwa: {0}
 "A POS Profile names the warehouse, price list and payment modes a till sells with. Create one, or ask to be added to one.","Wasifu wa POS unataja ghala, orodha ya bei na njia za malipo ambazo kaunta inauzia. Unda mmoja, au omba uongezwe kwenye mmoja."
 Abandon this count,Acha hesabu hii
 About,Kuhusu
@@ -56,6 +58,7 @@ Bank Reconciliation,Ulinganisho wa Benki
 Batch,Bechi
 Batches,Bechi
 Behind,Nyuma ya lengo
+Being changed,Inabadilishwa
 Bills of Materials,Orodha za Malighafi
 BOM,Orodha ya Malighafi
 Bringing these onto this computer…,Inaleta hizi kwenye kompyuta hii…
@@ -115,6 +118,8 @@ Customers,Wateja
 Dashboard,Dashibodi
 Date,Tarehe
 Delete,Futa
+Delete this draft,Futa rasimu hii
+"Delete this draft? It was never saved on the site, so it will be gone.","Futa rasimu hii? Haijawahi kuhifadhiwa kwenye tovuti, kwa hivyo itapotea kabisa."
 Delivery Note,Hati ya Uwasilishaji
 Delivery Notes,Hati za Uwasilishaji
 Department,Idara
@@ -126,6 +131,7 @@ Disconnect,Tenganisha
 Discount,Punguzo
 Done,Imekamilika
 Draft,Rasimu
+Drafts made while the site couldn't be reached. They are saved on the site as drafts as soon as it answers; nothing is submitted.,Rasimu zilizoundwa wakati tovuti haikupatikana. Huhifadhiwa kwenye tovuti kama rasimu mara tu inapojibu; hakuna kinachowasilishwa.
 Due,Inadaiwa
 Due Date,Tarehe ya Mwisho wa Malipo
 Duplicate,Nakili
@@ -158,6 +164,7 @@ Filter,Chuja
 Filter…,Chuja…
 Find a field…,Tafuta sehemu…
 Finish paying in the checkout window,Kamilisha malipo kwenye dirisha la malipo
+Fix,Rekebisha
 From,Kuanzia
 Get set up,Anza kutumia
 Goods Received,Bidhaa Zilizopokelewa
@@ -191,6 +198,8 @@ Job Card,Kadi ya Kazi
 Job Cards,Kadi za Kazi
 Journal Entries,Maingizo ya Jarida
 Journal Entry,Ingizo la Jarida
+Kept on this computer. It is saved on the site as a draft when the site is back.,Imehifadhiwa kwenye kompyuta hii. Itahifadhiwa kwenye tovuti kama rasimu tovuti ikirudi.
+Kept {0},Imehifadhiwa {0}
 KRA receipt check,Uthibitisho wa risiti wa KRA
 KRA refused the invoice.,KRA imekataa ankara.
 Language,Lugha
@@ -253,6 +262,7 @@ Not yet,Bado
 Nothing building up right now.,Hakuna kinachoongezeka kwa sasa.
 Nothing for these filters.,Hakuna kitu kwa vichujio hivi.
 Nothing here yet.,Hakuna kitu hapa bado.
+Nothing is waiting: every draft is on the site.,Hakuna kinachosubiri: kila rasimu iko kwenye tovuti.
 Nothing yet.,Hakuna bado.
 Offline,Nje ya mtandao
 Offline: browsing only,Nje ya mtandao: kuvinjari tu
@@ -375,8 +385,11 @@ Search {0}…,Tafuta {0}…
 Searching…,Inatafuta…
 Select all,Chagua zote
 Send,Tuma
+Send again,Tuma tena
+Send now,Tuma sasa
 Send to KRA now,Tuma KRA sasa
 Sending…,Inatuma…
+Sending… drafts that can't be sent yet stay here.,Inatuma… rasimu ambazo haziwezi kutumwa bado zinabaki hapa.
 Sent to KRA when the invoice is submitted.,Itatumwa KRA ankara ikiwasilishwa.
 Series,Mfululizo
 Set count,Weka hesabu
@@ -404,6 +417,7 @@ Stop waiting,Acha kusubiri
 Subject,Kichwa
 Submit,Wasilisha
 Submitted,Imewasilishwa
+Submitting needs the site. Save it as a draft to keep it on this computer.,Kuwasilisha kunahitaji tovuti. Ihifadhi kama rasimu ili ibaki kwenye kompyuta hii.
 Supplier,Msambazaji
 Supplier Inquiries,Maulizo kwa Wasambazaji
 Supplier Invoices,Ankara za Wasambazaji
@@ -427,7 +441,9 @@ The assistant isn't turned on for you. A System Manager can turn it on in,Msaidi
 The buyer scans the code to check the receipt with KRA.,Mnunuzi anasoma msimbo huu kuthibitisha risiti na KRA.
 The customer cancelled,Mteja ameghairi
 "The disclosure the ESG app prepares from these figures: scopes, intensity, reductions and methods.","Ripoti ambayo programu ya ESG inaandaa kutoka kwa takwimu hizi: mawanda, kiwango, upunguzaji na mbinu."
+The site can't be reached. Saving keeps this as a draft on this computer; it is saved on the site when it is back. Prices and totals are worked out then.,Tovuti haipatikani. Kuhifadhi kunaiweka kama rasimu kwenye kompyuta hii; itahifadhiwa kwenye tovuti ikirudi. Bei na jumla zitakokotolewa wakati huo.
 "The site can't be reached: this is the copy kept on this computer, read only.","Tovuti haipatikani: hii ni nakala iliyohifadhiwa kwenye kompyuta hii, ya kusoma tu."
+The site refused it: {0},Tovuti imeikataa: {0}
 The usual fields of,Sehemu za kawaida za
 "Their invoices, payments and balance in one place.","Ankara, malipo na salio lao mahali pamoja."
 This window,Dirisha hili
@@ -468,7 +484,9 @@ Vehicle (optional),Gari (si lazima)
 Views…,Mionekano…
 Waiting for KRA to sign…,Inasubiri KRA kuthibitisha…
 Waiting for the customer,Inamsubiri mteja
+Waiting for the site,Inasubiri tovuti
 Waiting to be sent to KRA. It goes on its own; you can also send it now.,Inasubiri kutumwa KRA. Itatumwa yenyewe; unaweza pia kuituma sasa.
+Waiting to send,Zinasubiri kutumwa
 Walk-in,Mteja wa papo hapo
 Warehouse,Ghala
 Warehouse to count,Ghala la kuhesabu
@@ -483,7 +501,12 @@ Yes,Ndiyo
 Your credits update here as soon as Nergaa Cloud confirms the payment.,Salio lako litasasishwa hapa mara tu Nergaa Cloud itakapothibitisha malipo.
 "Your Daraja keys, so customers pay from their phone.","Funguo zako za Daraja, ili wateja walipe kutoka kwenye simu zao."
 "Your own language, the same setting as in ERPNext. A System Manager turns languages on, and corrects translations, in Desk (Language and Translation).","Lugha yako mwenyewe, mpangilio uleule wa ERPNext. Msimamizi wa Mfumo huwasha lugha, na kusahihisha tafsiri, ndani ya Desk (Language na Translation)."
+{0} drafts haven't reached the site yet. They stay on this computer and are sent when you sign in again. Sign out?,Rasimu {0} bado hazijafika kwenye tovuti. Zinabaki kwenye kompyuta hii na zitatumwa ukiingia tena. Ondoka?
 {0} of {1} done,{0} kati ya {1} zimekamilika
+{0} saved,{0} imehifadhiwa
+{0} waiting to send,{0} zinasubiri kutumwa
+{0} was already saved on the site; your latest changes are not in it. Open it to apply them.,{0} ilikuwa tayari imehifadhiwa kwenye tovuti; mabadiliko yako ya mwisho hayamo. Ifungue ili uyaweke.
+{0} {1} saved on the site,{0} {1} imehifadhiwa kwenye tovuti
 · Check what it says before acting on it.,· Hakiki inachosema kabla ya kuchukua hatua.
 · set,· weka
 "· showing the last figures, updating…","· inaonyesha takwimu za mwisho, inasasisha…"

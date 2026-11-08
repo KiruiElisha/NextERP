@@ -26,7 +26,16 @@ const SCHEMA: &str = "
     );
     create table if not exists sync_state (doctype text primary key, since text, synced_at text);
     create table if not exists kv (key text primary key, value text not null);
+    create table if not exists outbox (
+        id text primary key, user text not null, doctype text not null, doc text not null,
+        title text, created integer not null, status text not null default 'pending', error text
+    );
+    create index if not exists outbox_user on outbox (user, created);
 ";
+
+/// Drafts kept while the site can't be reached: at most this many per user, each at most this big.
+pub const OUTBOX_MAX: i64 = 500;
+pub const OUTBOX_MAX_BYTES: usize = 1_000_000;
 
 const OPERATORS: [&str; 7] = ["=", "!=", ">", "<", ">=", "<=", "like"];
 
@@ -242,6 +251,100 @@ impl Store {
         Ok(())
     }
 
+    /// Everything one user saw, for a sign-in as someone else: the synced rows and the answers kept
+    /// for screens (figures, form definitions) and the Nergaa Cloud session. Unsent drafts stay,
+    /// each kept for its own user (`outbox`), and nobody else is shown them.
+    pub fn forget_user(&self) -> Result<()> {
+        self.clear()?;
+        self.conn.execute_batch(
+            "delete from kv where key like 'cache:%' or key in ('cloud_sid', 'cloud_csrf', 'boot', 'last_sync');",
+        )?;
+        Ok(())
+    }
+
+    // ── Drafts made offline, sent when the site is back ─────────────────────────────────────
+
+    /// Keep a new draft for `user`. Refused when it is too big or the user already has too many,
+    /// so a stuck site can't fill the computer.
+    pub fn outbox_add(
+        &self,
+        user: &str,
+        id: &str,
+        doctype: &str,
+        doc: &Value,
+        title: &str,
+        now: i64,
+    ) -> Result<()> {
+        let text = doc.to_string();
+        if text.len() > OUTBOX_MAX_BYTES {
+            return Err(crate::error::Error::Cache(
+                "this draft is too big to keep offline".into(),
+            ));
+        }
+        if self.outbox_count(user)? >= OUTBOX_MAX {
+            return Err(crate::error::Error::Cache(format!(
+                "{OUTBOX_MAX} drafts are already waiting to be sent; send or delete some first"
+            )));
+        }
+        self.conn.execute(
+            "insert into outbox (id, user, doctype, doc, title, created) values (?1, ?2, ?3, ?4, ?5, ?6)
+             on conflict (id) do update set doc = excluded.doc, title = excluded.title, status = 'pending', error = null
+             where outbox.user = excluded.user",
+            params![id, user, doctype, text, title, now],
+        )?;
+        Ok(())
+    }
+
+    pub fn outbox_count(&self, user: &str) -> Result<i64> {
+        Ok(self
+            .conn
+            .query_row("select count(*) from outbox where user = ?1", [user], |r| {
+                r.get(0)
+            })?)
+    }
+
+    /// This user's drafts, oldest first (the order they are sent in).
+    pub fn outbox_list(&self, user: &str) -> Result<Vec<Value>> {
+        let mut st = self.conn.prepare(
+            "select id, doctype, doc, title, created, status, error from outbox where user = ?1 order by created, id",
+        )?;
+        let rows = st.query_map([user], |r| {
+            let doc: String = r.get(2)?;
+            Ok(serde_json::json!({
+                "id": r.get::<_, String>(0)?,
+                "doctype": r.get::<_, String>(1)?,
+                "doc": serde_json::from_str::<Value>(&doc).unwrap_or(Value::Null),
+                "title": r.get::<_, Option<String>>(3)?,
+                "created": r.get::<_, i64>(4)?,
+                "status": r.get::<_, String>(5)?,
+                "error": r.get::<_, Option<String>>(6)?,
+            }))
+        })?;
+        Ok(rows.collect::<std::result::Result<_, _>>()?)
+    }
+
+    pub fn outbox_mark(
+        &self,
+        user: &str,
+        id: &str,
+        status: &str,
+        error: Option<&str>,
+    ) -> Result<()> {
+        self.conn.execute(
+            "update outbox set status = ?3, error = ?4 where id = ?1 and user = ?2",
+            params![id, user, status, error],
+        )?;
+        Ok(())
+    }
+
+    pub fn outbox_delete(&self, user: &str, id: &str) -> Result<()> {
+        self.conn.execute(
+            "delete from outbox where id = ?1 and user = ?2",
+            params![id, user],
+        )?;
+        Ok(())
+    }
+
     /// Everything synced, for "Clear cache" and a sign-in as someone else.
     pub fn clear(&self) -> Result<()> {
         self.conn.execute_batch(
@@ -326,5 +429,102 @@ fn sql_value(v: &Value) -> rusqlite::types::Value {
             .unwrap_or_else(|| Sql::Real(n.as_f64().unwrap_or(0.0))),
         Value::String(s) => Sql::Text(s.clone()),
         other => Sql::Text(other.to_string()),
+    }
+}
+
+#[cfg(test)]
+mod outbox_tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn drafts_are_kept_per_user_and_survive_clearing_the_cache() {
+        let s = Store::in_memory().unwrap();
+        s.outbox_add(
+            "a@x",
+            "id-1",
+            "Sales Invoice",
+            &json!({"customer": "C"}),
+            "C",
+            1,
+        )
+        .unwrap();
+        s.outbox_add("b@x", "id-2", "Quotation", &json!({}), "", 2)
+            .unwrap();
+        assert_eq!(s.outbox_list("a@x").unwrap().len(), 1);
+        assert_eq!(s.outbox_list("b@x").unwrap()[0]["doctype"], "Quotation");
+        s.forget_user().unwrap();
+        assert_eq!(
+            s.outbox_count("a@x").unwrap(),
+            1,
+            "a sign-in as someone else must not drop drafts"
+        );
+        // one user can neither change nor delete another's draft
+        s.outbox_add(
+            "b@x",
+            "id-1",
+            "Sales Invoice",
+            &json!({"customer": "HIJACK"}),
+            "",
+            3,
+        )
+        .unwrap();
+        assert_eq!(s.outbox_list("a@x").unwrap()[0]["doc"]["customer"], "C");
+        s.outbox_delete("b@x", "id-1").unwrap();
+        assert_eq!(s.outbox_count("a@x").unwrap(), 1);
+    }
+
+    #[test]
+    fn a_failed_draft_keeps_its_reason_and_an_edit_makes_it_pending_again() {
+        let s = Store::in_memory().unwrap();
+        s.outbox_add("a@x", "id-1", "Sales Invoice", &json!({}), "", 1)
+            .unwrap();
+        s.outbox_mark("a@x", "id-1", "failed", Some("Customer is required"))
+            .unwrap();
+        assert_eq!(
+            s.outbox_list("a@x").unwrap()[0]["error"],
+            "Customer is required"
+        );
+        s.outbox_add(
+            "a@x",
+            "id-1",
+            "Sales Invoice",
+            &json!({"customer": "C"}),
+            "C",
+            1,
+        )
+        .unwrap();
+        let d = &s.outbox_list("a@x").unwrap()[0];
+        assert_eq!(
+            (d["status"].as_str(), d["error"].is_null()),
+            (Some("pending"), true)
+        );
+    }
+
+    #[test]
+    fn too_big_or_too_many_is_refused() {
+        let s = Store::in_memory().unwrap();
+        let big = json!({"notes": "x".repeat(OUTBOX_MAX_BYTES)});
+        assert!(s
+            .outbox_add("a@x", "big", "Sales Invoice", &big, "", 1)
+            .is_err());
+        for i in 0..OUTBOX_MAX {
+            s.outbox_add("a@x", &format!("id-{i}"), "ToDo", &json!({}), "", i)
+                .unwrap();
+        }
+        assert!(s
+            .outbox_add("a@x", "one-more", "ToDo", &json!({}), "", 9999)
+            .is_err());
+    }
+
+    #[test]
+    fn another_user_doesnt_see_the_last_ones_answers() {
+        let s = Store::in_memory().unwrap();
+        s.set_kv("cache:home:x", "{\"cash\": 5}").unwrap();
+        s.set_kv("cloud_sid", "secret").unwrap();
+        s.set_kv("user", "a@x").unwrap();
+        s.forget_user().unwrap();
+        assert!(s.get_kv("cache:home:x").unwrap().is_none());
+        assert!(s.get_kv("cloud_sid").unwrap().is_none());
     }
 }

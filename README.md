@@ -77,6 +77,21 @@ around; numbers, dates and "5 minutes ago" are written the language's way. The w
 computer, so the app opens in the user's language offline. The Swahili file was written for this app:
 have a native speaker review it, and add a language by adding its CSV (or Translation records).
 
+## Drafts while offline
+
+When the site can't be reached, a new document (an invoice, a quotation, a customer) can still be
+started and saved: it is kept on the computer and saved on the site, as a draft, after the next sync
+that reaches it. The top bar says how many are waiting; **Waiting to send** lists them.
+
+- Only new documents, only drafts. Submitting needs the site; nothing kept offline is ever submitted.
+- The site saves each with the user's own permissions and ERPNext's validation, and works out prices
+  and totals then. A draft it refuses stays, with the reason, to fix and send again.
+- Each draft has an id; the site remembers the ids it has saved (NextERP Outbox Receipt), so a send
+  retried after a lost answer, or a draft reopened and saved while it was being sent, never makes two.
+- Drafts are kept per user: signing out, or another person signing in, never sends, shows or drops
+  them; they go when their owner signs in again. At most 500 per user, 1 MB each.
+- A new form opens offline from the last one the site gave; dates it had are moved to today.
+
 ## Server setup
 
 ```bash

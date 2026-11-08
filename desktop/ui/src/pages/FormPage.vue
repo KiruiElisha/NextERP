@@ -50,6 +50,9 @@
       </div>
     </header>
 
+    <div v-if="offlineNew && isNew" class="border-b border-sky-200 bg-sky-50 px-6 py-2 text-sm text-sky-900">
+      {{ outboxId ? __('A draft kept on this computer. Save to send it to the site, or keep it here if the site is still away.') : __('The site can\'t be reached. Saving keeps this as a draft on this computer; it is saved on the site when it is back. Prices and totals are worked out then.') }}
+    </div>
     <div v-if="offline" class="border-b border-amber-200 bg-amber-50 px-6 py-2 text-sm text-amber-800">
       {{ __('The site can\'t be reached: this is the copy kept on this computer, read only.') }}
     </div>
@@ -99,6 +102,7 @@ import RepeatDialog from '@/components/form/RepeatDialog.vue'
 import { applyAction, workflowOf } from '@/lib/work'
 import { toast } from '@/components/Toasts.vue'
 import { takeDraft } from '@/lib/ai'
+import { keep, pushNow, release, takeReopened } from '@/lib/outbox'
 import { __ } from '@/lib/i18n'
 import { session } from '@/lib/session'
 import { call, getDoc, site } from '@/lib/backend'
@@ -196,10 +200,17 @@ async function start() {
     if (props.name === 'new') {
       // An amended or duplicated copy arrives ready; otherwise a fresh document with the defaults.
       // ...or a draft the assistant prepared, which the user checks here before saving.
-      const copy = seed || takeDraft(props.doctype)
+      // ...or a draft kept on this computer while the site couldn't be reached, opened to change it.
+      if (outboxId.value && !keptAway) release(outboxId.value) // the form moved on from a reopened draft
+      keptAway = false
+      const again = !seed && takeReopened(props.doctype)
+      outboxId.value = again?.id || null
+      const copy = seed || takeDraft(props.doctype) || again?.doc
       seed = null
       const d = copy || (await newDoc(props.doctype))
       if (!copy) prefill(d)
+      offlineNew.value = Boolean(d.__offline || again)
+      delete d.__offline
       setDoc(d)
       if (copy) dirty.value = true
       if (completes.value) recompute()
@@ -317,6 +328,7 @@ async function save(action = 'Save') {
   busy.value = true
   menu.value = false
   try {
+    if (outboxId.value && action === 'Save') return await saveKept()
     const r = await saveDoc(doc.value, action === 'Save' && doc.value.docstatus === 1 ? 'Update' : action)
     setDoc(r.doc)
     docinfo.value = r.docinfo
@@ -325,11 +337,47 @@ async function save(action = 'Save') {
     toast(action === 'Submit' ? `${r.doc.name} submitted` : action === 'Cancel' ? `${r.doc.name} cancelled` : `${r.doc.name} saved`)
     if (props.name === 'new' || props.name !== r.doc.name) router.replace(formRoute(props.doctype, r.doc.name))
   } catch (e) {
+    if (e.kind === 'Network' && isNew.value) return keepOffline(action)
     toast(e.message, true)
   } finally {
     busy.value = false
   }
 }
+
+// ── Kept on this computer while the site can't be reached ──
+const outboxId = ref(null)
+const offlineNew = ref(false)
+
+// Only a new document, only as a draft: submitting needs the site.
+async function keepOffline(action) {
+  if (action !== 'Save') return toast(__('Submitting needs the site. Save it as a draft to keep it on this computer.'), true)
+  try {
+    outboxId.value = await keep(props.doctype, doc.value, outboxId.value)
+    dirty.value = false
+    toast(__('Kept on this computer. It is saved on the site as a draft when the site is back.'))
+    keptAway = true
+    router.push('/outbox')
+  } catch (e) {
+    toast(e.message, true)
+  }
+}
+
+// A reopened draft, saved now the site answers: by its id, so it can't be saved twice.
+async function saveKept() {
+  const id = outboxId.value
+  const r = await pushNow(props.doctype, doc.value, id)
+  outboxId.value = null
+  keptAway = true
+  dirty.value = false
+  toast(r.already ? __('{0} was already saved on the site; your latest changes are not in it. Open it to apply them.', [r.name]) : __('{0} saved', [r.name]))
+  router.replace(formRoute(props.doctype, r.name))
+}
+
+// Leaving a reopened draft without saving it hands it back to the sender.
+let keptAway = false
+onBeforeUnmount(() => {
+  if (outboxId.value && !keptAway) release(outboxId.value)
+})
 function confirmThen(action, question) {
   menu.value = false
   if (window.confirm(question)) save(action)

@@ -22,6 +22,8 @@ pub struct Session {
 pub struct AppState {
     pub session: Mutex<Option<Arc<Session>>>,
     pub syncing: AtomicBool,
+    /// Offline drafts are being sent (commands::send_outbox): one sender at a time.
+    pub sending: AtomicBool,
     /// Signed in to Nergaa Cloud (Press). Kept in the signed-in site's cache store (commands::keep_cloud).
     pub cloud: Mutex<Option<Client>>,
 }
@@ -69,7 +71,7 @@ pub fn open_store(dir: &Path, site: &str, user: &str) -> Result<Store, Error> {
     let store = Store::open(&path)?;
     // Another user on the same computer must not see what the last one could.
     if store.get_kv("user")?.as_deref() != Some(user) {
-        store.clear()?;
+        store.forget_user()?;
         store.set_kv("user", user)?;
     }
     Ok(store)

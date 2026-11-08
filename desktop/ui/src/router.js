@@ -14,6 +14,7 @@ export const router = createRouter({
     { path: '/doc/:slug/:name', redirect: (to) => `/form/${encodeURIComponent(bySlug(to.params.slug) || to.params.slug)}/${encodeURIComponent(to.params.name)}` },
     { path: '/new/sales-invoice', redirect: '/form/Sales%20Invoice/new' },
     { path: '/account', component: () => import('./pages/Account.vue') },
+    { path: '/outbox', component: () => import('./pages/Outbox.vue') },
     { path: '/inbox', component: () => import('./pages/Inbox.vue') },
     { path: '/assistant', component: () => import('./pages/Assistant.vue') },
     { path: '/insights', component: () => import('./pages/Insights.vue') },
