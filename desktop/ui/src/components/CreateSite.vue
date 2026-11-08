@@ -61,7 +61,7 @@
               <label v-for="h in hosts" :key="h.id"
                      class="cursor-pointer rounded-xl border p-3 transition"
                      :class="host === h.id ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-slate-200 hover:border-slate-300'">
-                <input v-model="host" type="radio" :value="h.id" class="sr-only" @change="checkName" />
+                <input v-model="host" type="radio" :value="h.id" class="sr-only"  />
                 <span class="block text-sm font-semibold text-slate-900">{{ h.title }}</span>
                 <span class="block text-xs text-slate-500">{{ h.tagline || 'Ready in minutes' }}</span>
               </label>
@@ -100,7 +100,7 @@
           <p v-if="localApps.length" class="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800 ring-1 ring-emerald-100">
             KRA eTIMS comes with it, for invoices signed by KRA. You connect your eTIMS device after setup.
           </p>
-          <p v-if="onFrappeCloud" class="mt-3 text-sm text-slate-600">
+          <p v-if="onPrivate" class="mt-3 text-sm text-slate-600">
             This site comes with ERPNext and ESG (GHG emissions). Add other apps later from Settings → Plan, billing and apps.
           </p>
           <template v-else>
@@ -133,7 +133,7 @@
 
       <!-- Plan and payment -->
       <div class="border-t border-slate-100 bg-slate-50/70 p-6">
-        <div v-if="onFrappeCloud" class="rounded-xl bg-white p-4 ring-1 ring-slate-200">
+        <div v-if="onPrivate" class="rounded-xl bg-white p-4 ring-1 ring-slate-200">
           <p class="text-sm font-semibold text-slate-900">{{ chosen.plan?.plan_title || chosen.title }} · {{ chosen.plan ? price(chosen.plan) : '' }} a month</p>
           <p class="mt-1 text-xs text-slate-500">Paid from your Nergaa Cloud credits, like any site.</p>
         </div>
@@ -153,7 +153,7 @@
             </label>
           </div>
         </template>
-        <div v-if="!options.trial_days || onFrappeCloud">
+        <div v-if="!options.trial_days || onPrivate">
           <div v-if="hostBlockers.length" class="mt-4 rounded-xl bg-white p-4 ring-1 ring-amber-200">
             <p class="text-sm font-medium text-slate-900">Add a way to pay first</p>
             <p v-for="b in hostBlockers" :key="b" class="mt-1 text-xs text-slate-600">{{ b }}</p>
@@ -248,11 +248,12 @@ const stepNote = computed(() => ({
   building: 'Getting your site ready',
 })[step.value])
 
-// Where the site runs: Nergaa Cloud, or Frappe Cloud when Nergaa Cloud offers it (older servers send no hosts).
+// Where the site runs: Nergaa Cloud, or its private servers when offered (older servers send no hosts). Both use
+// Nergaa Cloud's domain, so one name check covers them.
 const hosts = computed(() => options.value.hosts?.length ? options.value.hosts : [{ id: 'nergaa', title: 'Nergaa Cloud', domain: options.value.domain }])
 const chosen = computed(() => hosts.value.find((h) => h.id === host.value) || hosts.value[0])
-const onFrappeCloud = computed(() => chosen.value.id === 'frappe_cloud')
-const hostBlockers = computed(() => (onFrappeCloud.value ? chosen.value.blockers : options.value.blockers) || [])
+const onPrivate = computed(() => chosen.value.id === 'private')
+const hostBlockers = computed(() => (onPrivate.value ? chosen.value.blockers : options.value.blockers) || [])
 const localApps = computed(() => options.value.local_apps || [])
 
 const shownApps = computed(() => {
@@ -262,7 +263,7 @@ const shownApps = computed(() => {
 
 const canCreate = computed(() => {
   const ok = name.value.available && password.value.length >= 8 && password.value === again.value
-  if (onFrappeCloud.value) return ok && !hostBlockers.value.length
+  if (onPrivate.value) return ok && !hostBlockers.value.length
   return ok && options.value.ready && (options.value.trial_days || (plan.value && !hostBlockers.value.length))
 })
 
@@ -328,13 +329,6 @@ function checkName() {
   clearTimeout(nameCheck)
   name.value = { available: false, reason: '' }
   if (!subdomain.value) return
-  if (onFrappeCloud.value) {
-    // Frappe Cloud's names are checked there, when the site is created
-    name.value = /^[a-z0-9][a-z0-9-]{2,31}$/.test(subdomain.value)
-      ? { available: true, reason: '' }
-      : { available: false, reason: 'Use 3 to 32 lowercase letters, digits or hyphens' }
-    return
-  }
   nameCheck = setTimeout(async () => {
     try {
       const r = await cloud('is_available', { subdomain: subdomain.value, domain: options.value.domain })
@@ -354,8 +348,8 @@ const topUp = () => openCloudPage('/topup').catch((e) => (error.value = e.messag
 
 const create = () => run(async () => {
   if (password.value !== again.value) throw new Error('The two passwords are different')
-  const answer = await cloud('desktop_create_site', onFrappeCloud.value
-    ? { subdomain: subdomain.value, host: 'frappe_cloud' }
+  const answer = await cloud('desktop_create_site', onPrivate.value
+    ? { subdomain: subdomain.value, host: 'private' }
     : { subdomain: subdomain.value, apps: apps.value, plan: plan.value || null })
   site.value = answer.site
   step.value = 'building'
@@ -368,7 +362,7 @@ async function poll() {
     const s = await cloud('desktop_site_status', { site: site.value })
     siteUrl.value = s.url
     stage.value = s.stage
-    // Frappe Cloud doesn't say how far along a build is: creep forward instead
+    // a private site's build doesn't report its progress: creep forward instead
     const built = s.progress ?? Math.min(90, progress.value / 0.7 + 4)
     progress.value = s.stage === 'building' ? Math.max(5, Math.round(built * 0.7)) : s.stage === 'ready' ? 95 : 80
     if (s.stage === 'failed') {
