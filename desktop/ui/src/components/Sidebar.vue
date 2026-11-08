@@ -9,39 +9,39 @@
       <button class="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-slate-100" :aria-expanded="switcher" @click="switcher = !switcher">
         <img src="/icon.png" class="size-7 rounded-lg" alt="" />
         <span class="min-w-0 flex-1">
-          <span class="block truncate text-[15px] font-semibold tracking-tight text-slate-900">ERPNext</span>
+          <span class="block truncate text-[15px] font-semibold tracking-tight text-slate-900">{{ __('ERPNext') }}</span>
           <span class="block truncate text-[11px] text-slate-400">{{ siteName }}</span>
         </span>
         <ChevronsUpDown class="size-4 shrink-0 text-slate-400" />
       </button>
       <div v-if="switcher" class="absolute inset-x-2 top-full z-30 mt-1 rounded-xl border border-slate-200 bg-white p-1 shadow-lg" @mouseleave="switcher = false">
-        <p class="px-2.5 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Apps on this site</p>
+        <p class="px-2.5 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{{ __('Apps on this site') }}</p>
         <button v-for="a in apps" :key="a.name" class="menu" @click="pick(a)">
           <img v-if="a.logo" :src="logo(a)" class="size-5 rounded object-contain" alt="" @error="(e) => (e.target.style.visibility = 'hidden')" />
           <AppWindow v-else class="size-4 text-slate-400" />
           <span class="flex-1 truncate">{{ a.title }}</span>
-          <span v-if="a.native" class="text-[11px] text-brand-600">This window</span>
+          <span v-if="a.native" class="text-[11px] text-brand-600">{{ __('This window') }}</span>
           <ExternalLink v-else class="size-3.5 text-slate-300" />
         </button>
         <div class="my-1 border-t border-slate-100" />
-        <button class="menu" @click="choosePicker"><LayoutGrid class="size-4 text-slate-400" /> Choose app to open…</button>
+        <button class="menu" @click="choosePicker"><LayoutGrid class="size-4 text-slate-400" /> {{ __('Choose app to open…') }}</button>
       </div>
     </div>
 
     <nav class="no-scrollbar flex-1 overflow-y-auto px-2 pb-4 text-sm">
       <section v-for="(g, gi) in groups" :key="g.label" :class="gi > 0 && 'mt-1 border-t border-slate-100 pt-1'">
         <button class="flex w-full items-center gap-1 rounded-md px-2 py-1.5 text-left hover:bg-slate-50" :aria-expanded="isOpen(g.label)" @click="toggle(g.label)">
-          <span class="flex-1 truncate text-[10px] font-semibold uppercase tracking-wider text-brand-700">{{ g.label }}</span>
+          <span class="flex-1 truncate text-[10px] font-semibold uppercase tracking-wider text-brand-700">{{ __(g.label) }}</span>
           <ChevronDown class="size-3.5 text-slate-400 transition-transform" :class="!isOpen(g.label) && '-rotate-90'" />
         </button>
         <div v-show="isOpen(g.label)" class="space-y-0.5">
           <template v-for="item in g.items" :key="item.key">
             <button v-if="item.desk" class="nav w-full" :title="`Opens in ERPNext Desk`" @click="openDesk(item.desk)">
-              <component :is="icon(item.icon)" class="size-4" /> <span class="flex-1 truncate text-left">{{ item.name }}</span>
+              <component :is="icon(item.icon)" class="size-4" /> <span class="flex-1 truncate text-left">{{ __(item.name) }}</span>
               <ExternalLink class="size-3 text-slate-300" />
             </button>
             <RouterLink v-else :to="item.to" class="nav" :class="isActive(item) && 'active'">
-              <component :is="icon(item.icon)" class="size-4" /> <span class="flex-1 truncate">{{ item.name }}</span>
+              <component :is="icon(item.icon)" class="size-4" /> <span class="flex-1 truncate">{{ __(item.name) }}</span>
               <span v-if="item.badge && waiting" class="rounded-full bg-brand-600 px-1.5 text-[10px] font-semibold tabular-nums text-white">{{ waiting > 99 ? '99+' : waiting }}</span>
             </RouterLink>
           </template>
@@ -50,7 +50,7 @@
           <div v-for="d in g.reports" :key="d.key">
             <button class="nav w-full" :aria-expanded="isOpen(`Reports/${d.key}`, false)" @click="toggle(`Reports/${d.key}`, false)">
               <component :is="icon(DEPARTMENT_ICONS[d.key])" class="size-4" />
-              <span class="flex-1 truncate text-left">{{ d.label }}</span>
+              <span class="flex-1 truncate text-left">{{ __(d.label) }}</span>
               <span class="rounded-full bg-slate-100 px-1.5 text-[10px] font-medium tabular-nums text-slate-500">{{ d.reports.length }}</span>
               <ChevronRight class="size-3.5 text-slate-400 transition-transform" :class="isOpen(`Reports/${d.key}`, false) && 'rotate-90'" />
             </button>
@@ -59,7 +59,7 @@
                 <span class="truncate text-left">{{ r.name }}</span>
               </button>
               <RouterLink :to="`/reports/${d.key}`" class="nav text-slate-500" :class="route.path === `/reports/${d.key}` && 'active'">
-                <List class="size-4" /> All {{ d.label.toLowerCase() }} reports
+                <List class="size-4" /> {{ __('All {0} reports', [__(d.label).toLowerCase()]) }}
               </RouterLink>
             </div>
           </div>
@@ -69,12 +69,12 @@
 
     <div class="relative border-t border-slate-200 p-2 text-sm">
       <div v-if="userMenu" class="absolute inset-x-2 bottom-full z-30 mb-1 rounded-xl border border-slate-200 bg-white p-1 shadow-lg" @mouseleave="userMenu = false">
-        <RouterLink to="/account" class="menu" @click="userMenu = false"><CreditCard class="size-4 text-slate-400" /> Plan, billing and apps</RouterLink>
-        <RouterLink to="/settings" class="menu" @click="userMenu = false"><Settings class="size-4 text-slate-400" /> Settings</RouterLink>
-        <button class="menu" @click="openDesk('/app')"><ExternalLink class="size-4 text-slate-400" /> ERPNext Desk</button>
-        <button class="menu" @click="choosePicker"><LayoutGrid class="size-4 text-slate-400" /> Switch app…</button>
+        <RouterLink to="/account" class="menu" @click="userMenu = false"><CreditCard class="size-4 text-slate-400" /> {{ __('Plan, billing and apps') }}</RouterLink>
+        <RouterLink to="/settings" class="menu" @click="userMenu = false"><Settings class="size-4 text-slate-400" /> {{ __('Settings') }}</RouterLink>
+        <button class="menu" @click="openDesk('/app')"><ExternalLink class="size-4 text-slate-400" /> {{ __('ERPNext Desk') }}</button>
+        <button class="menu" @click="choosePicker"><LayoutGrid class="size-4 text-slate-400" /> {{ __('Switch app…') }}</button>
         <div class="my-1 border-t border-slate-100" />
-        <button class="menu text-red-600" @click="signOut"><LogOut class="size-4" /> Sign out</button>
+        <button class="menu text-red-600" @click="signOut"><LogOut class="size-4" /> {{ __('Sign out') }}</button>
       </div>
       <button class="flex w-full items-center gap-2 rounded-lg px-1.5 py-1.5 text-left hover:bg-slate-100" @click="userMenu = !userMenu">
         <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">{{ initials }}</span>

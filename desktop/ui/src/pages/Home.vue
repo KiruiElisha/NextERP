@@ -3,9 +3,9 @@
     <div class="flex items-end gap-3">
       <div class="flex-1">
         <h1 class="text-xl font-semibold text-slate-900">Good {{ partOfDay }}, {{ firstName }}</h1>
-        <p class="text-sm text-slate-500">{{ session.company }}<span v-if="stale" class="ml-2 text-amber-600">· showing the last figures, updating…</span></p>
+        <p class="text-sm text-slate-500">{{ session.company }}<span v-if="stale" class="ml-2 text-amber-600">{{ __('· showing the last figures, updating…') }}</span></p>
       </div>
-      <RouterLink to="/form/Sales%20Invoice/new" class="btn-primary"><Plus class="size-4" /> New invoice</RouterLink>
+      <RouterLink to="/form/Sales%20Invoice/new" class="btn-primary"><Plus class="size-4" /> {{ __('New invoice') }}</RouterLink>
     </div>
 
     <GettingStarted />
@@ -15,7 +15,7 @@
     <template v-if="data">
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div v-for="k in kpis" :key="k.label" class="card p-4">
-          <div class="text-xs font-medium text-slate-500">{{ k.label }}</div>
+          <div class="text-xs font-medium text-slate-500">{{ __(k.label) }}</div>
           <div class="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{{ short(k.value) }}</div>
           <div class="mt-0.5 text-xs" :class="k.tone || 'text-slate-400'">{{ k.hint }}</div>
         </div>
@@ -23,7 +23,7 @@
 
       <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
         <section class="card p-4 lg:col-span-2">
-          <h2 class="text-sm font-semibold text-slate-900">Sales, last 30 days</h2>
+          <h2 class="text-sm font-semibold text-slate-900">{{ __('Sales, last 30 days') }}</h2>
           <div class="mt-4 flex h-40 items-end gap-1">
             <div v-for="d in data.daily_sales" :key="d.date" class="group relative flex-1">
               <div class="rounded-t bg-brand-500/80 transition-colors group-hover:bg-brand-600" :style="{ height: `${bar(d.amount)}px` }" />
@@ -34,8 +34,8 @@
           </div>
         </section>
         <section class="card p-4">
-          <h2 class="text-sm font-semibold text-slate-900">Top customers this month</h2>
-          <p v-if="!data.top_customers.length" class="mt-3 text-sm text-slate-400">No sales yet this month.</p>
+          <h2 class="text-sm font-semibold text-slate-900">{{ __('Top customers this month') }}</h2>
+          <p v-if="!data.top_customers.length" class="mt-3 text-sm text-slate-400">{{ __('No sales yet this month.') }}</p>
           <div v-for="c in data.top_customers" :key="c.label" class="mt-3">
             <div class="flex justify-between text-sm"><span class="truncate text-slate-700">{{ c.label }}</span><span class="tabular-nums text-slate-900">{{ short(c.amount) }}</span></div>
             <div class="mt-1 h-1.5 rounded bg-slate-100"><div class="h-1.5 rounded bg-brand-500" :style="{ width: `${(c.amount / topCustomer) * 100}%` }" /></div>

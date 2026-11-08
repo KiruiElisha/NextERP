@@ -3,14 +3,14 @@
        Each opens in a Desk window, where ERPNext runs it with its own filters. -->
   <div class="mx-auto max-w-5xl space-y-5 p-6">
     <div>
-      <h1 class="text-xl font-semibold text-slate-900">{{ department ? `${department.label} reports` : 'Reports' }}</h1>
-      <p class="text-sm text-slate-500">ERPNext's standard reports, run here with their own filters, export and print.</p>
+      <h1 class="text-xl font-semibold text-slate-900">{{ department ? `${department.label} reports` : __('Reports') }}</h1>
+      <p class="text-sm text-slate-500">{{ __('ERPNext\'s standard reports, run here with their own filters, export and print.') }}</p>
     </div>
-    <p v-if="!shown.length" class="card p-6 text-sm text-slate-500">No reports are open to you on this site.</p>
+    <p v-if="!shown.length" class="card p-6 text-sm text-slate-500">{{ __('No reports are open to you on this site.') }}</p>
     <section v-for="d in shown" :key="d.key" class="card p-4">
       <div class="flex items-center gap-2">
-        <h2 class="flex-1 text-sm font-semibold text-slate-900">{{ d.label }}</h2>
-        <RouterLink v-if="!department" :to="`/reports/${d.key}`" class="text-xs text-brand-600 hover:underline">Only {{ d.label.toLowerCase() }}</RouterLink>
+        <h2 class="flex-1 text-sm font-semibold text-slate-900">{{ __(d.label) }}</h2>
+        <RouterLink v-if="!department" :to="`/reports/${d.key}`" class="text-xs text-brand-600 hover:underline">{{ __('Only {0}', [__(d.label).toLowerCase()]) }}</RouterLink>
       </div>
       <div class="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
         <RouterLink v-for="r in d.reports" :key="r.name" :to="`/report/${encodeURIComponent(r.name)}`" class="flex items-start gap-3 rounded-lg border border-slate-200 p-3 text-left hover:border-brand-500 hover:bg-brand-50">

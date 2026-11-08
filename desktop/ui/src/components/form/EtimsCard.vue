@@ -3,7 +3,7 @@
   <section v-if="info?.enabled" class="card overflow-hidden">
     <div class="flex items-center gap-2 border-b border-slate-100 px-4 py-2.5">
       <ShieldCheck class="size-4" :class="tone.icon" />
-      <h3 class="flex-1 text-xs font-semibold uppercase tracking-wide text-slate-500">KRA eTIMS</h3>
+      <h3 class="flex-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('KRA eTIMS') }}</h3>
       <span class="rounded-full px-2 py-0.5 text-[11px] font-medium" :class="tone.badge">{{ label }}</span>
     </div>
     <div class="space-y-1.5 px-4 py-3 text-sm">
@@ -11,13 +11,13 @@
         <Row label="CU invoice no" :value="`${info.etims_sdc_id}/${info.etims_invoice_no}`" />
         <Row label="Receipt no" :value="info.etims_receipt_no" />
         <Row label="Signed" :value="info.etims_sdc_datetime" />
-        <img v-if="info.qr" :src="`data:image/svg+xml;charset=utf-8,${encodeURIComponent(info.qr)}`" alt="QR code to check this receipt with KRA" class="mx-auto mt-2 size-32" />
-        <p class="text-center text-[11px] text-slate-400">The buyer scans the code to check the receipt with KRA.</p>
+        <img v-if="info.qr" :src="`data:image/svg+xml;charset=utf-8,${encodeURIComponent(info.qr)}`" :alt="__('QR code to check this receipt with KRA')" class="mx-auto mt-2 size-32" />
+        <p class="text-center text-[11px] text-slate-400">{{ __('The buyer scans the code to check the receipt with KRA.') }}</p>
       </template>
-      <p v-else-if="info.etims_status === 'Failed'" class="text-red-700">{{ info.etims_error || 'KRA refused the invoice.' }}</p>
-      <p v-else-if="info.etims_status === 'Queued'" class="text-slate-500">Waiting to be sent to KRA. It goes on its own; you can also send it now.</p>
-      <p v-else class="text-slate-500">{{ docstatus === 1 ? 'Not sent to KRA.' : 'Sent to KRA when the invoice is submitted.' }}</p>
-      <button v-if="info.can_resend" class="btn-subtle mt-1 w-full justify-center" :disabled="busy" @click="resend"><Send class="size-4" /> {{ busy ? 'Sending…' : 'Send to KRA now' }}</button>
+      <p v-else-if="info.etims_status === 'Failed'" class="text-red-700">{{ info.etims_error || __('KRA refused the invoice.') }}</p>
+      <p v-else-if="info.etims_status === 'Queued'" class="text-slate-500">{{ __('Waiting to be sent to KRA. It goes on its own; you can also send it now.') }}</p>
+      <p v-else class="text-slate-500">{{ docstatus === 1 ? __('Not sent to KRA.') : __('Sent to KRA when the invoice is submitted.') }}</p>
+      <button v-if="info.can_resend" class="btn-subtle mt-1 w-full justify-center" :disabled="busy" @click="resend"><Send class="size-4" /> {{ busy ? __('Sending…') : __('Send to KRA now') }}</button>
     </div>
   </section>
 </template>

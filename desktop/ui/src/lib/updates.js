@@ -10,7 +10,7 @@ export async function checkForUpdate() {
   try {
     const { check } = await import('@tauri-apps/plugin-updater')
     const found = await check()
-    if (found) {
+    if (found?.version) {
       pending = found
       update.available = { version: found.version, notes: found.body || '' }
     }

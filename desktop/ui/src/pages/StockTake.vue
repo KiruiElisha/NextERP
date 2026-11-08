@@ -5,35 +5,35 @@
     <header class="flex flex-wrap items-center gap-3 border-b border-slate-200 bg-white px-6 py-3">
       <RouterLink v-if="name" to="/stock-take" class="btn-ghost -ml-2 px-2"><ArrowLeft class="size-4" /></RouterLink>
       <div class="min-w-0 flex-1">
-        <div class="text-xs text-slate-400">Inventory</div>
-        <h1 class="truncate text-lg font-semibold text-slate-900">{{ name ? `Counting ${snap?.warehouse || ''}` : 'Stock take' }}</h1>
+        <div class="text-xs text-slate-400">{{ __('Inventory') }}</div>
+        <h1 class="truncate text-lg font-semibold text-slate-900">{{ name ? `Counting ${snap?.warehouse || ''}` : __('Stock take') }}</h1>
       </div>
       <template v-if="name && snap">
         <span class="flex items-center gap-1.5 text-xs text-slate-400"><span class="size-2 animate-pulse rounded-full bg-emerald-500" /> Live · {{ ago }}</span>
         <span v-if="snap.status !== 'Open'" class="rounded-full px-2.5 py-1 text-xs font-medium" :class="snap.status === 'Posted' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'">{{ snap.status }}</span>
         <RouterLink v-if="snap.stock_reconciliation" :to="formRoute('Stock Reconciliation', snap.stock_reconciliation)" class="btn-subtle">{{ snap.stock_reconciliation }}</RouterLink>
-        <button v-if="snap.status === 'Open' && snap.can_post" class="btn-primary" :disabled="!snap.lines.length" @click="confirmPost = true"><Upload class="size-4" /> Post count</button>
+        <button v-if="snap.status === 'Open' && snap.can_post" class="btn-primary" :disabled="!snap.lines.length" @click="confirmPost = true"><Upload class="size-4" /> {{ __('Post count') }}</button>
       </template>
     </header>
 
     <!-- The counts -->
     <div v-if="!name" class="mx-auto w-full max-w-4xl space-y-5 overflow-y-auto p-6">
       <form class="card flex flex-wrap items-end gap-3 p-4" @submit.prevent="begin">
-        <div class="min-w-[16rem] flex-1"><label class="label">Warehouse to count</label><LinkField v-model="warehouse" target="Warehouse" :context="{ doc: { company: session.company } }" /></div>
-        <div class="w-56"><label class="label">Only items in (optional)</label><LinkField v-model="itemGroup" target="Item Group" /></div>
-        <button class="btn-primary" :disabled="!warehouse || busy"><ScanLine class="size-4" /> Start counting</button>
+        <div class="min-w-[16rem] flex-1"><label class="label">{{ __('Warehouse to count') }}</label><LinkField v-model="warehouse" target="Warehouse" :context="{ doc: { company: session.company } }" /></div>
+        <div class="w-56"><label class="label">{{ __('Only items in (optional)') }}</label><LinkField v-model="itemGroup" target="Item Group" /></div>
+        <button class="btn-primary" :disabled="!warehouse || busy"><ScanLine class="size-4" /> {{ __('Start counting') }}</button>
       </form>
       <section class="card overflow-hidden">
-        <h2 class="border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-900">Counts</h2>
+        <h2 class="border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-900">{{ __('Counts') }}</h2>
         <RouterLink v-for="c in list" :key="c.name" :to="`/stock-take/${encodeURIComponent(c.name)}`" class="flex items-center gap-3 border-b border-slate-100 px-4 py-3 last:border-0 hover:bg-slate-50">
           <ClipboardCheck class="size-4 text-slate-400" />
           <div class="min-w-0 flex-1">
             <div class="truncate text-sm font-medium text-slate-800">{{ c.warehouse }}<span v-if="c.item_group" class="text-slate-400"> · {{ c.item_group }}</span></div>
-            <div class="text-xs text-slate-400">{{ c.name }} · {{ new Date(String(c.creation).replace(' ', 'T')).toLocaleString() }}</div>
+            <div class="text-xs text-slate-400">{{ c.name }} · {{ new Date(String(c.creation).replace(' ', __('T'))).toLocaleString() }}</div>
           </div>
           <span class="rounded-full px-2 py-0.5 text-[11px] font-medium" :class="c.status === 'Open' ? 'bg-brand-50 text-brand-700' : c.status === 'Posted' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'">{{ c.status }}</span>
         </RouterLink>
-        <p v-if="!list.length" class="p-8 text-center text-sm text-slate-400">No counts yet. Start one above.</p>
+        <p v-if="!list.length" class="p-8 text-center text-sm text-slate-400">{{ __('No counts yet. Start one above.') }}</p>
       </section>
     </div>
 
@@ -44,23 +44,23 @@
           <form class="flex flex-wrap items-center gap-2" @submit.prevent="scan">
             <div class="relative min-w-[18rem] flex-1">
               <ScanLine class="absolute left-3.5 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
-              <input ref="scanBox" v-model="code" class="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-3 text-base outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100" placeholder="Scan or type an item code" autocomplete="off" />
+              <input ref="scanBox" v-model="code" class="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-3 text-base outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100" :placeholder="__('Scan or type an item code')" autocomplete="off" />
             </div>
-            <input v-if="typed" v-model.number="qty" class="input w-28 py-3 text-right text-base tabular-nums" inputmode="decimal" placeholder="Qty" />
-            <input v-if="needsBatch" v-model="batch" class="input w-40 py-3" placeholder="Batch" />
-            <button class="btn-primary py-3">{{ typed ? 'Set count' : 'Add one' }}</button>
-            <label class="flex items-center gap-2 text-sm text-slate-600"><input v-model="typed" type="checkbox" class="rounded border-slate-300" /> Type quantities</label>
+            <input v-if="typed" v-model.number="qty" class="input w-28 py-3 text-right text-base tabular-nums" inputmode="decimal" :placeholder="__('Qty')" />
+            <input v-if="needsBatch" v-model="batch" class="input w-40 py-3" :placeholder="__('Batch')" />
+            <button class="btn-primary py-3">{{ typed ? __('Set count') : __('Add one') }}</button>
+            <label class="flex items-center gap-2 text-sm text-slate-600"><input v-model="typed" type="checkbox" class="rounded border-slate-300" /> {{ __('Type quantities') }}</label>
           </form>
           <p v-if="last" class="mt-2 text-sm" :class="last.error ? 'text-red-600' : 'text-emerald-700'">{{ last.text }}</p>
         </div>
         <div class="flex items-center gap-1 border-b border-slate-200 bg-white px-4 py-2 text-sm">
-          <button v-for="t in TABS" :key="t.key" class="rounded-lg px-3 py-1.5" :class="tab === t.key ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'" @click="tab = t.key">{{ t.label }} <span class="ml-1 text-xs opacity-70">{{ t.count() }}</span></button>
-          <input v-model="filter" class="input ml-auto w-56 py-1" placeholder="Filter…" />
+          <button v-for="t in TABS" :key="t.key" class="rounded-lg px-3 py-1.5" :class="tab === t.key ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'" @click="tab = t.key">{{ __(t.label) }} <span class="ml-1 text-xs opacity-70">{{ t.count() }}</span></button>
+          <input v-model="filter" class="input ml-auto w-56 py-1" :placeholder="__('Filter…')" />
         </div>
         <div class="min-h-0 flex-1 overflow-auto">
           <table class="w-full text-sm">
             <thead class="sticky top-0 bg-slate-50 text-left text-[11px] uppercase tracking-wide text-slate-500">
-              <tr><th class="px-4 py-2">Item</th><th class="px-3 py-2 text-right">In ERPNext</th><th class="px-3 py-2 text-right">Counted</th><th class="px-3 py-2 text-right">Difference</th><th class="px-3 py-2 text-right">Value</th><th class="px-3 py-2">Counted by</th></tr>
+              <tr><th class="px-4 py-2">{{ __('Item') }}</th><th class="px-3 py-2 text-right">{{ __('In ERPNext') }}</th><th class="px-3 py-2 text-right">{{ __('Counted') }}</th><th class="px-3 py-2 text-right">{{ __('Difference') }}</th><th class="px-3 py-2 text-right">{{ __('Value') }}</th><th class="px-3 py-2">{{ __('Counted by') }}</th></tr>
             </thead>
             <tbody>
               <tr v-for="l in rows" :key="l.item_code + (l.batch_no || '')" class="border-t border-slate-100 hover:bg-slate-50" @click="tab !== 'uncounted' && snap.status === 'Open' && recount(l)">
@@ -73,33 +73,33 @@
               </tr>
             </tbody>
           </table>
-          <p v-if="!rows.length" class="py-14 text-center text-sm text-slate-400">{{ tab === 'uncounted' ? 'Everything in stock has been counted.' : 'Scan the first item to start.' }}</p>
+          <p v-if="!rows.length" class="py-14 text-center text-sm text-slate-400">{{ tab === 'uncounted' ? __('Everything in stock has been counted.') : __('Scan the first item to start.') }}</p>
         </div>
       </section>
       <aside class="space-y-3 border-l border-slate-200 bg-white p-4">
         <div class="grid grid-cols-2 gap-3">
-          <div class="rounded-xl bg-slate-50 p-3"><div class="text-xs text-slate-500">Counted</div><div class="text-2xl font-bold">{{ snap.totals.counted_items }}</div></div>
-          <div class="rounded-xl bg-slate-50 p-3"><div class="text-xs text-slate-500">Not yet</div><div class="text-2xl font-bold">{{ snap.totals.uncounted }}</div></div>
-          <div class="rounded-xl bg-red-50 p-3"><div class="text-xs text-red-600">Short</div><div class="text-2xl font-bold text-red-700">{{ snap.totals.short }}</div></div>
-          <div class="rounded-xl bg-amber-50 p-3"><div class="text-xs text-amber-700">Over</div><div class="text-2xl font-bold text-amber-700">{{ snap.totals.over }}</div></div>
+          <div class="rounded-xl bg-slate-50 p-3"><div class="text-xs text-slate-500">{{ __('Counted') }}</div><div class="text-2xl font-bold">{{ snap.totals.counted_items }}</div></div>
+          <div class="rounded-xl bg-slate-50 p-3"><div class="text-xs text-slate-500">{{ __('Not yet') }}</div><div class="text-2xl font-bold">{{ snap.totals.uncounted }}</div></div>
+          <div class="rounded-xl bg-red-50 p-3"><div class="text-xs text-red-600">{{ __('Short') }}</div><div class="text-2xl font-bold text-red-700">{{ snap.totals.short }}</div></div>
+          <div class="rounded-xl bg-amber-50 p-3"><div class="text-xs text-amber-700">{{ __('Over') }}</div><div class="text-2xl font-bold text-amber-700">{{ snap.totals.over }}</div></div>
         </div>
         <div class="rounded-xl border border-slate-200 p-3">
-          <div class="text-xs text-slate-500">Value of the difference</div>
+          <div class="text-xs text-slate-500">{{ __('Value of the difference') }}</div>
           <div class="text-2xl font-bold tabular-nums" :class="tone(snap.totals.variance_value)">{{ signed(snap.totals.variance_value, 2) }}</div>
           <p class="mt-1 text-xs text-slate-400">At each item's valuation in {{ snap.warehouse }}. Posting adjusts stock and books this to the stock adjustment account.</p>
         </div>
-        <button v-if="snap.status === 'Open'" class="btn-ghost w-full justify-center text-slate-500" @click="cancelCount">Abandon this count</button>
+        <button v-if="snap.status === 'Open'" class="btn-ghost w-full justify-center text-slate-500" @click="cancelCount">{{ __('Abandon this count') }}</button>
       </aside>
     </div>
 
     <div v-if="confirmPost" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-6" @mousedown.self="confirmPost = false">
       <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl">
-        <h3 class="font-semibold text-slate-900">Post this count?</h3>
+        <h3 class="font-semibold text-slate-900">{{ __('Post this count?') }}</h3>
         <p class="mt-1 text-sm text-slate-500">ERPNext's stock in {{ snap.warehouse }} is set to what was counted for {{ snap.lines.filter((l) => l.variance).length }} items, a difference of <b :class="tone(snap.totals.variance_value)">{{ signed(snap.totals.variance_value, 2) }}</b>.</p>
         <label v-if="snap.totals.uncounted" class="mt-3 flex items-start gap-2 text-sm text-slate-700"><input v-model="zeroUncounted" type="checkbox" class="mt-0.5 rounded border-slate-300" /> Also set the {{ snap.totals.uncounted }} items nobody counted to zero</label>
         <div class="mt-5 flex justify-end gap-2">
-          <button class="btn-subtle" @click="confirmPost = false">Not yet</button>
-          <button class="btn-primary" :disabled="busy" @click="post">{{ busy ? 'Posting…' : 'Post count' }}</button>
+          <button class="btn-subtle" @click="confirmPost = false">{{ __('Not yet') }}</button>
+          <button class="btn-primary" :disabled="busy" @click="post">{{ busy ? __('Posting…') : __('Post count') }}</button>
         </div>
       </div>
     </div>

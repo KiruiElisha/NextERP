@@ -1,7 +1,7 @@
 <template>
   <div class="flex h-full flex-col">
     <div class="flex flex-wrap items-center gap-3 border-b border-slate-200 bg-white px-6 py-3">
-      <h1 class="text-lg font-semibold text-slate-900">{{ meta?.plural || doctype }}</h1>
+      <h1 class="text-lg font-semibold text-slate-900">{{ __(meta?.plural || doctype) }}</h1>
       <span class="text-xs text-slate-400">{{ total.toLocaleString() }} · {{ took }} ms from this computer</span>
       <div class="ml-auto flex items-center gap-2">
         <div class="flex overflow-hidden rounded-lg border border-slate-200 text-xs">
@@ -10,8 +10,8 @@
         </div>
         <input ref="box" v-model="text" class="input w-64" :placeholder="`Search ${(meta?.plural || '').toLowerCase()}…`" @keydown.down.prevent="move(1)"
           @keydown.up.prevent="move(-1)" @keydown.enter.prevent="open(rows[active])" />
-        <RouterLink :to="listRoute(doctype)" class="btn-subtle" title="Filters, saved views, bulk edit and export, from the site"><SlidersHorizontal class="size-4" /> More</RouterLink>
-        <RouterLink v-if="canCreate" :to="formRoute(doctype, 'new')" class="btn-primary"><Plus class="size-4" /> New</RouterLink>
+        <RouterLink :to="listRoute(doctype)" class="btn-subtle" :title="__('Filters, saved views, bulk edit and export, from the site')"><SlidersHorizontal class="size-4" /> {{ __('More') }}</RouterLink>
+        <RouterLink v-if="canCreate" :to="formRoute(doctype, 'new')" class="btn-primary"><Plus class="size-4" /> {{ __('New') }}</RouterLink>
       </div>
     </div>
 
@@ -20,7 +20,7 @@
         <thead class="sticky top-0 z-10 bg-slate-50 text-left text-[11px] uppercase tracking-wide text-slate-500">
           <tr>
             <th v-for="c in columns" :key="c.field" class="cursor-pointer select-none px-4 py-2 font-medium" :class="c.align === 'right' && 'text-right'" @click="sortBy(c.field)">
-              {{ c.label }}<span v-if="order === c.field">{{ descending ? ' ↓' : ' ↑' }}</span>
+              {{ __(c.label) }}<span v-if="order === c.field">{{ descending ? ' ↓' : ' ↑' }}</span>
             </th>
           </tr>
         </thead>
@@ -28,7 +28,7 @@
           <tr v-for="(r, i) in rows" :key="r.name" class="cursor-pointer border-b border-slate-100" :class="i === active ? 'bg-brand-50' : 'bg-white hover:bg-slate-50'"
             @click="open(r)" @mouseenter="active = i">
             <td v-for="c in columns" :key="c.field" class="whitespace-nowrap px-4 py-2" :class="[c.align === 'right' && 'text-right tabular-nums', c.grow && 'w-full max-w-0 truncate font-medium text-slate-800']">
-              <span v-if="c.kind === 'status'" class="rounded-full px-2 py-0.5 text-[11px] font-medium" :class="statusOf(r)[1]">{{ statusOf(r)[0] }}</span>
+              <span v-if="c.kind === 'status'" class="rounded-full px-2 py-0.5 text-[11px] font-medium" :class="statusOf(r)[1]">{{ __(statusOf(r)[0]) }}</span>
               <template v-else-if="c.kind === 'money'">{{ money(r[c.field]) }}</template>
               <template v-else-if="c.kind === 'date'">{{ date(r[c.field]) }}</template>
               <template v-else>{{ r[c.field] ?? '' }}</template>
@@ -37,7 +37,7 @@
         </tbody>
       </table>
       <p v-if="!rows.length" class="py-16 text-center text-sm text-slate-400">
-        {{ session.sync.running ? 'Bringing these onto this computer…' : text ? `Nothing matches “${text}”.` : 'Nothing here yet.' }}
+        {{ session.sync.running ? __('Bringing these onto this computer…') : text ? `Nothing matches “${text}”.` : __('Nothing here yet.') }}
       </p>
     </div>
   </div>

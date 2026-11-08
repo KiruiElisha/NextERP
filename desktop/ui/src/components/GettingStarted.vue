@@ -5,11 +5,11 @@
     <div class="flex items-center gap-3 border-b border-slate-100 px-5 py-3">
       <Rocket class="size-5 text-brand-600" />
       <div class="flex-1">
-        <h2 class="text-sm font-semibold text-slate-900">Get set up</h2>
+        <h2 class="text-sm font-semibold text-slate-900">{{ __('Get set up') }}</h2>
         <p class="text-xs text-slate-500">{{ done }} of {{ steps.length }} done</p>
       </div>
       <div class="hidden h-1.5 w-40 overflow-hidden rounded-full bg-slate-100 sm:block"><div class="h-full rounded-full bg-brand-600 transition-all" :style="{ width: `${(done / steps.length) * 100}%` }" /></div>
-      <button class="btn-ghost text-xs text-slate-500" @click="hide">Hide</button>
+      <button class="btn-ghost text-xs text-slate-500" @click="hide">{{ __('Hide') }}</button>
     </div>
     <ul class="grid sm:grid-cols-2 lg:grid-cols-3">
       <li v-for="s in steps" :key="s.key" class="border-b border-slate-100 sm:border-r">

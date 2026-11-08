@@ -2,14 +2,14 @@
   <header class="flex h-14 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4">
     <button class="flex h-9 w-full max-w-md items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-400 hover:border-slate-300"
       @click="$emit('search')">
-      <Search class="size-4" /> Search customers, items, invoices…
+      <Search class="size-4" /> {{ __('Search customers, items, invoices…') }}
       <kbd class="ml-auto rounded border border-slate-200 bg-white px-1.5 text-[11px] text-slate-500">Ctrl K</kbd>
     </button>
     <div class="ml-auto flex items-center gap-3">
       <button class="flex items-center gap-1.5 text-xs" :class="session.sync.error ? 'text-red-600' : 'text-slate-500'"
         :title="session.sync.error || 'Sync now'" @click="call('sync_now')">
         <RefreshCw class="size-3.5" :class="session.sync.running && 'animate-spin'" />
-        {{ session.sync.running ? `Syncing ${session.sync.doctype}…` : session.sync.error ? 'Offline' : `Synced ${ago(session.sync.last)}` }}
+        {{ session.sync.running ? __('Syncing {0}…', [__(session.sync.doctype)]) : session.sync.error ? __('Offline') : __('Synced {0}', [ago(session.sync.last)]) }}
       </button>
       <select v-if="companies.length > 1" :value="session.company" class="input w-56 py-1" @change="setCompany($event.target.value)">
         <option v-for="c in companies" :key="c" :value="c">{{ c }}</option>

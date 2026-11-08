@@ -66,6 +66,17 @@ connect M-Pesa, the assistant and eTIMS, each step opening the screen where it's
 the site records it. **Ctrl K** goes anywhere: every screen, **New …** for each document the user may
 create, every report, the documents on the computer, and (three words or more) the assistant.
 
+## Languages
+
+Settings → Language sets the user's own language, the same User.language Desk uses, from the languages
+the site has turned on. The app's words come from Frappe's translations of every installed app
+(ERPNext's labels and messages included), NextERP's own (`nexterp/translations/<lang>.csv`, Swahili
+included), then the site's Translation records, which a System Manager adds or corrects in Desk.
+Server messages follow the same setting. Arabic and other right-to-left languages turn the layout
+around; numbers, dates and "5 minutes ago" are written the language's way. The words are kept on the
+computer, so the app opens in the user's language offline. The Swahili file was written for this app:
+have a native speaker review it, and add a language by adding its CSV (or Translation records).
+
 ## Server setup
 
 ```bash

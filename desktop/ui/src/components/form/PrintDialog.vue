@@ -8,15 +8,15 @@
         <select v-model="format" class="input w-56">
           <option v-for="p in formats" :key="p" :value="p">{{ p }}</option>
         </select>
-        <label class="flex items-center gap-2 text-sm text-slate-600"><input v-model="letterhead" type="checkbox" class="rounded border-slate-300" /> Letterhead</label>
+        <label class="flex items-center gap-2 text-sm text-slate-600"><input v-model="letterhead" type="checkbox" class="rounded border-slate-300" /> {{ __('Letterhead') }}</label>
         <span class="flex-1" />
-        <button class="btn-subtle" :disabled="!html" @click="print"><Printer class="size-4" /> Print</button>
-        <button class="btn-primary" :disabled="saving" @click="pdf"><Download class="size-4" /> {{ saving ? 'Saving…' : 'Save PDF' }}</button>
+        <button class="btn-subtle" :disabled="!html" @click="print"><Printer class="size-4" /> {{ __('Print') }}</button>
+        <button class="btn-primary" :disabled="saving" @click="pdf"><Download class="size-4" /> {{ saving ? __('Saving…') : __('Save PDF') }}</button>
         <button class="btn-ghost" @click="$emit('close')"><X class="size-4" /></button>
       </div>
       <div class="relative flex-1 bg-slate-100">
-        <p v-if="loading" class="absolute inset-0 flex items-center justify-center text-sm text-slate-400">Preparing the print…</p>
-        <iframe ref="frame" class="h-full w-full bg-white" :srcdoc="html" title="Print preview" sandbox="allow-same-origin allow-modals" />
+        <p v-if="loading" class="absolute inset-0 flex items-center justify-center text-sm text-slate-400">{{ __('Preparing the print…') }}</p>
+        <iframe ref="frame" class="h-full w-full bg-white" :srcdoc="html" :title="__('Print preview')" sandbox="allow-same-origin allow-modals" />
       </div>
     </div>
   </div>

@@ -4,12 +4,12 @@
   <div>
     <div v-if="tabs.length > 1" class="mb-4 flex gap-1 overflow-x-auto border-b border-slate-200">
       <button v-for="(t, i) in tabs" :key="t.label + i" type="button" class="-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors"
-        :class="i === tab ? 'border-brand-600 text-brand-700' : 'border-transparent text-slate-500 hover:text-slate-800'" @click="tab = i">{{ t.label }}</button>
+        :class="i === tab ? 'border-brand-600 text-brand-700' : 'border-transparent text-slate-500 hover:text-slate-800'" @click="tab = i">{{ __(t.label) }}</button>
     </div>
     <div class="space-y-4">
       <section v-for="s in tabs[tab]?.sections || []" :key="s.fieldname || s.label" class="rounded-xl" :class="bordered && 'card p-4'">
         <button v-if="s.label" type="button" class="mb-3 flex w-full items-center gap-2 text-left" :disabled="!s.collapsible" @click="toggle(s)">
-          <h3 class="flex-1 text-sm font-semibold text-slate-900">{{ s.label }}</h3>
+          <h3 class="flex-1 text-sm font-semibold text-slate-900">{{ __(s.label) }}</h3>
           <ChevronDown v-if="s.collapsible" class="size-4 text-slate-400 transition-transform" :class="folded(s) && '-rotate-90'" />
         </button>
         <div v-show="!folded(s)" class="grid gap-x-6 gap-y-4" :style="{ gridTemplateColumns: `repeat(${s.columns.length}, minmax(0, 1fr))` }">

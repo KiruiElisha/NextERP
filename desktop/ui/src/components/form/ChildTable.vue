@@ -3,7 +3,7 @@
        other field of a row a click away. Enter on the last cell adds a row, as in Desk. -->
   <div>
     <div class="mb-1.5 flex items-center gap-2">
-      <span class="label mb-0">{{ df.label }}<span v-if="required" class="text-red-500"> *</span></span>
+      <span class="label mb-0">{{ __(df.label) }}<span v-if="required" class="text-red-500"> *</span></span>
       <span class="text-xs text-slate-400">{{ rows.length }}</span>
     </div>
     <div class="overflow-x-auto rounded-xl border border-slate-200">
@@ -11,7 +11,7 @@
         <thead class="bg-slate-50 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
           <tr>
             <th class="w-8 px-2 py-2 text-center">#</th>
-            <th v-for="c in columns" :key="c.fieldname" class="px-2 py-2" :class="numeric(c) && 'text-right'" :style="{ minWidth: width(c) }">{{ c.label }}</th>
+            <th v-for="c in columns" :key="c.fieldname" class="px-2 py-2" :class="numeric(c) && 'text-right'" :style="{ minWidth: width(c) }">{{ __(c.label) }}</th>
             <th class="w-16" />
           </tr>
         </thead>
@@ -23,22 +23,22 @@
                 @change="(f) => $emit('change', { row, fieldname: f })" @picked="(f) => $emit('change', { row, fieldname: f, picked: true })" />
             </td>
             <td class="whitespace-nowrap px-1 py-1.5 text-right">
-              <button class="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" title="All fields of this row" @click="expanded = row"><Maximize2 class="size-3.5" /></button>
-              <button v-if="!readOnly" class="rounded p-1 text-slate-300 hover:bg-red-50 hover:text-red-600" title="Remove row" @click="remove(i)"><Trash2 class="size-3.5" /></button>
+              <button class="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" :title="__('All fields of this row')" @click="expanded = row"><Maximize2 class="size-3.5" /></button>
+              <button v-if="!readOnly" class="rounded p-1 text-slate-300 hover:bg-red-50 hover:text-red-600" :title="__('Remove row')" @click="remove(i)"><Trash2 class="size-3.5" /></button>
             </td>
           </tr>
-          <tr v-if="!rows.length"><td :colspan="columns.length + 2" class="px-3 py-6 text-center text-sm text-slate-400">No rows yet.</td></tr>
+          <tr v-if="!rows.length"><td :colspan="columns.length + 2" class="px-3 py-6 text-center text-sm text-slate-400">{{ __('No rows yet.') }}</td></tr>
         </tbody>
       </table>
     </div>
-    <button v-if="!readOnly" class="btn-ghost mt-1.5 -ml-2 text-brand-700" @click="add"><Plus class="size-4" /> Add row</button>
+    <button v-if="!readOnly" class="btn-ghost mt-1.5 -ml-2 text-brand-700" @click="add"><Plus class="size-4" /> {{ __('Add row') }}</button>
 
     <!-- Every field of one row, laid out as ERPNext lays the child form. -->
     <div v-if="expanded" class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-6 backdrop-blur-sm" @mousedown.self="expanded = null">
       <div class="w-full max-w-3xl rounded-2xl bg-white shadow-2xl">
         <div class="flex items-center gap-3 border-b border-slate-100 px-5 py-3">
-          <h3 class="flex-1 font-semibold text-slate-900">{{ df.label }} · row {{ rows.indexOf(expanded) + 1 }}</h3>
-          <button class="btn-subtle" @click="expanded = null">Done</button>
+          <h3 class="flex-1 font-semibold text-slate-900">{{ __(df.label) }} · row {{ rows.indexOf(expanded) + 1 }}</h3>
+          <button class="btn-subtle" @click="expanded = null">{{ __('Done') }}</button>
         </div>
         <div class="max-h-[70vh] overflow-y-auto p-5">
           <FormLayout :meta="childMeta" :doc="expanded" :parent="doc" :parent-doctype="doc.doctype" :all="true" :show-invalid="showInvalid"

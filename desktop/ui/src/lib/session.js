@@ -1,4 +1,5 @@
 // Who is signed in, to which company, and how the cache is doing: shared by every screen.
+import { i18n, loadLanguage } from './i18n'
 import { reactive } from 'vue'
 import { call, on, whenSignedOut } from './backend'
 
@@ -49,18 +50,24 @@ export async function start() {
     session.sync.error = p.error ? p.error.message || p.error.kind : null
   })
   if (!session.signedIn) return
+  loadLanguage(session.boot?.lang)
   // The launch sync may finish before this window listens; the cache knows when it last did.
   call('cache_status').then((s) => (session.sync.last = s.last_sync ? Number(s.last_sync) * 1000 : null)).catch(() => {})
-  call('refresh_boot').then((boot) => (session.boot = boot)).catch(() => {})
+  call('refresh_boot').then((boot) => {
+    session.boot = boot
+    if (boot?.lang && boot.lang !== i18n.lang) loadLanguage(boot.lang)
+  }).catch(() => {})
 }
 
 export async function signIn(site, user, password) {
   const boot = await call('sign_in', { site, user, password })
   apply({ site, user: boot.user, boot })
+  loadLanguage(boot.lang)
   session.sync.running = true
 }
 
 export async function signOut() {
   await call('sign_out').catch(() => {})
   apply(null)
+  loadLanguage('en') // the sign-in screen belongs to nobody yet
 }

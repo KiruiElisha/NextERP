@@ -9,14 +9,14 @@
     <div v-if="error" class="p-4 text-xs text-slate-400">{{ error }}</div>
     <template v-else-if="data">
       <dl class="grid grid-cols-3 divide-x divide-slate-100 border-b border-slate-100 text-center">
-        <div class="p-3"><dt class="text-[11px] text-slate-400">This year</dt><dd class="mt-0.5 text-sm font-semibold tabular-nums text-slate-900">{{ short(data.billed_this_year) }}</dd></div>
-        <div class="p-3"><dt class="text-[11px] text-slate-400">Outstanding</dt><dd class="mt-0.5 text-sm font-semibold tabular-nums" :class="data.outstanding > 0 ? 'text-amber-700' : 'text-slate-900'">{{ short(data.outstanding) }}</dd></div>
-        <div class="p-3"><dt class="text-[11px] text-slate-400">Overdue</dt><dd class="mt-0.5 text-sm font-semibold tabular-nums" :class="data.overdue > 0 ? 'text-red-600' : 'text-slate-900'">{{ short(data.overdue) }}</dd></div>
+        <div class="p-3"><dt class="text-[11px] text-slate-400">{{ __('This year') }}</dt><dd class="mt-0.5 text-sm font-semibold tabular-nums text-slate-900">{{ short(data.billed_this_year) }}</dd></div>
+        <div class="p-3"><dt class="text-[11px] text-slate-400">{{ __('Outstanding') }}</dt><dd class="mt-0.5 text-sm font-semibold tabular-nums" :class="data.outstanding > 0 ? 'text-amber-700' : 'text-slate-900'">{{ short(data.outstanding) }}</dd></div>
+        <div class="p-3"><dt class="text-[11px] text-slate-400">{{ __('Overdue') }}</dt><dd class="mt-0.5 text-sm font-semibold tabular-nums" :class="data.overdue > 0 ? 'text-red-600' : 'text-slate-900'">{{ short(data.overdue) }}</dd></div>
       </dl>
       <div v-for="g in groups" :key="g.label" class="border-b border-slate-100 px-4 py-3 last:border-0">
         <div class="mb-1.5 flex items-center justify-between">
-          <h5 class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{{ g.label }}</h5>
-          <RouterLink v-if="g.rows.length" :to="g.list" class="text-[11px] text-brand-600 hover:underline">All</RouterLink>
+          <h5 class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{{ __(g.label) }}</h5>
+          <RouterLink v-if="g.rows.length" :to="g.list" class="text-[11px] text-brand-600 hover:underline">{{ __('All') }}</RouterLink>
         </div>
         <RouterLink v-for="r in g.rows" :key="r.name" :to="formRoute(g.doctype, r.name)" class="flex items-center gap-2 rounded-lg px-1.5 py-1 text-xs hover:bg-slate-50"
           :class="r.name === current && 'bg-brand-50'">
@@ -26,10 +26,10 @@
           </span>
           <span class="text-right">
             <span class="block tabular-nums text-slate-700">{{ money(r.grand_total ?? r.paid_amount) }}</span>
-            <span class="block text-[10px]" :class="statusOf(r)[1].split(' ').filter((c) => c.startsWith('text-')).join(' ')">{{ statusOf(r)[0] }}</span>
+            <span class="block text-[10px]" :class="statusOf(r)[1].split(' ').filter((c) => c.startsWith('text-')).join(' ')">{{ __(statusOf(r)[0]) }}</span>
           </span>
         </RouterLink>
-        <p v-if="!g.rows.length" class="px-1.5 text-xs text-slate-400">None yet</p>
+        <p v-if="!g.rows.length" class="px-1.5 text-xs text-slate-400">{{ __('None yet') }}</p>
       </div>
     </template>
     <div v-else class="space-y-2 p-4"><div v-for="n in 3" :key="n" class="h-4 animate-pulse rounded bg-slate-100" /></div>

@@ -34,6 +34,8 @@ def boot() -> dict:
 		"esg": esg_allowed(),
 		# the assistant: on for this user or not, and its provider (never its key)
 		"ai": ai_status(),
+		# the user's own language (User.language, as in Desk); the app loads its words from i18n.messages
+		"lang": frappe.local.lang or "en",
 		# KRA eTIMS (etims_oscu on the site): invoices and receipts show what KRA signed
 		"etims": etims.enabled(),
 		# the app picker and switcher: installed apps with a screen, ERPNext (drawn here) first

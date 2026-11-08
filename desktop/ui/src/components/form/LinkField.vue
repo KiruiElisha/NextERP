@@ -4,11 +4,11 @@
   <div class="relative">
     <div class="relative">
       <input ref="box" :value="open ? text : modelValue || ''" :disabled="disabled" class="input pr-8" :class="invalid && 'border-red-400'"
-        :placeholder="placeholder || (target ? `Search ${target.toLowerCase()}…` : 'Choose the type first')" autocomplete="off" spellcheck="false"
+        :placeholder="placeholder || (target ? __('Search {0}…', [__(target).toLowerCase()]) : __('Choose the type first'))" autocomplete="off" spellcheck="false"
         @focus="start" @input="type($event.target.value)" @blur="finish" @keydown.down.prevent="move(1)" @keydown.up.prevent="move(-1)"
         @keydown.enter.prevent="choose(options[active])" @keydown.esc.prevent="close" @keydown.tab="finishWithActive" />
       <button v-if="modelValue && !disabled" type="button" tabindex="-1" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500"
-        title="Clear" @mousedown.prevent="clear"><X class="size-3.5" /></button>
+        :title="__('Clear')" @mousedown.prevent="clear"><X class="size-3.5" /></button>
     </div>
     <p v-if="title && !open" class="mt-0.5 truncate text-[11px] text-slate-400">{{ title }}</p>
     <ul v-if="open && (options.length || text)" class="absolute z-40 mt-1 max-h-72 w-full min-w-[16rem] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
@@ -20,7 +20,7 @@
         </div>
         <div v-if="o.description" class="truncate text-xs text-slate-400">{{ o.description }}</div>
       </li>
-      <li v-if="!options.length" class="px-2.5 py-2 text-sm text-slate-400">{{ loading ? 'Searching…' : `No ${target?.toLowerCase() || 'records'} match “${text}”.` }}</li>
+      <li v-if="!options.length" class="px-2.5 py-2 text-sm text-slate-400">{{ loading ? __('Searching…') : `No ${target?.toLowerCase() || 'records'} match “${text}”.` }}</li>
       <li v-if="canCreate" class="mt-1 border-t border-slate-100 pt-1">
         <button type="button" class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm text-brand-700 hover:bg-brand-50" @mousedown.prevent="create">
           <Plus class="size-3.5" /> New {{ target }}{{ text ? ` “${text}”` : '' }}

@@ -3,36 +3,36 @@
        assigned to, its attachments, comments, emails and every change. -->
   <aside class="space-y-5 text-sm">
     <section>
-      <h4 class="side-h"><Users class="size-3.5" /> Assigned to</h4>
+      <h4 class="side-h"><Users class="size-3.5" /> {{ __('Assigned to') }}</h4>
       <div class="flex flex-wrap gap-1.5">
         <span v-for="a in info.assignments" :key="a.owner || a.name" class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">{{ a.owner || a.name }}</span>
-        <span v-if="!info.assignments?.length" class="text-xs text-slate-400">Nobody</span>
+        <span v-if="!info.assignments?.length" class="text-xs text-slate-400">{{ __('Nobody') }}</span>
       </div>
       <form v-if="canWrite" class="mt-2 flex gap-1.5" @submit.prevent="assign">
-        <input v-model="assignee" class="input py-1 text-xs" placeholder="user@company.com" />
-        <button class="btn-subtle px-2 py-1 text-xs" :disabled="!assignee">Assign</button>
+        <input v-model="assignee" class="input py-1 text-xs" :placeholder="__('user@company.com')" />
+        <button class="btn-subtle px-2 py-1 text-xs" :disabled="!assignee">{{ __('Assign') }}</button>
       </form>
     </section>
 
     <section>
-      <h4 class="side-h"><Paperclip class="size-3.5" /> Attachments</h4>
+      <h4 class="side-h"><Paperclip class="size-3.5" /> {{ __('Attachments') }}</h4>
       <ul class="space-y-1">
         <li v-for="f in info.attachments" :key="f.name" class="flex items-center gap-2">
           <FileText class="size-3.5 shrink-0 text-slate-400" />
           <button class="truncate text-left text-brand-700 hover:underline" @click="openFile(f)">{{ f.file_name }}</button>
         </li>
-        <li v-if="!info.attachments?.length" class="text-xs text-slate-400">None</li>
+        <li v-if="!info.attachments?.length" class="text-xs text-slate-400">{{ __('None') }}</li>
       </ul>
-      <label v-if="canWrite" class="btn-ghost -ml-2 mt-1 cursor-pointer text-xs text-brand-700"><Plus class="size-3.5" /> {{ uploading ? 'Uploading…' : 'Attach a file' }}
+      <label v-if="canWrite" class="btn-ghost -ml-2 mt-1 cursor-pointer text-xs text-brand-700"><Plus class="size-3.5" /> {{ uploading ? __('Uploading…') : __('Attach a file') }}
         <input type="file" class="hidden" :disabled="uploading" @change="upload($event.target.files[0])" />
       </label>
     </section>
 
     <section>
-      <h4 class="side-h"><MessageSquare class="size-3.5" /> Activity</h4>
+      <h4 class="side-h"><MessageSquare class="size-3.5" /> {{ __('Activity') }}</h4>
       <form class="mb-3" @submit.prevent="comment">
-        <textarea v-model="note" class="input min-h-[64px] text-sm" placeholder="Add a comment…" @keydown.ctrl.enter.prevent="comment" @keydown.meta.enter.prevent="comment" />
-        <div class="mt-1.5 flex justify-end"><button class="btn-subtle px-2.5 py-1 text-xs" :disabled="!note.trim() || posting">Comment</button></div>
+        <textarea v-model="note" class="input min-h-[64px] text-sm" :placeholder="__('Add a comment…')" @keydown.ctrl.enter.prevent="comment" @keydown.meta.enter.prevent="comment" />
+        <div class="mt-1.5 flex justify-end"><button class="btn-subtle px-2.5 py-1 text-xs" :disabled="!note.trim() || posting">{{ __('Comment') }}</button></div>
       </form>
       <ol class="relative space-y-3 border-l border-slate-200 pl-4">
         <li v-for="e in events" :key="e.key" class="relative">
@@ -41,7 +41,7 @@
           <div v-if="e.subject" class="font-medium text-slate-800">{{ e.subject }}</div>
           <div class="break-words text-slate-700" :class="e.kind === 'version' && 'text-xs text-slate-500'" v-html="e.html" />
         </li>
-        <li v-if="!events.length" class="text-xs text-slate-400">Nothing yet.</li>
+        <li v-if="!events.length" class="text-xs text-slate-400">{{ __('Nothing yet.') }}</li>
       </ol>
     </section>
   </aside>

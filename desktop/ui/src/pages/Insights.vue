@@ -4,8 +4,8 @@
   <div class="mx-auto max-w-7xl space-y-5 p-6">
     <div class="flex flex-wrap items-end gap-3">
       <div class="flex-1">
-        <h1 class="text-xl font-semibold text-slate-900">Business Intelligence</h1>
-        <p class="text-sm text-slate-500">{{ session.company }} · {{ label }}<span v-if="stale" class="ml-2 text-amber-600">· showing the last figures, updating…</span></p>
+        <h1 class="text-xl font-semibold text-slate-900">{{ __('Business Intelligence') }}</h1>
+        <p class="text-sm text-slate-500">{{ session.company }} · {{ label }}<span v-if="stale" class="ml-2 text-amber-600">{{ __('· showing the last figures, updating…') }}</span></p>
       </div>
       <div class="flex overflow-hidden rounded-lg border border-slate-200 bg-white text-sm">
         <button v-for="p in PERIODS" :key="p.key" class="px-3 py-1.5" :class="period === p.key ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'" @click="period = p.key">{{ p.label }}</button>
@@ -18,7 +18,7 @@
     <template v-else>
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <RouterLink v-for="k in kpis" :key="k.label" :to="k.to" class="card group p-4 transition hover:border-brand-500 hover:shadow-sm">
-          <div class="flex items-center gap-2 text-xs font-medium text-slate-500"><component :is="k.icon" class="size-4" :class="k.tint" />{{ k.label }}</div>
+          <div class="flex items-center gap-2 text-xs font-medium text-slate-500"><component :is="k.icon" class="size-4" :class="k.tint" />{{ __(k.label) }}</div>
           <div class="mt-1.5 text-2xl font-semibold tabular-nums text-slate-900">{{ short(k.value) }}</div>
           <div class="mt-0.5 text-xs" :class="k.hintTone || 'text-slate-400'">{{ k.hint }}</div>
         </RouterLink>
@@ -28,7 +28,7 @@
         <section v-if="d.sales" class="card p-4 lg:col-span-2">
           <div class="flex items-center justify-between">
             <h2 class="text-sm font-semibold text-slate-900">Sales{{ d.profit ? ' and profit' : '' }} by month</h2>
-            <div class="flex gap-3 text-xs text-slate-500"><span class="flex items-center gap-1"><i class="size-2.5 rounded-sm bg-brand-600" />Sales</span><span v-if="d.profit" class="flex items-center gap-1"><i class="size-2.5 rounded-sm bg-emerald-500" />Profit</span></div>
+            <div class="flex gap-3 text-xs text-slate-500"><span class="flex items-center gap-1"><i class="size-2.5 rounded-sm bg-brand-600" />{{ __('Sales') }}</span><span v-if="d.profit" class="flex items-center gap-1"><i class="size-2.5 rounded-sm bg-emerald-500" />{{ __('Profit') }}</span></div>
           </div>
           <svg viewBox="0 0 600 200" class="mt-3 h-52 w-full" preserveAspectRatio="none" role="img" aria-label="Sales by month">
             <line v-for="t in 4" :key="t" x1="0" x2="600" :y1="t * 45" :y2="t * 45" stroke="#e2e8f0" vector-effect="non-scaling-stroke" />
@@ -41,28 +41,28 @@
         </section>
 
         <section v-if="d.receivables" class="card p-4">
-          <h2 class="text-sm font-semibold text-slate-900">Owed by customers</h2>
+          <h2 class="text-sm font-semibold text-slate-900">{{ __('Owed by customers') }}</h2>
           <div class="mt-1 text-2xl font-semibold tabular-nums">{{ money(d.receivables.total) }}</div>
           <Ageing :buckets="d.receivables.buckets" class="mt-3" />
-          <RouterLink to="/report/Accounts%20Receivable" class="mt-3 inline-block text-xs text-brand-600 hover:underline">Accounts Receivable report →</RouterLink>
+          <RouterLink to="/report/Accounts%20Receivable" class="mt-3 inline-block text-xs text-brand-600 hover:underline">{{ __('Accounts Receivable report →') }}</RouterLink>
         </section>
       </div>
 
       <div class="grid gap-4 lg:grid-cols-3">
-        <Ranked v-if="d.sales?.top_customers?.length" title="Top customers" :rows="d.sales.top_customers" doctype="Customer" />
-        <Ranked v-if="d.sales?.top_items?.length" title="Top items" :rows="d.sales.top_items" doctype="Item" />
+        <Ranked v-if="d.sales?.top_customers?.length" :title="__('Top customers')" :rows="d.sales.top_customers" doctype="Customer" />
+        <Ranked v-if="d.sales?.top_items?.length" :title="__('Top items')" :rows="d.sales.top_items" doctype="Item" />
         <section v-if="d.cash" class="card p-4">
-          <h2 class="text-sm font-semibold text-slate-900">Cash and bank</h2>
+          <h2 class="text-sm font-semibold text-slate-900">{{ __('Cash and bank') }}</h2>
           <div class="mt-1 text-2xl font-semibold tabular-nums" :class="d.cash.total < 0 && 'text-red-600'">{{ money(d.cash.total) }}</div>
           <RouterLink v-for="a in d.cash.accounts" :key="a.name" :to="{ path: '/report/General%20Ledger', query: { account: a.name } }" class="mt-2 flex justify-between rounded-lg px-1.5 py-1 text-sm hover:bg-slate-50">
             <span class="truncate text-slate-600">{{ a.name }}</span><span class="tabular-nums" :class="a.value < 0 ? 'text-red-600' : 'text-slate-900'">{{ money(a.value) }}</span>
           </RouterLink>
         </section>
         <section v-if="d.payables && d.payables.total" class="card p-4">
-          <h2 class="text-sm font-semibold text-slate-900">Owed to suppliers</h2>
+          <h2 class="text-sm font-semibold text-slate-900">{{ __('Owed to suppliers') }}</h2>
           <div class="mt-1 text-2xl font-semibold tabular-nums">{{ money(d.payables.total) }}</div>
           <Ageing :buckets="d.payables.buckets" class="mt-3" />
-          <RouterLink to="/report/Accounts%20Payable" class="mt-3 inline-block text-xs text-brand-600 hover:underline">Accounts Payable report →</RouterLink>
+          <RouterLink to="/report/Accounts%20Payable" class="mt-3 inline-block text-xs text-brand-600 hover:underline">{{ __('Accounts Payable report →') }}</RouterLink>
         </section>
       </div>
     </template>

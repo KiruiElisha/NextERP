@@ -3,7 +3,7 @@
     <div class="w-full max-w-xl overflow-hidden rounded-xl bg-white shadow-2xl">
       <div class="flex items-center gap-2 border-b border-slate-200 px-4">
         <Search class="size-4 text-slate-400" />
-        <input ref="box" v-model="text" class="h-12 flex-1 text-[15px] outline-none" placeholder="Search documents, go anywhere, create, run a report…"
+        <input ref="box" v-model="text" class="h-12 flex-1 text-[15px] outline-none" :placeholder="__('Search documents, go anywhere, create, run a report…')"
           @keydown.down.prevent="move(1)" @keydown.up.prevent="move(-1)" @keydown.enter.prevent="go(results[active])" @keydown.esc="close" />
         <span v-if="took !== null" class="text-[11px] text-slate-400">{{ took }} ms</span>
       </div>

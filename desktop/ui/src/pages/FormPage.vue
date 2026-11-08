@@ -7,42 +7,42 @@
         <RouterLink :to="backTo" class="btn-ghost -ml-2 px-2"><ArrowLeft class="size-4" /></RouterLink>
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5 text-xs text-slate-400">
-            <RouterLink :to="backTo" class="hover:text-slate-600 hover:underline">{{ plural }}</RouterLink>
-            <ChevronRight class="size-3" /><span class="truncate">{{ isNew ? 'New' : doc?.name }}</span>
+            <RouterLink :to="backTo" class="hover:text-slate-600 hover:underline">{{ __(plural) }}</RouterLink>
+            <ChevronRight class="size-3" /><span class="truncate">{{ isNew ? __('New') : doc?.name }}</span>
           </div>
           <div class="flex items-center gap-2">
             <h1 class="truncate text-lg font-semibold text-slate-900">{{ heading }}</h1>
-            <span v-if="doc && !isNew" class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium" :class="status[1]">{{ status[0] }}</span>
-            <span v-if="dirty" class="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">Not saved</span>
-            <span v-if="computing" class="shrink-0 text-[11px] text-slate-400">Updating…</span>
+            <span v-if="doc && !isNew" class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium" :class="status[1]">{{ __(status[0]) }}</span>
+            <span v-if="dirty" class="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">{{ __('Not saved') }}</span>
+            <span v-if="computing" class="shrink-0 text-[11px] text-slate-400">{{ __('Updating…') }}</span>
           </div>
         </div>
 
         <template v-if="doc && meta && !offline">
-          <button v-if="canSave" class="btn-primary" :disabled="busy" title="Ctrl+S" @click="save()"><Save class="size-4" /> {{ doc.docstatus === 1 ? 'Update' : 'Save' }}</button>
+          <button v-if="canSave" class="btn-primary" :disabled="busy" :title="__('Ctrl+S')" @click="save()"><Save class="size-4" /> {{ doc.docstatus === 1 ? __('Update') : __('Save') }}</button>
           <template v-if="flow && !dirty">
-            <span class="shrink-0 rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700" title="Workflow state">{{ flow.state }}</span>
+            <span class="shrink-0 rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700" :title="__('Workflow state')">{{ flow.state }}</span>
             <button v-for="a in flow.actions" :key="a.action" class="btn-primary bg-violet-600 hover:bg-violet-700" :disabled="busy" :title="`Moves it to ${a.next_state}`" @click="takeAction(a.action)">{{ a.action }}</button>
           </template>
           <button v-if="canSubmit && !flow" class="btn-primary bg-emerald-600 hover:bg-emerald-700" :disabled="busy" @click="confirmThen('Submit', `Submit ${doc.name}? A submitted document can only be cancelled, not edited.`)">
-            <CheckCircle2 class="size-4" /> Submit
+            <CheckCircle2 class="size-4" /> {{ __('Submit') }}
           </button>
-          <button v-if="doc.docstatus === 2 && perms.amend" class="btn-primary" :disabled="busy" @click="amend"><CopyPlus class="size-4" /> Amend</button>
+          <button v-if="doc.docstatus === 2 && perms.amend" class="btn-primary" :disabled="busy" @click="amend"><CopyPlus class="size-4" /> {{ __('Amend') }}</button>
           <div class="relative">
             <button class="btn-subtle" :aria-expanded="menu" @click="menu = !menu"><MoreHorizontal class="size-4" /></button>
             <div v-if="menu" class="absolute right-0 top-full z-30 mt-1 w-56 rounded-xl border border-slate-200 bg-white p-1 shadow-xl" @mouseleave="menu = false">
-              <button v-if="!isNew && session.boot?.ai?.enabled" class="menu" @click="router.push({ path: '/assistant', query: { doctype, name: doc.name } })"><Sparkles class="size-4" /> Ask the assistant</button>
-              <button v-if="!isNew && perms.print" class="menu" @click="open('print')"><Printer class="size-4" /> Print or PDF</button>
-              <button v-if="!isNew && perms.email" class="menu" @click="open('email')"><Mail class="size-4" /> Email</button>
-              <button v-if="!isNew && meta.allow_auto_repeat" class="menu" @click="open('repeat')"><Repeat class="size-4" /> Repeat…</button>
-              <button v-if="!isNew && perms.create" class="menu" @click="duplicate"><Copy class="size-4" /> Duplicate</button>
-              <button class="menu" @click="open('fields')"><SlidersHorizontal class="size-4" /> Choose fields…</button>
-              <button class="menu" @click="toggleAll"><LayoutList class="size-4" /> {{ all ? 'Usual fields only' : 'Show every field' }}</button>
-              <button v-if="!isNew" class="menu" @click="reload"><RefreshCw class="size-4" /> Reload</button>
+              <button v-if="!isNew && session.boot?.ai?.enabled" class="menu" @click="router.push({ path: '/assistant', query: { doctype, name: doc.name } })"><Sparkles class="size-4" /> {{ __('Ask the assistant') }}</button>
+              <button v-if="!isNew && perms.print" class="menu" @click="open('print')"><Printer class="size-4" /> {{ __('Print or PDF') }}</button>
+              <button v-if="!isNew && perms.email" class="menu" @click="open('email')"><Mail class="size-4" /> {{ __('Email') }}</button>
+              <button v-if="!isNew && meta.allow_auto_repeat" class="menu" @click="open('repeat')"><Repeat class="size-4" /> {{ __('Repeat…') }}</button>
+              <button v-if="!isNew && perms.create" class="menu" @click="duplicate"><Copy class="size-4" /> {{ __('Duplicate') }}</button>
+              <button class="menu" @click="open('fields')"><SlidersHorizontal class="size-4" /> {{ __('Choose fields…') }}</button>
+              <button class="menu" @click="toggleAll"><LayoutList class="size-4" /> {{ all ? __('Usual fields only') : __('Show every field') }}</button>
+              <button v-if="!isNew" class="menu" @click="reload"><RefreshCw class="size-4" /> {{ __('Reload') }}</button>
               <template v-if="!isNew">
                 <div class="my-1 border-t border-slate-100" />
-                <button v-if="doc.docstatus === 1 && perms.cancel" class="menu text-red-600" @click="confirmThen('Cancel', `Cancel ${doc.name}? ERPNext reverses its postings.`)"><Ban class="size-4" /> Cancel</button>
-                <button v-if="doc.docstatus !== 1 && perms.delete" class="menu text-red-600" @click="remove"><Trash2 class="size-4" /> Delete</button>
+                <button v-if="doc.docstatus === 1 && perms.cancel" class="menu text-red-600" @click="confirmThen('Cancel', `Cancel ${doc.name}? ERPNext reverses its postings.`)"><Ban class="size-4" /> {{ __('Cancel') }}</button>
+                <button v-if="doc.docstatus !== 1 && perms.delete" class="menu text-red-600" @click="remove"><Trash2 class="size-4" /> {{ __('Delete') }}</button>
               </template>
             </div>
           </div>
@@ -51,7 +51,7 @@
     </header>
 
     <div v-if="offline" class="border-b border-amber-200 bg-amber-50 px-6 py-2 text-sm text-amber-800">
-      The site can't be reached: this is the copy kept on this computer, read only.
+      {{ __('The site can\'t be reached: this is the copy kept on this computer, read only.') }}
     </div>
 
     <div class="min-h-0 flex-1 overflow-y-auto">
@@ -64,9 +64,9 @@
           <FormLayout :key="layoutKey" :meta="formMeta" :doc="doc" :all="all" :bordered="true" :show-invalid="showInvalid"
             @change="changed" @row-change="rowChanged" @attach="attach" />
           <p class="mt-4 text-center text-xs text-slate-400">
-            {{ all ? 'Every field of' : 'The usual fields of' }} {{ doctype }}.
-            <button class="text-brand-600 hover:underline" @click="open('fields')">Choose fields</button> ·
-            <button class="text-brand-600 hover:underline" @click="toggleAll">{{ all ? 'Usual fields only' : 'Show every field' }}</button>
+            {{ all ? __('Every field of') : __('The usual fields of') }} {{ doctype }}.
+            <button class="text-brand-600 hover:underline" @click="open('fields')">{{ __('Choose fields') }}</button> ·
+            <button class="text-brand-600 hover:underline" @click="toggleAll">{{ all ? __('Usual fields only') : __('Show every field') }}</button>
           </p>
         </div>
         <div v-if="hasSide" class="space-y-5 xl:sticky xl:top-4 xl:self-start">
@@ -99,6 +99,7 @@ import RepeatDialog from '@/components/form/RepeatDialog.vue'
 import { applyAction, workflowOf } from '@/lib/work'
 import { toast } from '@/components/Toasts.vue'
 import { takeDraft } from '@/lib/ai'
+import { __ } from '@/lib/i18n'
 import { session } from '@/lib/session'
 import { call, getDoc, site } from '@/lib/backend'
 import { DOCTYPES, statusOf } from '@/lib/doctypes'
@@ -146,8 +147,8 @@ const backTo = computed(() => (cached.value ? `/list/${cached.value.slug}` : lis
 const status = computed(() => (doc.value ? statusOf(doc.value) : ['', '']))
 const heading = computed(() => {
   const d = doc.value
-  if (!d) return props.doctype
-  if (isNew.value) return `New ${props.doctype}`
+  if (!d) return __(props.doctype)
+  if (isNew.value) return __('New {0}', [__(props.doctype)])
   const t = meta.value?.title_field && d[meta.value.title_field]
   return t && t !== d.name ? t : d.name
 })

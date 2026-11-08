@@ -4,9 +4,9 @@
     <span class="flex-1">
       <template v-if="update.busy">Installing ERPNext {{ update.available.version }}… {{ update.progress ? `${update.progress}%` : '' }}</template>
       <template v-else-if="update.error">The update didn't install: {{ update.error }}</template>
-      <template v-else>ERPNext {{ update.available.version }} is ready. Save your work, then restart to update.</template>
+      <template v-else>{{ __('ERPNext {0} is ready. Save your work, then restart to update.', [update.available.version]) }}</template>
     </span>
-    <button class="btn-primary" :disabled="update.busy" @click="installAndRestart">{{ update.error ? 'Try again' : 'Restart and update' }}</button>
+    <button class="btn-primary" :disabled="update.busy" @click="installAndRestart">{{ update.error ? __('Try again') : __('Restart and update') }}</button>
   </div>
 </template>
 

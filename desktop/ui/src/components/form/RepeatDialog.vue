@@ -7,30 +7,30 @@
         <h3 class="flex-1 font-semibold text-slate-900">Repeat {{ name }}</h3>
         <button class="btn-ghost" @click="$emit('close')"><X class="size-4" /></button>
       </div>
-      <p v-if="!info" class="py-8 text-center text-sm text-slate-400">Loading…</p>
+      <p v-if="!info" class="py-8 text-center text-sm text-slate-400">{{ __('Loading…') }}</p>
       <template v-else-if="info.repeat && !info.repeat.disabled">
         <p class="mt-3 text-sm text-slate-700">
-          Repeats <strong>{{ info.repeat.frequency.toLowerCase() }}</strong> from {{ date(info.repeat.start_date) }}<span v-if="info.repeat.end_date"> to {{ date(info.repeat.end_date) }}</span>.
+          {{ __('Repeats') }} <strong>{{ info.repeat.frequency.toLowerCase() }}</strong> from {{ date(info.repeat.start_date) }}<span v-if="info.repeat.end_date"> to {{ date(info.repeat.end_date) }}</span>.
           <span v-if="info.repeat.next_schedule_date">Next on {{ date(info.repeat.next_schedule_date) }}.</span>
         </p>
         <div class="mt-5 flex justify-end gap-2">
-          <button class="btn-subtle text-red-600" :disabled="busy" @click="stop">Stop repeating</button>
-          <button class="btn-primary" @click="$emit('close')">Done</button>
+          <button class="btn-subtle text-red-600" :disabled="busy" @click="stop">{{ __('Stop repeating') }}</button>
+          <button class="btn-primary" @click="$emit('close')">{{ __('Done') }}</button>
         </div>
       </template>
       <form v-else class="mt-4 space-y-3" @submit.prevent="start">
-        <label class="block text-sm"><span class="text-slate-600">How often</span>
+        <label class="block text-sm"><span class="text-slate-600">{{ __('How often') }}</span>
           <select v-model="frequency" class="input mt-1 w-full"><option v-for="f in info.frequencies" :key="f">{{ f }}</option></select>
         </label>
         <div class="grid grid-cols-2 gap-3">
-          <label class="block text-sm"><span class="text-slate-600">From</span><input v-model="from" type="date" class="input mt-1 w-full" required /></label>
-          <label class="block text-sm"><span class="text-slate-600">Until (optional)</span><input v-model="until" type="date" class="input mt-1 w-full" :min="from" /></label>
+          <label class="block text-sm"><span class="text-slate-600">{{ __('From') }}</span><input v-model="from" type="date" class="input mt-1 w-full" required /></label>
+          <label class="block text-sm"><span class="text-slate-600">{{ __('Until (optional)') }}</span><input v-model="until" type="date" class="input mt-1 w-full" :min="from" /></label>
         </div>
         <p class="text-xs text-slate-500">ERPNext creates each new {{ doctype }} from this one on schedule, as a draft or submitted as its Auto Repeat settings say.</p>
         <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
         <div class="flex justify-end gap-2 pt-1">
-          <button type="button" class="btn-subtle" @click="$emit('close')">Cancel</button>
-          <button class="btn-primary" :disabled="busy">{{ busy ? 'Setting up…' : 'Repeat' }}</button>
+          <button type="button" class="btn-subtle" @click="$emit('close')">{{ __('Cancel') }}</button>
+          <button class="btn-primary" :disabled="busy">{{ busy ? __('Setting up…') : __('Repeat') }}</button>
         </div>
       </form>
     </div>

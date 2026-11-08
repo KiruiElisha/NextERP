@@ -3,12 +3,12 @@
   <div v-if="df.fieldtype === 'Check'" class="flex items-start gap-2 pt-1">
     <input :id="id" type="checkbox" class="mt-0.5 size-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" :checked="Boolean(value)" :disabled="ro"
       @change="set($event.target.checked ? 1 : 0)" />
-    <label :for="id" class="text-sm text-slate-700">{{ df.label }}<span v-if="desc" class="block text-xs text-slate-400">{{ desc }}</span></label>
+    <label :for="id" class="text-sm text-slate-700">{{ __(df.label) }}<span v-if="desc" class="block text-xs text-slate-400">{{ desc }}</span></label>
   </div>
 
   <div v-else>
     <label v-if="!bare" :for="id" class="label flex items-center gap-1">
-      <span class="truncate">{{ df.label || df.fieldname }}</span><span v-if="required" class="text-red-500">*</span>
+      <span class="truncate">{{ __(df.label) || df.fieldname }}</span><span v-if="required" class="text-red-500">*</span>
     </label>
 
     <!-- Read-only: the value as text, formatted for its type. -->
@@ -44,10 +44,10 @@
 
     <div v-else-if="df.fieldtype === 'Attach' || df.fieldtype === 'Attach Image'" class="flex items-center gap-2">
       <button v-if="value" type="button" class="truncate text-sm text-brand-700 hover:underline" @click="openFile">{{ fileName }}</button>
-      <label class="btn-subtle cursor-pointer"><Paperclip class="size-4" /> {{ value ? 'Replace' : 'Attach' }}
+      <label class="btn-subtle cursor-pointer"><Paperclip class="size-4" /> {{ value ? __('Replace') : __('Attach') }}
         <input type="file" class="hidden" :accept="df.fieldtype === 'Attach Image' ? 'image/*' : undefined" @change="$emit('attach', { fieldname: df.fieldname, file: $event.target.files[0] })" />
       </label>
-      <button v-if="value" type="button" class="btn-ghost text-slate-400" title="Remove" @click="set(null)"><X class="size-4" /></button>
+      <button v-if="value" type="button" class="btn-ghost text-slate-400" :title="__('Remove')" @click="set(null)"><X class="size-4" /></button>
     </div>
 
     <textarea v-else-if="isText" :id="id" class="input min-h-[84px] resize-y" :class="invalid && 'border-red-400'" :rows="df.fieldtype === 'Small Text' ? 3 : 6"

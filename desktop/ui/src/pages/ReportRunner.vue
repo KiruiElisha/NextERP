@@ -6,13 +6,13 @@
       <div class="flex flex-wrap items-center gap-3">
         <RouterLink to="/reports" class="btn-ghost -ml-2 px-2"><ArrowLeft class="size-4" /></RouterLink>
         <div class="min-w-0 flex-1">
-          <div class="text-xs text-slate-400">Reports</div>
+          <div class="text-xs text-slate-400">{{ __('Reports') }}</div>
           <h1 class="truncate text-lg font-semibold text-slate-900">{{ name }}</h1>
         </div>
         <span v-if="took !== null" class="text-xs text-slate-400">{{ rows.length.toLocaleString() }} rows · {{ took }} s</span>
-        <button class="btn-subtle" :disabled="!rows.length" @click="print"><Printer class="size-4" /> Print</button>
-        <button v-if="info?.can_export" class="btn-subtle" :disabled="!rows.length || exporting" @click="exportExcel"><FileSpreadsheet class="size-4" /> {{ exporting ? 'Exporting…' : 'Excel' }}</button>
-        <button class="btn-primary" :disabled="running || !ready" @click="run"><Play class="size-4" /> {{ running ? 'Running…' : 'Run' }}</button>
+        <button class="btn-subtle" :disabled="!rows.length" @click="print"><Printer class="size-4" /> {{ __('Print') }}</button>
+        <button v-if="info?.can_export" class="btn-subtle" :disabled="!rows.length || exporting" @click="exportExcel"><FileSpreadsheet class="size-4" /> {{ exporting ? __('Exporting…') : __('Excel') }}</button>
+        <button class="btn-primary" :disabled="running || !ready" @click="run"><Play class="size-4" /> {{ running ? __('Running…') : __('Run') }}</button>
       </div>
       <div v-if="filters.length" class="mt-3 flex flex-wrap items-end gap-3">
         <div v-for="f in filters" :key="f.fieldname" :class="f.fieldtype === 'Check' ? 'pb-1.5' : 'w-48'">
@@ -22,7 +22,7 @@
           <div v-else-if="f.fieldtype === 'MultiSelectList'">
             <LinkField :model-value="''" :target="f.options" :placeholder="`Add ${f.label.toLowerCase()}…`" @update:model-value="(v) => v && set(f, [...new Set([...(values[f.fieldname] || []), v])])" />
             <div v-if="values[f.fieldname]?.length" class="mt-1 flex flex-wrap gap-1">
-              <button v-for="v in values[f.fieldname]" :key="v" class="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] text-brand-700 hover:bg-brand-100" title="Remove" @click="set(f, values[f.fieldname].filter((x) => x !== v))">{{ v }} ×</button>
+              <button v-for="v in values[f.fieldname]" :key="v" class="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] text-brand-700 hover:bg-brand-100" :title="__('Remove')" @click="set(f, values[f.fieldname].filter((x) => x !== v))">{{ v }} ×</button>
             </div>
           </div>
           <select v-else-if="f.fieldtype === 'Select'" class="input" :value="values[f.fieldname] ?? ''" @change="set(f, $event.target.value)">
@@ -44,7 +44,7 @@
         <p v-if="message" class="mx-6 mt-4 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800" v-html="sanitize(message)" />
         <div v-if="summary.length" class="mx-6 mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
           <div v-for="s in summary" :key="s.label" class="card p-3">
-            <div class="text-xs text-slate-500">{{ s.label }}</div>
+            <div class="text-xs text-slate-500">{{ __(s.label) }}</div>
             <div class="mt-0.5 text-lg font-semibold tabular-nums" :class="tone(s.indicator)">{{ show(s.value, { fieldtype: s.datatype }) }}</div>
           </div>
         </div>
@@ -54,7 +54,7 @@
             <thead class="sticky top-0 z-10 bg-slate-50 text-left text-[11px] uppercase tracking-wide text-slate-500">
               <tr>
                 <th v-for="c in shownColumns" :key="c.index" class="cursor-pointer select-none whitespace-nowrap px-3 py-2 font-medium" :class="isNumeric(c) && 'text-right'" @click="sortBy(c)">
-                  {{ c.label }}<span v-if="sort?.index === c.index">{{ sort.desc ? ' ↓' : ' ↑' }}</span>
+                  {{ __(c.label) }}<span v-if="sort?.index === c.index">{{ sort.desc ? ' ↓' : ' ↑' }}</span>
                 </th>
               </tr>
             </thead>
@@ -68,11 +68,11 @@
                 </td>
               </tr>
               <tr v-if="totals" class="border-t-2 border-slate-200 bg-slate-50 font-semibold">
-                <td v-for="(c, ci) in shownColumns" :key="c.index" class="whitespace-nowrap px-3 py-2" :class="isNumeric(c) && 'text-right tabular-nums'">{{ ci === 0 ? 'Total' : totals[c.index] !== undefined ? show(totals[c.index], c) : '' }}</td>
+                <td v-for="(c, ci) in shownColumns" :key="c.index" class="whitespace-nowrap px-3 py-2" :class="isNumeric(c) && 'text-right tabular-nums'">{{ ci === 0 ? __('Total') : totals[c.index] !== undefined ? show(totals[c.index], c) : '' }}</td>
               </tr>
             </tbody>
           </table>
-          <p v-if="!rows.length" class="py-14 text-center text-sm text-slate-400">{{ running ? 'Running…' : took === null ? (ready ? 'Run the report to see it.' : 'Fill in the required filters.') : 'Nothing for these filters.' }}</p>
+          <p v-if="!rows.length" class="py-14 text-center text-sm text-slate-400">{{ running ? __('Running…') : took === null ? (ready ? __('Run the report to see it.') : __('Fill in the required filters.')) : __('Nothing for these filters.') }}</p>
         </div>
       </template>
     </div>

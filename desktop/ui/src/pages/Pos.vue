@@ -3,7 +3,7 @@
        prices the cart (pricing rules, taxes); the server makes and submits the sale. -->
   <div class="flex h-full flex-col bg-slate-100">
     <header class="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-2.5">
-      <RouterLink to="/home" class="btn-ghost px-2" title="Leave the till"><ArrowLeft class="size-4" /></RouterLink>
+      <RouterLink to="/home" class="btn-ghost px-2" :title="__('Leave the till')"><ArrowLeft class="size-4" /></RouterLink>
       <div class="flex items-center gap-2">
         <span class="flex size-8 items-center justify-center rounded-lg bg-brand-600 text-white"><Store class="size-4" /></span>
         <select v-model="profileName" class="rounded-lg border-0 bg-transparent py-1 pl-1 pr-7 text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-brand-100">
@@ -12,17 +12,17 @@
       </div>
       <span class="hidden text-xs text-slate-400 md:inline">{{ profile?.warehouse }}</span>
       <span class="flex-1" />
-      <span class="flex items-center gap-1.5 text-xs" :class="online ? 'text-emerald-600' : 'text-amber-600'"><span class="size-2 rounded-full" :class="online ? 'bg-emerald-500' : 'bg-amber-500'" />{{ online ? 'Online' : 'Offline: browsing only' }}</span>
-      <button class="btn-subtle" :disabled="!held.length" @click="dialog = 'held'"><PauseCircle class="size-4" /> Held <span v-if="held.length" class="rounded-full bg-brand-600 px-1.5 text-[11px] text-white">{{ held.length }}</span></button>
-      <button class="btn-subtle" @click="openToday"><BarChart3 class="size-4" /> Today</button>
+      <span class="flex items-center gap-1.5 text-xs" :class="online ? 'text-emerald-600' : 'text-amber-600'"><span class="size-2 rounded-full" :class="online ? 'bg-emerald-500' : 'bg-amber-500'" />{{ online ? __('Online') : __('Offline: browsing only') }}</span>
+      <button class="btn-subtle" :disabled="!held.length" @click="dialog = 'held'"><PauseCircle class="size-4" /> {{ __('Held') }} <span v-if="held.length" class="rounded-full bg-brand-600 px-1.5 text-[11px] text-white">{{ held.length }}</span></button>
+      <button class="btn-subtle" @click="openToday"><BarChart3 class="size-4" /> {{ __('Today') }}</button>
     </header>
 
     <div v-if="loadError" class="m-6 card p-6 text-sm text-red-700">{{ loadError }}</div>
     <div v-else-if="!profileList.length && !loading" class="m-auto max-w-md card p-8 text-center">
       <Store class="mx-auto size-10 text-slate-300" />
-      <h2 class="mt-3 font-semibold text-slate-900">No till is set up for you</h2>
-      <p class="mt-1 text-sm text-slate-500">A POS Profile names the warehouse, price list and payment modes a till sells with. Create one, or ask to be added to one.</p>
-      <RouterLink :to="formRoute('POS Profile', 'new')" class="btn-primary mt-4">Create a POS profile</RouterLink>
+      <h2 class="mt-3 font-semibold text-slate-900">{{ __('No till is set up for you') }}</h2>
+      <p class="mt-1 text-sm text-slate-500">{{ __('A POS Profile names the warehouse, price list and payment modes a till sells with. Create one, or ask to be added to one.') }}</p>
+      <RouterLink :to="formRoute('POS Profile', 'new')" class="btn-primary mt-4">{{ __('Create a POS profile') }}</RouterLink>
     </div>
 
     <div v-else class="flex min-h-0 flex-1">
@@ -32,7 +32,7 @@
           <div class="relative">
             <Search class="absolute left-3.5 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
             <input ref="searchBox" v-model="query" class="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-24 text-base shadow-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
-              placeholder="Scan a barcode or search items" autocomplete="off" @keydown.enter.prevent="enterSearch" @keydown.down.prevent="focusGrid" />
+              :placeholder="__('Scan a barcode or search items')" autocomplete="off" @keydown.enter.prevent="enterSearch" @keydown.down.prevent="focusGrid" />
             <kbd class="absolute right-3 top-1/2 -translate-y-1/2 rounded border border-slate-200 bg-slate-50 px-1.5 text-[11px] text-slate-500">F2</kbd>
           </div>
           <div class="no-scrollbar flex gap-1.5 overflow-x-auto">
@@ -56,25 +56,25 @@
                 <span class="line-clamp-2 text-[13px] font-medium leading-snug text-slate-800">{{ it.item_name }}</span>
                 <span class="mt-auto flex items-end justify-between pt-1.5">
                   <span class="text-sm font-semibold tabular-nums text-slate-900">{{ money(it.rate) }}</span>
-                  <span v-if="it.stock !== null" class="text-[11px] tabular-nums" :class="it.stock <= 0 ? 'text-red-600' : it.stock < 5 ? 'text-amber-600' : 'text-slate-400'">{{ it.stock <= 0 ? 'Out' : `${fmtQty(it.stock)} ${it.uom}` }}</span>
+                  <span v-if="it.stock !== null" class="text-[11px] tabular-nums" :class="it.stock <= 0 ? 'text-red-600' : it.stock < 5 ? 'text-amber-600' : 'text-slate-400'">{{ it.stock <= 0 ? __('Out') : `${fmtQty(it.stock)} ${it.uom}` }}</span>
                 </span>
               </div>
             </button>
           </div>
-          <p v-if="!loading && !shown.length" class="py-16 text-center text-sm text-slate-400">{{ query ? `Nothing matches “${query}”.` : 'No items to sell on this till.' }}</p>
+          <p v-if="!loading && !shown.length" class="py-16 text-center text-sm text-slate-400">{{ query ? `Nothing matches “${query}”.` : __('No items to sell on this till.') }}</p>
         </div>
       </section>
 
       <!-- Cart -->
       <aside class="flex w-[420px] shrink-0 flex-col border-l border-slate-200 bg-white">
         <div class="border-b border-slate-100 p-3">
-          <label class="label">Customer</label>
+          <label class="label">{{ __('Customer') }}</label>
           <LinkField v-model="customer" target="Customer" :placeholder="profile?.customer ? `${profile.customer} (walk-in)` : 'Choose a customer'" />
         </div>
         <div class="min-h-0 flex-1 overflow-y-auto">
           <div v-if="!cart.length" class="flex h-full flex-col items-center justify-center p-8 text-center text-slate-400">
             <ShoppingBag class="size-10 text-slate-200" />
-            <p class="mt-2 text-sm">Scan or tap items to start a sale.</p>
+            <p class="mt-2 text-sm">{{ __('Scan or tap items to start a sale.') }}</p>
           </div>
           <ul v-else class="divide-y divide-slate-100">
             <li v-for="(l, i) in cart" :key="l.item_code" class="px-3 py-2.5" :class="selected === i && 'bg-brand-50/50'" @click="selected = i">
@@ -82,19 +82,19 @@
                 <div class="min-w-0 flex-1">
                   <div class="truncate text-sm font-medium text-slate-800">{{ l.item_name }}</div>
                   <div class="flex items-center gap-1.5 text-xs text-slate-400">
-                    <button v-if="profile?.allow_rate_change" class="tabular-nums hover:text-brand-700 hover:underline" title="Change the price" @click.stop="editRate(l)">{{ money(priced(l).rate) }}</button>
+                    <button v-if="profile?.allow_rate_change" class="tabular-nums hover:text-brand-700 hover:underline" :title="__('Change the price')" @click.stop="editRate(l)">{{ money(priced(l).rate) }}</button>
                     <span v-else class="tabular-nums">{{ money(priced(l).rate) }}</span>
                     <span>× {{ fmtQty(l.qty) }}</span>
-                    <button v-if="profile?.allow_discount_change" class="hover:text-brand-700 hover:underline" @click.stop="editDiscount(l)">{{ l.discount ? `−${l.discount}%` : 'Discount' }}</button>
+                    <button v-if="profile?.allow_discount_change" class="hover:text-brand-700 hover:underline" @click.stop="editDiscount(l)">{{ l.discount ? `−${l.discount}%` : __('Discount') }}</button>
                   </div>
                 </div>
                 <div class="flex items-center rounded-lg border border-slate-200">
-                  <button class="px-2 py-1 text-slate-500 hover:bg-slate-100" title="One less" @click.stop="step(l, -1)"><Minus class="size-3.5" /></button>
+                  <button class="px-2 py-1 text-slate-500 hover:bg-slate-100" :title="__('One less')" @click.stop="step(l, -1)"><Minus class="size-3.5" /></button>
                   <input class="w-12 border-0 p-0 text-center text-sm tabular-nums focus:ring-0" :value="l.qty" inputmode="decimal" @click.stop @change="setQty(l, $event.target.value)" />
-                  <button class="px-2 py-1 text-slate-500 hover:bg-slate-100" title="One more" @click.stop="step(l, 1)"><Plus class="size-3.5" /></button>
+                  <button class="px-2 py-1 text-slate-500 hover:bg-slate-100" :title="__('One more')" @click.stop="step(l, 1)"><Plus class="size-3.5" /></button>
                 </div>
                 <div class="w-24 text-right text-sm font-semibold tabular-nums text-slate-900">{{ money(priced(l).amount) }}</div>
-                <button class="text-slate-300 hover:text-red-600" title="Remove" @click.stop="remove(i)"><X class="size-4" /></button>
+                <button class="text-slate-300 hover:text-red-600" :title="__('Remove')" @click.stop="remove(i)"><X class="size-4" /></button>
               </div>
             </li>
           </ul>
@@ -102,13 +102,13 @@
         <div class="border-t border-slate-200 bg-slate-50/60 p-3">
           <dl class="space-y-1 text-sm">
             <div class="flex justify-between text-slate-500"><dt>{{ count }} {{ count === 1 ? 'item' : 'items' }}</dt><dd class="tabular-nums">{{ money(totals.net_total) }}</dd></div>
-            <div v-if="totals.discount" class="flex justify-between text-slate-500"><dt>Discount</dt><dd class="tabular-nums">−{{ money(totals.discount) }}</dd></div>
-            <div v-if="totals.taxes" class="flex justify-between text-slate-500"><dt>Taxes</dt><dd class="tabular-nums">{{ money(totals.taxes) }}</dd></div>
-            <div class="flex items-baseline justify-between pt-1"><dt class="font-semibold text-slate-900">Total</dt><dd class="text-2xl font-bold tabular-nums text-slate-900">{{ money(totals.grand_total) }}</dd></div>
+            <div v-if="totals.discount" class="flex justify-between text-slate-500"><dt>{{ __('Discount') }}</dt><dd class="tabular-nums">−{{ money(totals.discount) }}</dd></div>
+            <div v-if="totals.taxes" class="flex justify-between text-slate-500"><dt>{{ __('Taxes') }}</dt><dd class="tabular-nums">{{ money(totals.taxes) }}</dd></div>
+            <div class="flex items-baseline justify-between pt-1"><dt class="font-semibold text-slate-900">{{ __('Total') }}</dt><dd class="text-2xl font-bold tabular-nums text-slate-900">{{ money(totals.grand_total) }}</dd></div>
           </dl>
           <div class="mt-3 grid grid-cols-[auto_auto_1fr] gap-2">
-            <button class="btn-subtle" :disabled="!cart.length" title="Park this sale" @click="hold"><PauseCircle class="size-4" /></button>
-            <button class="btn-subtle" :disabled="!cart.length" title="Clear the cart" @click="clear"><Trash2 class="size-4" /></button>
+            <button class="btn-subtle" :disabled="!cart.length" :title="__('Park this sale')" @click="hold"><PauseCircle class="size-4" /></button>
+            <button class="btn-subtle" :disabled="!cart.length" :title="__('Clear the cart')" @click="clear"><Trash2 class="size-4" /></button>
             <button class="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-40"
               :disabled="!cart.length || !online" @click="openPay">
               <Loader2 v-if="pricing" class="size-5 animate-spin" /><Wallet v-else class="size-5" /> Pay {{ money(totals.grand_total) }} <kbd class="rounded bg-white/20 px-1.5 text-[11px]">F9</kbd>
@@ -122,7 +122,7 @@
     <div v-if="dialog === 'pay'" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-6 backdrop-blur-sm" @mousedown.self="closePay">
       <div class="grid w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl md:grid-cols-[1fr_1.15fr]">
         <div class="border-r border-slate-100 bg-slate-50 p-5">
-          <div class="text-xs font-medium uppercase tracking-wide text-slate-400">To pay</div>
+          <div class="text-xs font-medium uppercase tracking-wide text-slate-400">{{ __('To pay') }}</div>
           <div class="text-4xl font-bold tabular-nums text-slate-900">{{ money(totals.grand_total) }}</div>
           <ul class="mt-5 space-y-2">
             <li v-for="(p, i) in payments" :key="i" class="flex items-center gap-2 rounded-xl bg-white p-3 shadow-sm">
@@ -136,9 +136,9 @@
             </li>
           </ul>
           <dl class="mt-5 space-y-1 border-t border-slate-200 pt-3 text-sm">
-            <div class="flex justify-between"><dt class="text-slate-500">Paid</dt><dd class="font-semibold tabular-nums">{{ money(paid) }}</dd></div>
-            <div v-if="remaining > 0" class="flex justify-between text-amber-700"><dt>Still to pay</dt><dd class="font-semibold tabular-nums">{{ money(remaining) }}</dd></div>
-            <div v-else class="flex justify-between text-emerald-700"><dt>Change</dt><dd class="text-xl font-bold tabular-nums">{{ money(-remaining) }}</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-500">{{ __('Paid') }}</dt><dd class="font-semibold tabular-nums">{{ money(paid) }}</dd></div>
+            <div v-if="remaining > 0" class="flex justify-between text-amber-700"><dt>{{ __('Still to pay') }}</dt><dd class="font-semibold tabular-nums">{{ money(remaining) }}</dd></div>
+            <div v-else class="flex justify-between text-emerald-700"><dt>{{ __('Change') }}</dt><dd class="text-xl font-bold tabular-nums">{{ money(-remaining) }}</dd></div>
           </dl>
         </div>
         <div class="p-5">
@@ -152,21 +152,21 @@
           <!-- M-Pesa: a prompt on the customer's phone, confirmed by Safaricom. -->
           <div v-if="isMpesa(mode)" class="mt-5">
             <template v-if="!prompt">
-              <label class="label">Customer's M-Pesa number</label>
-              <input ref="phoneBox" v-model="phone" class="input py-2.5 text-lg tabular-nums" placeholder="07XX XXX XXX" inputmode="tel" @keydown.enter.prevent="sendPrompt" />
-              <label class="label mt-3">Amount</label>
+              <label class="label">{{ __('Customer\'s M-Pesa number') }}</label>
+              <input ref="phoneBox" v-model="phone" class="input py-2.5 text-lg tabular-nums" :placeholder="__('07XX XXX XXX')" inputmode="tel" @keydown.enter.prevent="sendPrompt" />
+              <label class="label mt-3">{{ __('Amount') }}</label>
               <input v-model.number="amount" class="input py-2.5 text-lg tabular-nums" inputmode="decimal" />
               <button class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 font-semibold text-white hover:bg-emerald-700 disabled:opacity-40" :disabled="busy || !phone || !(amount > 0)" @click="sendPrompt">
-                <Smartphone class="size-5" /> {{ busy ? 'Sending…' : `Send prompt for ${money(amount)}` }}
+                <Smartphone class="size-5" /> {{ busy ? __('Sending…') : `Send prompt for ${money(amount)}` }}
               </button>
             </template>
             <div v-else class="rounded-2xl border p-5 text-center" :class="prompt.status === 'Paid' ? 'border-emerald-200 bg-emerald-50' : prompt.status === 'Pending' ? 'border-slate-200' : 'border-red-200 bg-red-50'">
               <template v-if="prompt.status === 'Pending'">
                 <Loader2 class="mx-auto size-8 animate-spin text-emerald-600" />
-                <p class="mt-3 font-semibold text-slate-900">Waiting for the customer</p>
+                <p class="mt-3 font-semibold text-slate-900">{{ __('Waiting for the customer') }}</p>
                 <p class="text-sm text-slate-500">A prompt for {{ money(prompt.amount) }} is on {{ prompt.phone }}. They enter their M-Pesa PIN to pay.</p>
                 <p class="mt-1 text-xs text-slate-400">{{ elapsed }} s</p>
-                <button class="btn-ghost mt-3 text-slate-500" @click="cancelPrompt">Stop waiting</button>
+                <button class="btn-ghost mt-3 text-slate-500" @click="cancelPrompt">{{ __('Stop waiting') }}</button>
               </template>
               <template v-else-if="prompt.status === 'Paid'">
                 <CheckCircle2 class="mx-auto size-9 text-emerald-600" />
@@ -175,9 +175,9 @@
               </template>
               <template v-else>
                 <XCircle class="mx-auto size-9 text-red-500" />
-                <p class="mt-2 font-semibold text-red-800">{{ prompt.status === 'Cancelled' ? 'The customer cancelled' : 'Not paid' }}</p>
+                <p class="mt-2 font-semibold text-red-800">{{ prompt.status === 'Cancelled' ? __('The customer cancelled') : __('Not paid') }}</p>
                 <p class="text-sm text-red-700">{{ prompt.message }}</p>
-                <button class="btn-subtle mt-3" @click="prompt = null">Try again</button>
+                <button class="btn-subtle mt-3" @click="prompt = null">{{ __('Try again') }}</button>
               </template>
             </div>
           </div>
@@ -187,16 +187,16 @@
             <label class="label">{{ mode }} amount</label>
             <input ref="amountBox" v-model.number="amount" class="input py-3 text-2xl font-semibold tabular-nums" inputmode="decimal" @keydown.enter.prevent="addPayment" />
             <div v-if="isCash(mode)" class="mt-2 flex flex-wrap gap-1.5">
-              <button v-for="t in tenders" :key="t" class="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium tabular-nums text-slate-700 hover:bg-slate-200" @click="amount = t">{{ t === remaining ? 'Exact' : money(t) }}</button>
+              <button v-for="t in tenders" :key="t" class="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium tabular-nums text-slate-700 hover:bg-slate-200" @click="amount = t">{{ t === remaining ? __('Exact') : money(t) }}</button>
             </div>
             <button class="btn-subtle mt-4 w-full justify-center py-2.5" :disabled="!(amount > 0)" @click="addPayment">Add {{ money(amount || 0) }} {{ mode.toLowerCase() }}</button>
           </div>
 
           <div class="mt-6 flex gap-2 border-t border-slate-100 pt-4">
-            <button class="btn-subtle" @click="closePay">Back</button>
+            <button class="btn-subtle" @click="closePay">{{ __('Back') }}</button>
             <button class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-600 py-3 text-base font-semibold text-white hover:bg-brand-700 disabled:opacity-40"
               :disabled="remaining > 0.001 || busy || prompt?.status === 'Pending'" @click="finish">
-              <Check class="size-5" /> {{ busy ? 'Completing…' : 'Complete sale' }}
+              <Check class="size-5" /> {{ busy ? __('Completing…') : __('Complete sale') }}
             </button>
           </div>
         </div>
@@ -207,7 +207,7 @@
     <div v-if="dialog === 'receipt' && receipt" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-6 backdrop-blur-sm">
       <div class="w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
         <div class="bg-emerald-600 px-5 py-4 text-white">
-          <div class="flex items-center gap-2 text-sm"><CheckCircle2 class="size-5" /> Sale complete</div>
+          <div class="flex items-center gap-2 text-sm"><CheckCircle2 class="size-5" /> {{ __('Sale complete') }}</div>
           <div class="mt-1 text-3xl font-bold tabular-nums">{{ money(receipt.grand_total) }}</div>
           <div v-if="receipt.change" class="text-sm text-emerald-50">Change {{ money(receipt.change) }}</div>
         </div>
@@ -217,29 +217,29 @@
           <div class="my-2 border-t border-dashed border-slate-300" />
           <div v-for="(r, i) in receipt.items" :key="i" class="flex justify-between gap-2"><span class="truncate">{{ fmtQty(r.qty) }} × {{ r.item_name }}</span><span class="tabular-nums">{{ money(r.amount) }}</span></div>
           <div class="my-2 border-t border-dashed border-slate-300" />
-          <div v-if="receipt.taxes" class="flex justify-between"><span>Taxes</span><span>{{ money(receipt.taxes) }}</span></div>
-          <div class="flex justify-between font-semibold"><span>Total</span><span>{{ money(receipt.grand_total) }}</span></div>
+          <div v-if="receipt.taxes" class="flex justify-between"><span>{{ __('Taxes') }}</span><span>{{ money(receipt.taxes) }}</span></div>
+          <div class="flex justify-between font-semibold"><span>{{ __('Total') }}</span><span>{{ money(receipt.grand_total) }}</span></div>
           <div v-for="p in receipt.payments" :key="p.mode_of_payment" class="flex justify-between"><span>{{ p.mode_of_payment }}</span><span>{{ money(p.amount) }}</span></div>
-          <div v-if="receipt.change" class="flex justify-between"><span>Change</span><span>{{ money(receipt.change) }}</span></div>
+          <div v-if="receipt.change" class="flex justify-between"><span>{{ __('Change') }}</span><span>{{ money(receipt.change) }}</span></div>
           <template v-if="receipt.etims?.enabled">
             <div class="border-t" />
-            <div class="text-center font-semibold">KRA eTIMS</div>
+            <div class="text-center font-semibold">{{ __('KRA eTIMS') }}</div>
             <template v-if="receipt.etims.etims_status === 'Sent'">
-              <div class="flex justify-between"><span>CU Serial No</span><span>{{ receipt.etims.etims_sdc_id }}</span></div>
-              <div class="flex justify-between"><span>CU Invoice No</span><span>{{ receipt.etims.etims_sdc_id }}/{{ receipt.etims.etims_invoice_no }}</span></div>
-              <div class="flex justify-between"><span>Internal Data</span><span class="truncate">{{ receipt.etims.etims_internal_data }}</span></div>
-              <div class="flex justify-between"><span>Signature</span><span class="truncate">{{ receipt.etims.etims_receipt_signature }}</span></div>
-              <img v-if="receipt.etims.qr" :src="qrSrc(receipt.etims.qr)" alt="KRA receipt check" class="mx-auto mt-1 size-28" />
+              <div class="flex justify-between"><span>{{ __('CU Serial No') }}</span><span>{{ receipt.etims.etims_sdc_id }}</span></div>
+              <div class="flex justify-between"><span>{{ __('CU Invoice No') }}</span><span>{{ receipt.etims.etims_sdc_id }}/{{ receipt.etims.etims_invoice_no }}</span></div>
+              <div class="flex justify-between"><span>{{ __('Internal Data') }}</span><span class="truncate">{{ receipt.etims.etims_internal_data }}</span></div>
+              <div class="flex justify-between"><span>{{ __('Signature') }}</span><span class="truncate">{{ receipt.etims.etims_receipt_signature }}</span></div>
+              <img v-if="receipt.etims.qr" :src="qrSrc(receipt.etims.qr)" :alt="__('KRA receipt check')" class="mx-auto mt-1 size-28" />
             </template>
-            <div v-else-if="receipt.etims.etims_status === 'Failed'" class="text-center text-red-600">Not signed by KRA yet: send it again from the invoice.</div>
-            <div v-else class="text-center text-slate-400">Waiting for KRA to sign…</div>
+            <div v-else-if="receipt.etims.etims_status === 'Failed'" class="text-center text-red-600">{{ __('Not signed by KRA yet: send it again from the invoice.') }}</div>
+            <div v-else class="text-center text-slate-400">{{ __('Waiting for KRA to sign…') }}</div>
           </template>
           <div class="mt-2 text-center text-slate-400">Served by {{ receipt.cashier }}. Thank you.</div>
         </div>
         <div class="flex gap-2 border-t border-slate-100 p-4">
-          <button class="btn-subtle flex-1 justify-center" @click="printReceipt"><Printer class="size-4" /> Print</button>
-          <RouterLink :to="formRoute('Sales Invoice', receipt.name)" class="btn-subtle">Invoice</RouterLink>
-          <button ref="newSaleBtn" class="btn-primary flex-1 justify-center" @click="newSale">New sale <kbd class="rounded bg-white/20 px-1 text-[10px]">Enter</kbd></button>
+          <button class="btn-subtle flex-1 justify-center" @click="printReceipt"><Printer class="size-4" /> {{ __('Print') }}</button>
+          <RouterLink :to="formRoute('Sales Invoice', receipt.name)" class="btn-subtle">{{ __('Invoice') }}</RouterLink>
+          <button ref="newSaleBtn" class="btn-primary flex-1 justify-center" @click="newSale">{{ __('New sale') }} <kbd class="rounded bg-white/20 px-1 text-[10px]">Enter</kbd></button>
         </div>
       </div>
     </div>
@@ -247,14 +247,14 @@
     <!-- Held sales -->
     <div v-if="dialog === 'held'" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-6" @mousedown.self="dialog = null">
       <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl">
-        <h3 class="font-semibold text-slate-900">Held sales</h3>
+        <h3 class="font-semibold text-slate-900">{{ __('Held sales') }}</h3>
         <ul class="mt-3 divide-y divide-slate-100">
           <li v-for="(h, i) in held" :key="h.id" class="flex items-center gap-3 py-2.5">
             <div class="min-w-0 flex-1">
-              <div class="truncate text-sm font-medium text-slate-800">{{ h.customer || 'Walk-in' }} · {{ h.cart.length }} lines</div>
+              <div class="truncate text-sm font-medium text-slate-800">{{ h.customer || __('Walk-in') }} · {{ h.cart.length }} lines</div>
               <div class="text-xs text-slate-400">{{ new Date(h.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}</div>
             </div>
-            <button class="btn-primary" @click="resume(i)">Resume</button>
+            <button class="btn-primary" @click="resume(i)">{{ __('Resume') }}</button>
             <button class="text-slate-300 hover:text-red-600" @click="dropHeld(i)"><Trash2 class="size-4" /></button>
           </li>
         </ul>
@@ -268,13 +268,13 @@
         <div v-if="!todayData" class="mt-4 h-24 animate-pulse rounded-xl bg-slate-100" />
         <template v-else>
           <div class="mt-3 grid grid-cols-2 gap-3">
-            <div class="rounded-xl bg-slate-50 p-3"><div class="text-xs text-slate-500">Sales</div><div class="text-2xl font-bold">{{ todayData.count }}</div></div>
-            <div class="rounded-xl bg-slate-50 p-3"><div class="text-xs text-slate-500">Taken</div><div class="text-2xl font-bold tabular-nums">{{ money(todayData.total) }}</div></div>
+            <div class="rounded-xl bg-slate-50 p-3"><div class="text-xs text-slate-500">{{ __('Sales') }}</div><div class="text-2xl font-bold">{{ todayData.count }}</div></div>
+            <div class="rounded-xl bg-slate-50 p-3"><div class="text-xs text-slate-500">{{ __('Taken') }}</div><div class="text-2xl font-bold tabular-nums">{{ money(todayData.total) }}</div></div>
           </div>
           <ul class="mt-3 space-y-1 text-sm">
             <li v-for="(v, k) in todayData.by_mode" :key="k" class="flex justify-between"><span class="text-slate-600">{{ k }}</span><span class="font-semibold tabular-nums">{{ money(v) }}</span></li>
           </ul>
-          <h4 class="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-400">Latest</h4>
+          <h4 class="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ __('Latest') }}</h4>
           <RouterLink v-for="r in todayData.recent" :key="r.name" :to="formRoute('Sales Invoice', r.name)" class="flex justify-between rounded-lg px-2 py-1 text-sm hover:bg-slate-50">
             <span class="truncate text-slate-700">{{ r.customer_name }}</span><span class="tabular-nums">{{ money(r.rounded_total || r.grand_total) }}</span>
           </RouterLink>

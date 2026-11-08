@@ -5,8 +5,8 @@
     <div class="w-full max-w-xl rounded-2xl bg-white shadow-2xl">
       <div class="border-b border-slate-100 p-5">
         <h3 class="font-semibold text-slate-900">Fields on {{ meta.name }}</h3>
-        <p class="mt-0.5 text-sm text-slate-500">Tick the fields you want on the form. Required ones always show.</p>
-        <input v-model="q" class="input mt-3" placeholder="Find a field…" autofocus />
+        <p class="mt-0.5 text-sm text-slate-500">{{ __('Tick the fields you want on the form. Required ones always show.') }}</p>
+        <input v-model="q" class="input mt-3" :placeholder="__('Find a field…')" autofocus />
       </div>
       <div class="max-h-[55vh] overflow-y-auto p-2">
         <label v-for="f in shown" :key="f.fieldname" class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 hover:bg-slate-50" :class="f.reqd && 'opacity-60'">
@@ -19,10 +19,10 @@
         <p v-if="!shown.length" class="p-6 text-center text-sm text-slate-400">No field matches “{{ q }}”.</p>
       </div>
       <div class="flex items-center gap-2 border-t border-slate-100 p-4">
-        <button class="btn-ghost" @click="reset">Back to the usual fields</button>
+        <button class="btn-ghost" @click="reset">{{ __('Back to the usual fields') }}</button>
         <span class="flex-1" />
-        <button class="btn-subtle" @click="$emit('close')">Cancel</button>
-        <button class="btn-primary" :disabled="busy" @click="save">Save</button>
+        <button class="btn-subtle" @click="$emit('close')">{{ __('Cancel') }}</button>
+        <button class="btn-primary" :disabled="busy" @click="save">{{ __('Save') }}</button>
       </div>
     </div>
   </div>

@@ -3,20 +3,20 @@
        search, status filter, and trees (accounts, warehouses, cost centres) drawn as trees. -->
   <div class="flex h-full flex-col">
     <div class="flex flex-wrap items-center gap-3 border-b border-slate-200 bg-white px-6 py-3">
-      <h1 class="text-lg font-semibold text-slate-900">{{ title }}</h1>
+      <h1 class="text-lg font-semibold text-slate-900">{{ __(title) }}</h1>
       <span class="text-xs text-slate-400">{{ count === null ? '' : `${count.toLocaleString()} ${count === 1 ? 'record' : 'records'}` }}</span>
       <div class="ml-auto flex items-center gap-2">
         <div v-if="meta?.is_submittable" class="flex overflow-hidden rounded-lg border border-slate-200 text-xs">
           <button v-for="f in STATES" :key="f.label" class="px-2.5 py-1.5" :class="state === f ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'" @click="state = f">{{ f.label }}</button>
         </div>
         <input v-model="text" class="input w-64" :placeholder="`Search ${title.toLowerCase()}…`" />
-        <button class="btn-subtle" :class="(adding || extra.length) && 'border-brand-300 text-brand-700'" @click="adding = !adding"><Filter class="size-4" /> Filter<span v-if="extra.length"> ({{ extra.length }})</span></button>
-        <select v-if="savedViews.length" class="input w-40" :value="''" title="Saved views" @change="useView($event.target.value); $event.target.value = ''">
-          <option value="" disabled>Views…</option>
+        <button class="btn-subtle" :class="(adding || extra.length) && 'border-brand-300 text-brand-700'" @click="adding = !adding"><Filter class="size-4" /> {{ __('Filter') }}<span v-if="extra.length"> ({{ extra.length }})</span></button>
+        <select v-if="savedViews.length" class="input w-40" :value="''" :title="__('Saved views')" @change="useView($event.target.value); $event.target.value = ''">
+          <option value="" disabled>{{ __('Views…') }}</option>
           <option v-for="(v, i) in savedViews" :key="v.label" :value="i">{{ v.label }}</option>
         </select>
-        <button v-if="meta?.perms?.export" class="btn-subtle" :disabled="exporting" title="Save as an Excel file in Downloads" @click="exportRows"><Download class="size-4" /> {{ exporting ? 'Exporting…' : 'Export' }}</button>
-        <RouterLink v-if="meta?.perms?.create" :to="formRoute(doctype, 'new')" class="btn-primary"><Plus class="size-4" /> New</RouterLink>
+        <button v-if="meta?.perms?.export" class="btn-subtle" :disabled="exporting" :title="__('Save as an Excel file in Downloads')" @click="exportRows"><Download class="size-4" /> {{ exporting ? __('Exporting…') : __('Export') }}</button>
+        <RouterLink v-if="meta?.perms?.create" :to="formRoute(doctype, 'new')" class="btn-primary"><Plus class="size-4" /> {{ __('New') }}</RouterLink>
       </div>
     </div>
 
@@ -26,41 +26,41 @@
         <button class="ml-0.5 text-slate-400 hover:text-red-600" :aria-label="`Remove ${labelOf(f[0])}`" @click="extra.splice(i, 1)"><X class="size-3" /></button>
       </span>
       <form v-if="adding" class="flex items-center gap-1.5" @submit.prevent="addFilter">
-        <select v-model="draft.field" class="input w-44" required><option value="" disabled>Field…</option><option v-for="f in filterable" :key="f.fieldname" :value="f.fieldname">{{ f.label || f.fieldname }}</option></select>
+        <select v-model="draft.field" class="input w-44" required><option value="" disabled>{{ __('Field…') }}</option><option v-for="f in filterable" :key="f.fieldname" :value="f.fieldname">{{ f.label || f.fieldname }}</option></select>
         <select v-model="draft.op" class="input w-28"><option v-for="o in OPS" :key="o.op" :value="o.op">{{ o.label }}</option></select>
         <select v-if="draftField?.fieldtype === 'Select'" v-model="draft.value" class="input w-40"><option v-for="o in (draftField.options || '').split('\n')" :key="o" :value="o">{{ o || '(empty)' }}</option></select>
-        <select v-else-if="draftField?.fieldtype === 'Check'" v-model="draft.value" class="input w-24"><option :value="1">Yes</option><option :value="0">No</option></select>
-        <input v-else v-model="draft.value" :type="draftField?.fieldtype === 'Date' ? 'date' : 'text'" class="input w-40" placeholder="Value" />
-        <button class="btn-primary" :disabled="!draft.field">Add</button>
+        <select v-else-if="draftField?.fieldtype === 'Check'" v-model="draft.value" class="input w-24"><option :value="1">{{ __('Yes') }}</option><option :value="0">{{ __('No') }}</option></select>
+        <input v-else v-model="draft.value" :type="draftField?.fieldtype === 'Date' ? 'date' : 'text'" class="input w-40" :placeholder="__('Value')" />
+        <button class="btn-primary" :disabled="!draft.field">{{ __('Add') }}</button>
       </form>
       <span class="flex-1" />
       <form v-if="extra.length || state.docstatus !== null" class="flex items-center gap-1.5" @submit.prevent="saveView">
-        <input v-model="viewName" class="input w-40" placeholder="Name this view" />
-        <button class="btn-subtle" :disabled="!viewName.trim()">Save view</button>
+        <input v-model="viewName" class="input w-40" :placeholder="__('Name this view')" />
+        <button class="btn-subtle" :disabled="!viewName.trim()">{{ __('Save view') }}</button>
       </form>
-      <button v-if="extra.length" class="text-xs text-slate-500 hover:text-red-600" @click="extra = []">Clear filters</button>
+      <button v-if="extra.length" class="text-xs text-slate-500 hover:text-red-600" @click="extra = []">{{ __('Clear filters') }}</button>
     </div>
 
     <div v-if="selected.size" class="flex flex-wrap items-center gap-2 border-b border-brand-200 bg-brand-50 px-6 py-2 text-sm">
       <strong class="text-brand-800">{{ selected.size }} selected</strong>
       <template v-if="bulk.fields.length">
-        <span class="text-slate-500">· set</span>
-        <select v-model="bulk.field" class="input w-44"><option value="" disabled>Field…</option><option v-for="f in bulk.fields" :key="f.fieldname" :value="f.fieldname">{{ f.label || f.fieldname }}</option></select>
-        <span class="text-slate-500">to</span>
+        <span class="text-slate-500">{{ __('· set') }}</span>
+        <select v-model="bulk.field" class="input w-44"><option value="" disabled>{{ __('Field…') }}</option><option v-for="f in bulk.fields" :key="f.fieldname" :value="f.fieldname">{{ f.label || f.fieldname }}</option></select>
+        <span class="text-slate-500">{{ __('to') }}</span>
         <select v-if="bulkField?.fieldtype === 'Select'" v-model="bulk.value" class="input w-40"><option v-for="o in (bulkField.options || '').split('\n')" :key="o" :value="o">{{ o || '(empty)' }}</option></select>
-        <select v-else-if="bulkField?.fieldtype === 'Check'" v-model="bulk.value" class="input w-24"><option :value="1">Yes</option><option :value="0">No</option></select>
-        <input v-else v-model="bulk.value" :type="bulkField?.fieldtype === 'Date' ? 'date' : ['Int', 'Float', 'Currency', 'Percent'].includes(bulkField?.fieldtype) ? 'number' : 'text'" class="input w-44" placeholder="Value" />
-        <button class="btn-primary" :disabled="!bulk.field || bulk.busy" @click="applyBulk">{{ bulk.busy ? 'Changing…' : 'Apply' }}</button>
+        <select v-else-if="bulkField?.fieldtype === 'Check'" v-model="bulk.value" class="input w-24"><option :value="1">{{ __('Yes') }}</option><option :value="0">{{ __('No') }}</option></select>
+        <input v-else v-model="bulk.value" :type="bulkField?.fieldtype === 'Date' ? 'date' : ['Int', 'Float', 'Currency', 'Percent'].includes(bulkField?.fieldtype) ? 'number' : 'text'" class="input w-44" :placeholder="__('Value')" />
+        <button class="btn-primary" :disabled="!bulk.field || bulk.busy" @click="applyBulk">{{ bulk.busy ? __('Changing…') : __('Apply') }}</button>
       </template>
       <span class="flex-1" />
-      <button class="text-xs text-slate-500 hover:text-slate-800" @click="selected = new Set()">Clear selection</button>
+      <button class="text-xs text-slate-500 hover:text-slate-800" @click="selected = new Set()">{{ __('Clear selection') }}</button>
     </div>
 
     <div class="min-h-0 flex-1 overflow-auto">
       <div v-if="error" class="m-6 card p-6 text-sm text-red-700">{{ error }}</div>
       <table v-else class="w-full text-sm">
         <thead class="sticky top-0 z-10 bg-slate-50 text-left text-[11px] uppercase tracking-wide text-slate-500">
-          <tr><th v-if="canBulk" class="w-8 px-4 py-2"><input type="checkbox" class="rounded border-slate-300" :checked="rows.length && selected.size === rows.length" aria-label="Select all" @change="toggleAll($event.target.checked)" /></th><th v-for="c in columns" :key="c.fieldname" class="px-4 py-2 font-medium" :class="numeric(c) && 'text-right'">{{ c.label }}</th></tr>
+          <tr><th v-if="canBulk" class="w-8 px-4 py-2"><input type="checkbox" class="rounded border-slate-300" :checked="rows.length && selected.size === rows.length" :aria-label="__('Select all')" @change="toggleAll($event.target.checked)" /></th><th v-for="c in columns" :key="c.fieldname" class="px-4 py-2 font-medium" :class="numeric(c) && 'text-right'">{{ c.label }}</th></tr>
         </thead>
         <tbody>
           <tr v-for="r in rows" :key="r.name" class="cursor-pointer border-b border-slate-100 bg-white hover:bg-brand-50/50" @click="router.push(formRoute(doctype, r.name))">
@@ -69,7 +69,7 @@
               <span v-if="ci === 0 && tree" :style="{ paddingLeft: `${(r.__depth || 0) * 18}px` }" class="inline-flex items-center gap-1.5">
                 <component :is="r.is_group ? FolderOpen : FileText" class="size-3.5 shrink-0" :class="r.is_group ? 'text-amber-500' : 'text-slate-300'" />{{ cell(r, c) }}
               </span>
-              <span v-else-if="c.fieldname === '__status'" class="rounded-full px-2 py-0.5 text-[11px] font-medium" :class="statusOf(r)[1]">{{ statusOf(r)[0] }}</span>
+              <span v-else-if="c.fieldname === '__status'" class="rounded-full px-2 py-0.5 text-[11px] font-medium" :class="statusOf(r)[1]">{{ __(statusOf(r)[0]) }}</span>
               <template v-else>{{ cell(r, c) }}</template>
             </td>
           </tr>
@@ -77,7 +77,7 @@
       </table>
       <p v-if="!loading && !rows.length && !error" class="py-16 text-center text-sm text-slate-400">{{ text ? `Nothing matches “${text}”.` : `No ${title.toLowerCase()} yet.` }}</p>
       <div v-if="rows.length < (count || 0) && !tree" class="flex justify-center p-4">
-        <button class="btn-subtle" :disabled="loading" @click="load(true)">{{ loading ? 'Loading…' : `Show more (${rows.length} of ${count})` }}</button>
+        <button class="btn-subtle" :disabled="loading" @click="load(true)">{{ loading ? __('Loading…') : `Show more (${rows.length} of ${count})` }}</button>
       </div>
     </div>
   </div>

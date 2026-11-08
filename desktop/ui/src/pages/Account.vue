@@ -4,25 +4,25 @@
   <div class="mx-auto max-w-6xl space-y-5 p-6">
     <div class="flex flex-wrap items-end gap-3">
       <div class="flex-1">
-        <h1 class="text-xl font-semibold text-slate-900">Plan, billing and apps</h1>
+        <h1 class="text-xl font-semibold text-slate-900">{{ __('Plan, billing and apps') }}</h1>
         <p class="text-sm text-slate-500">{{ host }} on Nergaa Cloud<template v-if="me"> · signed in as {{ me.email }}</template></p>
       </div>
-      <button v-if="me" class="btn-ghost text-slate-500" @click="disconnect"><LogOut class="size-4" /> Disconnect</button>
+      <button v-if="me" class="btn-ghost text-slate-500" @click="disconnect"><LogOut class="size-4" /> {{ __('Disconnect') }}</button>
     </div>
 
     <!-- Connect -->
     <div v-if="!me && !checking" class="mx-auto max-w-md card p-6">
       <Cloud class="size-8 text-brand-600" />
-      <h2 class="mt-3 font-semibold text-slate-900">Connect your Nergaa Cloud account</h2>
+      <h2 class="mt-3 font-semibold text-slate-900">{{ __('Connect your Nergaa Cloud account') }}</h2>
       <p class="mt-1 text-sm text-slate-500">Use the email of the team that owns {{ host }}. Nergaa Cloud emails a code; nothing else is needed.</p>
       <form v-if="!codeSent" class="mt-4 space-y-3" @submit.prevent="sendCode">
-        <input v-model="email" type="email" class="input" placeholder="you@company.com" required />
-        <button class="btn-primary w-full justify-center" :disabled="busy">{{ busy ? 'Sending…' : 'Email me a code' }}</button>
+        <input v-model="email" type="email" class="input" :placeholder="__('you@company.com')" required />
+        <button class="btn-primary w-full justify-center" :disabled="busy">{{ busy ? __('Sending…') : __('Email me a code') }}</button>
       </form>
       <form v-else class="mt-4 space-y-3" @submit.prevent="verify">
         <input v-model="code" class="input text-center text-lg tracking-[0.4em]" inputmode="numeric" placeholder="••••••" maxlength="8" required autofocus />
-        <button class="btn-primary w-full justify-center" :disabled="busy">{{ busy ? 'Checking…' : 'Connect' }}</button>
-        <button type="button" class="btn-ghost w-full justify-center text-slate-500" @click="codeSent = false">Use another email</button>
+        <button class="btn-primary w-full justify-center" :disabled="busy">{{ busy ? __('Checking…') : __('Connect') }}</button>
+        <button type="button" class="btn-ghost w-full justify-center text-slate-500" @click="codeSent = false">{{ __('Use another email') }}</button>
       </form>
     </div>
     <div v-else-if="checking" class="card h-40 animate-pulse bg-slate-50" />
@@ -42,49 +42,49 @@
           <div v-if="acct.unpaid > 0" class="card flex items-center gap-3 border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
             <AlertTriangle class="size-5 shrink-0" />
             <span class="flex-1">{{ money(acct.unpaid, acct.currency) }} is unpaid. Top up your credits to pay it and keep {{ host }} running.</span>
-            <button class="btn-primary" @click="openTopUp(acct.unpaid)">Pay now</button>
+            <button class="btn-primary" @click="openTopUp(acct.unpaid)">{{ __('Pay now') }}</button>
           </div>
           <div class="grid gap-4 lg:grid-cols-3">
             <section class="card p-5">
-              <div class="text-xs font-medium uppercase tracking-wide text-slate-400">Plan</div>
-              <div class="mt-1 text-xl font-semibold text-slate-900">{{ acct.plan?.plan_title || acct.plan?.name || 'No plan' }}</div>
+              <div class="text-xs font-medium uppercase tracking-wide text-slate-400">{{ __('Plan') }}</div>
+              <div class="mt-1 text-xl font-semibold text-slate-900">{{ acct.plan?.plan_title || acct.plan?.name || __('No plan') }}</div>
               <div class="text-sm text-slate-500">{{ planPrice(acct.plan) }}</div>
               <div v-if="acct.trial_end_date" class="mt-2 rounded-lg bg-brand-50 px-2.5 py-1.5 text-xs text-brand-700">Trial until {{ date(acct.trial_end_date) }}</div>
               <div class="mt-2 text-xs text-slate-400">Site {{ acct.status.toLowerCase() }}</div>
             </section>
             <section class="card p-5">
-              <div class="text-xs font-medium uppercase tracking-wide text-slate-400">Credits</div>
+              <div class="text-xs font-medium uppercase tracking-wide text-slate-400">{{ __('Credits') }}</div>
               <div class="mt-1 text-3xl font-bold tabular-nums" :class="acct.balance < 0 ? 'text-red-600' : 'text-slate-900'">{{ money(acct.balance, acct.currency) }}</div>
-              <div class="text-sm text-slate-500">Invoices are paid from your credits.</div>
-              <button class="btn-primary mt-3" :disabled="!acct.gateways.length" @click="openTopUp()"><Plus class="size-4" /> Top up</button>
+              <div class="text-sm text-slate-500">{{ __('Invoices are paid from your credits.') }}</div>
+              <button class="btn-primary mt-3" :disabled="!acct.gateways.length" @click="openTopUp()"><Plus class="size-4" /> {{ __('Top up') }}</button>
             </section>
             <section class="card p-5">
-              <div class="text-xs font-medium uppercase tracking-wide text-slate-400">Next invoice</div>
+              <div class="text-xs font-medium uppercase tracking-wide text-slate-400">{{ __('Next invoice') }}</div>
               <template v-if="acct.upcoming">
                 <div class="mt-1 text-xl font-semibold tabular-nums text-slate-900">{{ money(acct.upcoming.total, acct.upcoming.currency) }}</div>
                 <div class="text-sm text-slate-500">So far, for {{ date(acct.upcoming.period_start) }} – {{ date(acct.upcoming.period_end) }}</div>
               </template>
-              <p v-else class="mt-1 text-sm text-slate-500">Nothing building up right now.</p>
+              <p v-else class="mt-1 text-sm text-slate-500">{{ __('Nothing building up right now.') }}</p>
             </section>
           </div>
 
           <section class="card p-5">
-            <h2 class="text-sm font-semibold text-slate-900">Change plan</h2>
+            <h2 class="text-sm font-semibold text-slate-900">{{ __('Change plan') }}</h2>
             <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <button v-for="p in acct.plans" :key="p.name" class="rounded-xl border p-4 text-left transition" :class="p.name === acct.plan?.name ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-100' : 'border-slate-200 hover:border-slate-300'"
                 :disabled="busy || p.name === acct.plan?.name" @click="changePlan(p)">
                 <div class="font-medium text-slate-900">{{ p.plan_title || p.name }}</div>
                 <div class="text-sm text-slate-500">{{ planPrice(p) }}</div>
                 <div class="mt-1 text-xs text-slate-400">{{ p.max_storage_usage ? `${p.max_storage_usage} MB files · ` : '' }}{{ p.max_database_usage ? `${p.max_database_usage} MB data` : '' }}</div>
-                <div v-if="p.name === acct.plan?.name" class="mt-2 text-xs font-medium text-brand-700">Current plan</div>
+                <div v-if="p.name === acct.plan?.name" class="mt-2 text-xs font-medium text-brand-700">{{ __('Current plan') }}</div>
               </button>
             </div>
           </section>
 
           <section class="card overflow-hidden">
-            <h2 class="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-900">Invoices</h2>
+            <h2 class="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-900">{{ __('Invoices') }}</h2>
             <table class="w-full text-sm">
-              <thead class="bg-slate-50 text-left text-[11px] uppercase tracking-wide text-slate-500"><tr><th class="px-5 py-2">Period</th><th class="px-3 py-2">Type</th><th class="px-3 py-2 text-right">Total</th><th class="px-3 py-2 text-right">Due</th><th class="px-5 py-2">Status</th></tr></thead>
+              <thead class="bg-slate-50 text-left text-[11px] uppercase tracking-wide text-slate-500"><tr><th class="px-5 py-2">{{ __('Period') }}</th><th class="px-3 py-2">{{ __('Type') }}</th><th class="px-3 py-2 text-right">{{ __('Total') }}</th><th class="px-3 py-2 text-right">{{ __('Due') }}</th><th class="px-5 py-2">{{ __('Status') }}</th></tr></thead>
               <tbody>
                 <tr v-for="i in acct.invoices" :key="i.name" class="border-t border-slate-100">
                   <td class="px-5 py-2">{{ date(i.period_start) }} – {{ date(i.period_end) }}</td>
@@ -95,7 +95,7 @@
                 </tr>
               </tbody>
             </table>
-            <p v-if="!acct.invoices.length" class="p-6 text-center text-sm text-slate-400">No invoices yet.</p>
+            <p v-if="!acct.invoices.length" class="p-6 text-center text-sm text-slate-400">{{ __('No invoices yet.') }}</p>
           </section>
         </template>
       </template>
@@ -111,7 +111,7 @@
               <div v-for="a in apps.installed" :key="a.app" class="card flex items-start gap-3 p-4">
                 <AppIcon :app="a" />
                 <div class="min-w-0 flex-1"><div class="font-medium text-slate-900">{{ a.title }}</div><div class="line-clamp-2 text-xs text-slate-500">{{ a.description || a.app }}</div></div>
-                <button v-if="a.removable" class="btn-ghost px-2 text-slate-400 hover:text-red-600" :disabled="apps.busy || busy" title="Remove" @click="remove(a)"><Trash2 class="size-4" /></button>
+                <button v-if="a.removable" class="btn-ghost px-2 text-slate-400 hover:text-red-600" :disabled="apps.busy || busy" :title="__('Remove')" @click="remove(a)"><Trash2 class="size-4" /></button>
               </div>
             </div>
           </section>
@@ -121,10 +121,10 @@
               <div v-for="a in apps.available" :key="a.app" class="card flex items-start gap-3 p-4">
                 <AppIcon :app="a" />
                 <div class="min-w-0 flex-1"><div class="font-medium text-slate-900">{{ a.title }}</div><div class="line-clamp-2 text-xs text-slate-500">{{ a.description }}</div></div>
-                <button class="btn-subtle" :disabled="apps.busy || busy" @click="install(a)"><Plus class="size-4" /> Add</button>
+                <button class="btn-subtle" :disabled="apps.busy || busy" @click="install(a)"><Plus class="size-4" /> {{ __('Add') }}</button>
               </div>
             </div>
-            <p v-if="!apps.available.length" class="card p-6 text-center text-sm text-slate-400">Every app this site's bench offers is installed.</p>
+            <p v-if="!apps.available.length" class="card p-6 text-center text-sm text-slate-400">{{ __('Every app this site\'s bench offers is installed.') }}</p>
           </section>
         </template>
       </template>
@@ -133,33 +133,33 @@
     <!-- Top up -->
     <div v-if="topUp" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-6" @mousedown.self="!topUp.waiting && (topUp = null)">
       <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl">
-        <h3 class="font-semibold text-slate-900">Top up credits</h3>
+        <h3 class="font-semibold text-slate-900">{{ __('Top up credits') }}</h3>
         <template v-if="!topUp.waiting && !topUp.done">
           <div class="mt-3 flex flex-wrap gap-2">
-            <button v-for="g in acct.gateways" :key="g" class="rounded-xl border px-3 py-2 text-sm font-medium" :class="topUp.gateway === g ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-700'" @click="topUp.gateway = g">{{ g === 'IntaSend' ? 'Card' : g }}</button>
+            <button v-for="g in acct.gateways" :key="g" class="rounded-xl border px-3 py-2 text-sm font-medium" :class="topUp.gateway === g ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-700'" @click="topUp.gateway = g">{{ g === 'IntaSend' ? __('Card') : g }}</button>
           </div>
           <label class="label mt-4">Amount ({{ acct.currency }})</label>
           <input v-model.number="topUp.amount" class="input text-lg tabular-nums" inputmode="decimal" />
           <template v-if="topUp.gateway === 'M-PESA'">
-            <label class="label mt-3">M-Pesa number</label>
-            <input v-model="topUp.phone" class="input text-lg tabular-nums" placeholder="07XX XXX XXX" inputmode="tel" />
+            <label class="label mt-3">{{ __('M-Pesa number') }}</label>
+            <input v-model="topUp.phone" class="input text-lg tabular-nums" :placeholder="__('07XX XXX XXX')" inputmode="tel" />
           </template>
-          <p v-else class="mt-3 text-xs text-slate-500">You'll enter your card or PayPal details on the provider's secure checkout, which opens in its own window.</p>
+          <p v-else class="mt-3 text-xs text-slate-500">{{ __('You\'ll enter your card or PayPal details on the provider\'s secure checkout, which opens in its own window.') }}</p>
           <div class="mt-5 flex justify-end gap-2">
-            <button class="btn-subtle" @click="topUp = null">Cancel</button>
-            <button class="btn-primary" :disabled="busy || !(topUp.amount > 0) || !topUp.gateway" @click="startTopUp">{{ busy ? 'Starting…' : `Pay ${money(topUp.amount || 0, acct.currency)}` }}</button>
+            <button class="btn-subtle" @click="topUp = null">{{ __('Cancel') }}</button>
+            <button class="btn-primary" :disabled="busy || !(topUp.amount > 0) || !topUp.gateway" @click="startTopUp">{{ busy ? __('Starting…') : `Pay ${money(topUp.amount || 0, acct.currency)}` }}</button>
           </div>
         </template>
         <div v-else-if="topUp.waiting" class="py-6 text-center">
           <Loader2 class="mx-auto size-8 animate-spin text-brand-600" />
-          <p class="mt-3 font-medium text-slate-900">{{ topUp.gateway === 'M-PESA' ? 'Check your phone and enter your M-Pesa PIN' : 'Finish paying in the checkout window' }}</p>
-          <p class="text-sm text-slate-500">Your credits update here as soon as Nergaa Cloud confirms the payment.</p>
-          <button class="btn-ghost mt-3 text-slate-500" @click="stopTopUp">Close</button>
+          <p class="mt-3 font-medium text-slate-900">{{ topUp.gateway === 'M-PESA' ? __('Check your phone and enter your M-Pesa PIN') : __('Finish paying in the checkout window') }}</p>
+          <p class="text-sm text-slate-500">{{ __('Your credits update here as soon as Nergaa Cloud confirms the payment.') }}</p>
+          <button class="btn-ghost mt-3 text-slate-500" @click="stopTopUp">{{ __('Close') }}</button>
         </div>
         <div v-else class="py-6 text-center">
           <component :is="topUp.done === 'Paid' ? CheckCircle2 : XCircle" class="mx-auto size-9" :class="topUp.done === 'Paid' ? 'text-emerald-600' : 'text-red-500'" />
-          <p class="mt-2 font-semibold" :class="topUp.done === 'Paid' ? 'text-emerald-800' : 'text-red-800'">{{ topUp.done === 'Paid' ? 'Credits added' : `Not paid: ${topUp.error || topUp.done}` }}</p>
-          <button class="btn-primary mt-4" @click="topUp = null">Done</button>
+          <p class="mt-2 font-semibold" :class="topUp.done === 'Paid' ? 'text-emerald-800' : 'text-red-800'">{{ topUp.done === 'Paid' ? __('Credits added') : `Not paid: ${topUp.error || topUp.done}` }}</p>
+          <button class="btn-primary mt-4" @click="topUp = null">{{ __('Done') }}</button>
         </div>
       </div>
     </div>

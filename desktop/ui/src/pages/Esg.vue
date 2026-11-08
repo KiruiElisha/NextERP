@@ -2,11 +2,11 @@
   <div class="mx-auto max-w-6xl space-y-4 p-6">
     <div class="flex flex-wrap items-center gap-3">
       <div class="flex-1">
-        <h1 class="flex items-center gap-2 text-xl font-semibold text-slate-900"><Leaf class="size-5 text-leaf-600" /> ESG</h1>
+        <h1 class="flex items-center gap-2 text-xl font-semibold text-slate-900"><Leaf class="size-5 text-leaf-600" /> {{ __('ESG') }}</h1>
         <p class="text-sm text-slate-500">Greenhouse gas emissions for {{ session.company }}, from transactions and what you record.</p>
       </div>
       <select v-model.number="year" class="input w-28"><option v-for="y in years" :key="y" :value="y">{{ y }}</option></select>
-      <button class="btn-primary bg-leaf-600 hover:bg-leaf-500" @click="recording = true"><Plus class="size-4" /> Record activity</button>
+      <button class="btn-primary bg-leaf-600 hover:bg-leaf-500" @click="recording = true"><Plus class="size-4" /> {{ __('Record activity') }}</button>
     </div>
 
     <div v-if="data?.setup_problem" class="card border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{{ data.setup_problem }}</div>
@@ -15,14 +15,14 @@
     <template v-if="data">
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div v-for="t in tiles" :key="t.label" class="card p-4">
-          <div class="text-xs font-medium text-slate-500">{{ t.label }}</div>
-          <div class="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{{ t.value.toLocaleString(undefined, { maximumFractionDigits: 2 }) }} <span class="text-sm font-normal text-slate-400">tCO₂e</span></div>
+          <div class="text-xs font-medium text-slate-500">{{ __(t.label) }}</div>
+          <div class="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{{ t.value.toLocaleString(undefined, { maximumFractionDigits: 2 }) }} <span class="text-sm font-normal text-slate-400">{{ __('tCO₂e') }}</span></div>
           <div class="text-xs text-slate-400">{{ t.hint }}</div>
         </div>
       </div>
       <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <section class="card p-4">
-          <h2 class="text-sm font-semibold text-slate-900">By month</h2>
+          <h2 class="text-sm font-semibold text-slate-900">{{ __('By month') }}</h2>
           <div class="mt-4 flex h-36 items-end gap-1.5">
             <div v-for="(v, i) in data.months" :key="i" class="flex flex-1 flex-col items-center gap-1" :title="`${MONTHS[i]}: ${v} t`">
               <div class="w-full rounded-t bg-leaf-500/80" :style="{ height: `${(v / peak) * 120 + (v ? 2 : 0)}px` }" />
@@ -31,7 +31,7 @@
           </div>
         </section>
         <section class="card p-4">
-          <h2 class="text-sm font-semibold text-slate-900">Where the figures come from</h2>
+          <h2 class="text-sm font-semibold text-slate-900">{{ __('Where the figures come from') }}</h2>
           <p v-if="!data.sources.length" class="mt-3 text-sm text-slate-400">Nothing recorded for {{ data.year }} yet.</p>
           <div v-for="s in data.sources" :key="s.source" class="mt-2.5 flex justify-between text-sm">
             <span class="text-slate-700">{{ s.source }} <span class="text-xs text-slate-400">· {{ s.entries }}</span></span>
@@ -40,7 +40,7 @@
         </section>
       </div>
       <section class="card overflow-hidden">
-        <h2 class="border-b border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-900">Latest entries</h2>
+        <h2 class="border-b border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-900">{{ __('Latest entries') }}</h2>
         <table class="w-full text-sm">
           <tbody>
             <tr v-for="r in data.recent" :key="r.name" class="border-b border-slate-100 last:border-0">
@@ -57,23 +57,23 @@
       <!-- The ESG app's reduction targets and its GRI 305 disclosure, without leaving the app. -->
       <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <section class="card p-4">
-          <h2 class="text-sm font-semibold text-slate-900">Reduction targets</h2>
-          <p v-if="!targets.length" class="mt-2 text-sm text-slate-400">No targets set yet. Add one in the ESG app's targets.</p>
+          <h2 class="text-sm font-semibold text-slate-900">{{ __('Reduction targets') }}</h2>
+          <p v-if="!targets.length" class="mt-2 text-sm text-slate-400">{{ __('No targets set yet. Add one in the ESG app\'s targets.') }}</p>
           <div v-for="t in targets" :key="t.name" class="mt-3">
             <div class="flex items-baseline justify-between gap-2 text-sm">
-              <span class="truncate font-medium text-slate-800">{{ t.target_name }}<span class="text-xs font-normal text-slate-400"> · {{ t.scope || 'All scopes' }} · {{ t.target_year || t.target_period }}</span></span>
-              <span class="shrink-0 text-xs font-medium" :class="t.on_track ? 'text-leaf-600' : 'text-amber-600'">{{ t.on_track ? 'On track' : 'Behind' }}</span>
+              <span class="truncate font-medium text-slate-800">{{ t.target_name }}<span class="text-xs font-normal text-slate-400"> · {{ t.scope || __('All scopes') }} · {{ t.target_year || t.target_period }}</span></span>
+              <span class="shrink-0 text-xs font-medium" :class="t.on_track ? 'text-leaf-600' : 'text-amber-600'">{{ t.on_track ? __('On track') : __('Behind') }}</span>
             </div>
             <div class="mt-1.5 h-2 rounded-full bg-slate-100"><div class="h-2 rounded-full" :class="t.on_track ? 'bg-leaf-500' : 'bg-amber-500'" :style="{ width: `${Math.min(100, Math.max(0, ((t.actual_reduction_percent || 0) / (t.reduction_percent || 1)) * 100))}%` }" /></div>
             <div class="mt-1 text-xs text-slate-400">{{ (t.actual_reduction_percent ?? 0).toFixed(1) }}% cut of the {{ t.reduction_percent }}% aimed for</div>
           </div>
         </section>
         <section class="card flex flex-col p-4">
-          <h2 class="text-sm font-semibold text-slate-900">GRI 305 emissions disclosure</h2>
-          <p class="mt-1 text-sm text-slate-500">The disclosure the ESG app prepares from these figures: scopes, intensity, reductions and methods.</p>
+          <h2 class="text-sm font-semibold text-slate-900">{{ __('GRI 305 emissions disclosure') }}</h2>
+          <p class="mt-1 text-sm text-slate-500">{{ __('The disclosure the ESG app prepares from these figures: scopes, intensity, reductions and methods.') }}</p>
           <div class="mt-auto flex gap-2 pt-4">
-            <button class="btn-subtle" :disabled="griBusy" @click="previewGri"><FileText class="size-4" /> {{ griBusy ? 'Preparing…' : 'Preview' }}</button>
-            <button class="btn-primary bg-leaf-600 hover:bg-leaf-500" :disabled="pdfBusy" @click="saveGri"><Download class="size-4" /> {{ pdfBusy ? 'Saving…' : 'Save PDF' }}</button>
+            <button class="btn-subtle" :disabled="griBusy" @click="previewGri"><FileText class="size-4" /> {{ griBusy ? __('Preparing…') : __('Preview') }}</button>
+            <button class="btn-primary bg-leaf-600 hover:bg-leaf-500" :disabled="pdfBusy" @click="saveGri"><Download class="size-4" /> {{ pdfBusy ? __('Saving…') : __('Save PDF') }}</button>
           </div>
         </section>
       </div>
@@ -83,32 +83,32 @@
       <div class="mx-auto flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-3">
           <Leaf class="size-4 text-leaf-600" /><h3 class="flex-1 font-semibold text-slate-900">GRI 305 · {{ session.company }}</h3>
-          <button class="btn-primary bg-leaf-600 hover:bg-leaf-500" :disabled="pdfBusy" @click="saveGri"><Download class="size-4" /> Save PDF</button>
+          <button class="btn-primary bg-leaf-600 hover:bg-leaf-500" :disabled="pdfBusy" @click="saveGri"><Download class="size-4" /> {{ __('Save PDF') }}</button>
           <button class="btn-ghost" @click="gri = ''"><X class="size-4" /></button>
         </div>
-        <iframe class="flex-1 bg-white" :srcdoc="gri" title="GRI 305 disclosure" sandbox="allow-same-origin" />
+        <iframe class="flex-1 bg-white" :srcdoc="gri" :title="__('GRI 305 disclosure')" sandbox="allow-same-origin" />
       </div>
     </div>
 
     <div v-if="recording" class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/30" @mousedown.self="recording = false">
       <form class="card w-full max-w-md space-y-3 p-5 shadow-2xl" @submit.prevent="record">
-        <h2 class="text-base font-semibold text-slate-900">Record activity</h2>
+        <h2 class="text-base font-semibold text-slate-900">{{ __('Record activity') }}</h2>
         <div>
-          <label class="label">What was used</label>
+          <label class="label">{{ __('What was used') }}</label>
           <select v-model="form.activity" class="input"><option v-for="a in options?.activities || []" :key="a.key" :value="a.key">{{ a.label }}</option></select>
         </div>
         <div class="grid grid-cols-[1fr_8rem] gap-2">
-          <div><label class="label">Quantity</label><input v-model.number="form.quantity" type="number" min="0" step="any" class="input" required /></div>
-          <div><label class="label">Unit</label><select v-model="form.unit" class="input"><option v-for="u in units" :key="u">{{ u }}</option></select></div>
+          <div><label class="label">{{ __('Quantity') }}</label><input v-model.number="form.quantity" type="number" min="0" step="any" class="input" required /></div>
+          <div><label class="label">{{ __('Unit') }}</label><select v-model="form.unit" class="input"><option v-for="u in units" :key="u">{{ u }}</option></select></div>
         </div>
         <div v-if="['petrol', 'diesel'].includes(form.activity)">
-          <label class="label">Vehicle (optional)</label>
-          <select v-model="form.vehicle" class="input"><option value="">Not a particular vehicle</option><option v-for="v in options?.vehicles || []" :key="v">{{ v }}</option></select>
+          <label class="label">{{ __('Vehicle (optional)') }}</label>
+          <select v-model="form.vehicle" class="input"><option value="">{{ __('Not a particular vehicle') }}</option><option v-for="v in options?.vehicles || []" :key="v">{{ v }}</option></select>
         </div>
-        <div><label class="label">Date</label><input v-model="form.date" type="date" class="input" /></div>
+        <div><label class="label">{{ __('Date') }}</label><input v-model="form.date" type="date" class="input" /></div>
         <div class="flex justify-end gap-2 pt-1">
-          <button type="button" class="btn-ghost" @click="recording = false">Cancel</button>
-          <button class="btn-primary" :disabled="!(form.quantity > 0) || saving">{{ saving ? 'Recording…' : 'Record' }}</button>
+          <button type="button" class="btn-ghost" @click="recording = false">{{ __('Cancel') }}</button>
+          <button class="btn-primary" :disabled="!(form.quantity > 0) || saving">{{ saving ? __('Recording…') : __('Record') }}</button>
         </div>
       </form>
     </div>

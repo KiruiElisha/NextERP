@@ -1,0 +1,489 @@
+", choosing Claude, OpenAI, Gemini, Groq or a local model, and who may use it.",", ukichagua Claude, OpenAI, Gemini, Groq au modeli ya ndani, na nani anaweza kuitumia."
+"A POS Profile names the warehouse, price list and payment modes a till sells with. Create one, or ask to be added to one.","Wasifu wa POS unataja ghala, orodha ya bei na njia za malipo ambazo kaunta inauzia. Unda mmoja, au omba uongezwe kwenye mmoja."
+Abandon this count,Acha hesabu hii
+About,Kuhusu
+Account,Akaunti
+Accounts,Akaunti
+Accounts Payable report →,Ripoti ya madeni tunayodaiwa →
+Accounts Receivable report →,Ripoti ya madeni tunayodai →
+Activity,Shughuli
+Add,Ongeza
+Add a comment…,Ongeza maoni…
+Add a customer,Ongeza mteja
+Add one,Ongeza moja
+Add row,Ongeza safu
+Add what you sell,Ongeza unachouza
+Address,Anwani
+Addresses,Anwani
+All,Zote
+All fields of this row,Sehemu zote za safu hii
+All Reports,Ripoti Zote
+All scopes,Mawanda yote
+All {0} reports,Ripoti zote za {0}
+Amend,Rekebisha
+Amount,Kiasi
+"Answers from your ERPNext records, with your permissions. It can draft documents for you to check; it never saves or changes anything.","Majibu kutoka kwenye rekodi zako za ERPNext, kwa ruhusa zako. Inaweza kuandaa rasimu za hati ili uzikague; haihifadhi wala kubadilisha chochote."
+App,Programu
+Apply,Tumia
+"Approvals, assignments and notifications waiting on you.","Idhini, kazi ulizopewa na arifa zinazokusubiri."
+Apps on this site,Programu kwenye tovuti hii
+Ask,Uliza
+Ask about anything,Uliza chochote
+"Ask about sales, customers, stock, payments… or ask for a draft","Uliza kuhusu mauzo, wateja, stoki, malipo… au omba rasimu"
+Ask about your business; it drafts documents for you to check.,Uliza kuhusu biashara yako; inaandaa rasimu za hati ili uzikague.
+Ask the assistant,Muulize msaidizi
+Asset,Mali
+Asset Categories,Aina za Mali
+Asset Category,Aina ya Mali
+Asset Movement,Uhamishaji wa Mali
+Asset Movements,Uhamishaji wa Mali
+Assets,Mali
+Assign,Kabidhi
+Assigned to,Amekabidhiwa
+Assignment,Kazi uliyopewa
+Assistant,Msaidizi
+"At the till, or as an invoice.","Kwenye kaunta, au kama ankara."
+Attach,Ambatisha
+Attach a file,Ambatisha faili
+Attach the print,Ambatisha nakala ya kuchapisha
+Attachments,Viambatisho
+Attendance,Mahudhurio
+Back,Rudi
+Back to the usual fields,Rudi kwenye sehemu za kawaida
+Bank Account,Akaunti ya Benki
+Bank Accounts,Akaunti za Benki
+Bank Reconciliation,Ulinganisho wa Benki
+Batch,Bechi
+Batches,Bechi
+Behind,Nyuma ya lengo
+Bills of Materials,Orodha za Malighafi
+BOM,Orodha ya Malighafi
+Bringing these onto this computer…,Inaleta hizi kwenye kompyuta hii…
+Budget,Bajeti
+Budgets,Bajeti
+Business Intelligence,Takwimu za Biashara
+By month,Kwa mwezi
+Cancel,Ghairi
+Cancelled,Imeghairiwa
+Card,Kadi
+Cash and bank,Pesa taslimu na benki
+Change,Chenji
+Change plan,Badilisha mpango
+Change the price,Badilisha bei
+Changing…,Inabadilisha…
+Chart of Accounts,Chati ya Akaunti
+Check your phone and enter your M-Pesa PIN,Angalia simu yako na uweke PIN yako ya M-Pesa
+Checking…,Inakagua…
+Choose app to open…,Chagua programu ya kufungua…
+Choose fields,Chagua sehemu
+Choose fields…,Chagua sehemu…
+Choose the app this computer is for,Chagua programu ya kompyuta hii
+Choose the type first,Chagua aina kwanza
+Clear,Futa
+Clear and resync,Futa na usawazishe upya
+Clear filters,Ondoa vichujio
+Clear selection,Ondoa uteuzi
+Clear the cart,Safisha kikapu
+Close,Funga
+Closed,Imefungwa
+Code,Msimbo
+Comment,Maoni
+Company,Kampuni
+Complete sale,Kamilisha mauzo
+Completed,Imekamilika
+Completing…,Inakamilisha…
+Connect,Unganisha
+Connect KRA eTIMS,Unganisha KRA eTIMS
+Connect your Nergaa Cloud account,Unganisha akaunti yako ya Nergaa Cloud
+Contact,Mawasiliano
+Contacts,Mawasiliano
+Cost Center,Kituo cha Gharama
+Cost Centres,Vituo vya Gharama
+Counted,Imehesabiwa
+Counted by,Imehesabiwa na
+Counts,Hesabu
+Create a POS profile,Unda wasifu wa POS
+Credit Note Issued,Hati ya Mkopo Imetolewa
+Credits,Salio
+Credits added,Salio limeongezwa
+Currency,Sarafu
+Current plan,Mpango wa sasa
+Customer,Mteja
+Customer Name,Jina la Mteja
+Customer's M-Pesa number,Nambari ya M-Pesa ya mteja
+Customers,Wateja
+Dashboard,Dashibodi
+Date,Tarehe
+Delete,Futa
+Delivery Note,Hati ya Uwasilishaji
+Delivery Notes,Hati za Uwasilishaji
+Department,Idara
+Departments,Idara
+Designation,Cheo
+Details,Maelezo
+Difference,Tofauti
+Disconnect,Tenganisha
+Discount,Punguzo
+Done,Imekamilika
+Draft,Rasimu
+Due,Inadaiwa
+Due Date,Tarehe ya Mwisho wa Malipo
+Duplicate,Nakili
+Each person signs in with their own roles and permissions.,Kila mtu anaingia kwa majukumu na ruhusa zake mwenyewe.
+Email,Barua pepe
+Email me a code,Nitumie msimbo kwa barua pepe
+Employee,Mfanyakazi
+Employee Advance,Malipo ya Awali kwa Mfanyakazi
+Employee Advances,Malipo ya Awali kwa Wafanyakazi
+Employees,Wafanyakazi
+"ERPNext {0} is ready. Save your work, then restart to update.","ERPNext {0} iko tayari. Hifadhi kazi yako, kisha uwashe upya ili kusasisha."
+"ERPNext's standard reports, run here with their own filters, export and print.","Ripoti za kawaida za ERPNext, zinazoendeshwa hapa na vichujio vyake, kuhamisha na kuchapisha."
+Every app this site's bench offers is installed.,Kila programu inayopatikana kwa tovuti hii imesakinishwa.
+Every field of,Sehemu zote za
+"Every invoice signed by KRA, with the QR on your receipts.","Kila ankara imethibitishwa na KRA, na msimbo wa QR kwenye risiti zako."
+Everything in stock has been counted.,Kila kitu kilicho kwenye stoki kimehesabiwa.
+Exact,Kiasi kamili
+Excel,Excel
+Expense Claim,Dai la Matumizi
+Expense Claims,Madai ya Matumizi
+Expired,Imeisha muda
+Export,Hamisha
+Exporting…,Inahamisha…
+"Fast, works offline, in this window","Haraka, inafanya kazi bila mtandao, kwenye dirisha hili"
+Field…,Sehemu…
+File → Switch App…,Faili → Badilisha Programu…
+Fill in the required filters.,Jaza vichujio vinavyohitajika.
+Filter,Chuja
+"Filters, saved views, bulk edit and export, from the site","Vichujio, mionekano iliyohifadhiwa, kuhariri kwa wingi na kuhamisha, kutoka kwenye tovuti"
+Filter…,Chuja…
+Find a field…,Tafuta sehemu…
+Finish paying in the checkout window,Kamilisha malipo kwenye dirisha la malipo
+From,Kuanzia
+Get set up,Anza kutumia
+Goods Received,Bidhaa Zilizopokelewa
+Grand Total,Jumla Kuu
+GRI 305 disclosure,Ripoti ya GRI 305
+GRI 305 emissions disclosure,Ripoti ya uzalishaji wa hewa chafu ya GRI 305
+Group,Kundi
+Held,Zilizosimamishwa
+Held sales,Mauzo yaliyosimamishwa
+Hide,Ficha
+Holiday List,Orodha ya Likizo
+Holiday Lists,Orodha za Likizo
+How often,Mara ngapi
+In ERPNext,Ndani ya ERPNext
+Inbox,Kikasha
+Internal Data,Data ya Ndani
+Inventory,Stoki
+Invite your team,Alika timu yako
+Invoice,Ankara
+Invoices,Ankara
+Invoices are paid from your credits.,Ankara hulipwa kutoka kwenye salio lako.
+Issue,Tatizo
+Issues,Matatizo
+Item,Bidhaa
+Item Group,Kundi la Bidhaa
+Item Groups,Makundi ya Bidhaa
+Item Name,Jina la Bidhaa
+Items,Bidhaa
+Items with their prices; scan or type them at the till.,Bidhaa pamoja na bei zake; zisome kwa skana au uziandike kwenye kaunta.
+Job Card,Kadi ya Kazi
+Job Cards,Kadi za Kazi
+Journal Entries,Maingizo ya Jarida
+Journal Entry,Ingizo la Jarida
+KRA receipt check,Uthibitisho wa risiti wa KRA
+KRA refused the invoice.,KRA imekataa ankara.
+Language,Lugha
+Language changed,Lugha imebadilishwa
+Language changed to {0},Lugha imebadilishwa kuwa {0}
+Last full sync {0}. It runs every 5 minutes and after every save.,Usawazishaji kamili wa mwisho {0}. Hufanyika kila dakika 5 na baada ya kila kuhifadhi.
+Latest,Za karibuni
+Latest entries,Maingizo ya karibuni
+Lead,Mteja Mtarajiwa
+Leads,Wateja Watarajiwa
+Leave Application,Ombi la Likizo
+Leave Applications,Maombi ya Likizo
+Leave the till,Ondoka kwenye kaunta
+Letterhead,Kichwa cha barua
+Loading…,Inapakia…
+Looking through your records…,Inapitia rekodi zako…
+Lost,Imepotea
+M-Pesa number,Nambari ya M-Pesa
+Make your first sale,Fanya mauzo yako ya kwanza
+Manufacturing,Uzalishaji
+Mark all read,Weka zote zimesomwa
+Mark done,Weka imekamilika
+Material Request,Ombi la Malighafi
+Message,Ujumbe
+Mobile,Simu
+Mode,Njia
+Mode of Payment,Njia ya Malipo
+More,Zaidi
+Name,Jina
+Name this view,Lipe jina mwonekano huu
+never,kamwe
+New,Mpya
+New conversation,Mazungumzo mapya
+New invoice,Ankara mpya
+New sale,Mauzo mapya
+New {0},{0} Mpya
+Next invoice,Ankara inayofuata
+NextERP Settings,Mipangilio ya NextERP
+NextERP Stock Count,Hesabu ya Stoki ya NextERP
+No,Hapana
+No counts yet. Start one above.,Hakuna hesabu bado. Anza moja hapo juu.
+No invoices yet.,Hakuna ankara bado.
+No items to sell on this till.,Hakuna bidhaa za kuuza kwenye kaunta hii.
+No plan,Hakuna mpango
+No reports are open to you on this site.,Hakuna ripoti zilizo wazi kwako kwenye tovuti hii.
+No rows yet.,Hakuna safu bado.
+No sales yet this month.,Hakuna mauzo bado mwezi huu.
+No targets set yet. Add one in the ESG app's targets.,Hakuna malengo bado. Ongeza moja kwenye malengo ya programu ya ESG.
+No till is set up for you,Hakuna kaunta iliyowekwa kwa ajili yako
+Nobody,Hakuna mtu
+None,Hakuna
+None yet,Hakuna bado
+Not a particular vehicle,Si gari maalum
+Not paid,Haijalipwa
+Not saved,Haijahifadhiwa
+"Not saved. Open it to check the details, then save it yourself.","Haijahifadhiwa. Ifungue ukague maelezo, kisha uihifadhi mwenyewe."
+Not sent to KRA.,Haijatumwa KRA.
+Not signed by KRA yet: send it again from the invoice.,Bado haijathibitishwa na KRA: itume tena kutoka kwenye ankara.
+Not yet,Bado
+Nothing building up right now.,Hakuna kinachoongezeka kwa sasa.
+Nothing for these filters.,Hakuna kitu kwa vichujio hivi.
+Nothing here yet.,Hakuna kitu hapa bado.
+Nothing yet.,Hakuna bado.
+Offline,Nje ya mtandao
+Offline: browsing only,Nje ya mtandao: kuvinjari tu
+On this computer,Kwenye kompyuta hii
+On track,Kwenye lengo
+One less,Punguza moja
+One more,Ongeza moja
+Online,Mtandaoni
+Only items in (optional),Bidhaa za kundi hili tu (si lazima)
+Only {0},{0} tu
+Open,Wazi
+Open draft,Fungua rasimu
+Open this app automatically next time,Fungua programu hii moja kwa moja wakati ujao
+Opportunities,Fursa za Mauzo
+Opportunity,Fursa ya Mauzo
+or the ERPNext menu at the top left.,au menyu ya ERPNext iliyo juu kushoto.
+Ordered,Imeagizwa
+Out,Imeisha
+Outstanding,Deni lililobaki
+Outstanding Amount,Kiasi Kinachodaiwa
+Over,Ziada
+Overdue,Imepitwa na muda
+Overview,Muhtasari
+Owed by customers,Madeni ya wateja
+Owed to suppliers,Madeni kwa wasambazaji
+Paid,Imelipwa
+Paid Amount,Kiasi Kilicholipwa
+Park this sale,Simamisha mauzo haya
+Partly Paid,Imelipwa kiasi
+Party,Mhusika
+Pay now,Lipa sasa
+Payment Entry,Ingizo la Malipo
+Payment Request,Ombi la Malipo
+Payment Requests,Maombi ya Malipo
+Payments,Malipo
+Payroll,Mishahara
+Payroll Entry,Ingizo la Mishahara
+People,Watu
+Period,Kipindi
+Pick a company you can open.,Chagua kampuni unayoweza kufungua.
+Pick List,Orodha ya Kuchukua
+Pick Lists,Orodha za Kuchukua
+Plan,Mpango
+"Plan, billing and apps","Mpango, malipo na programu"
+Point of Sale,Kaunta ya Mauzo
+Post count,Rekodi hesabu
+Post this count?,Rekodi hesabu hii?
+Posting Date,Tarehe ya Kurekodi
+Posting…,Inarekodi…
+Preparing the print…,Inaandaa nakala ya kuchapisha…
+Preparing…,Inaandaa…
+Preview,Hakiki
+Price List,Orodha ya Bei
+Price Lists,Orodha za Bei
+Print,Chapisha
+Print or PDF,Chapisha au PDF
+Print preview,Hakiki ya kuchapisha
+Profit,Faida
+Project,Mradi
+Projects,Miradi
+Purchase Invoice,Ankara ya Ununuzi
+Purchase Order,Agizo la Ununuzi
+Purchase Orders,Maagizo ya Ununuzi
+Purchase Receipt,Stakabadhi ya Ununuzi
+Purchases,Ununuzi
+QR code to check this receipt with KRA,Msimbo wa QR wa kuthibitisha risiti hii na KRA
+Qty,Idadi
+Quality Inspection,Ukaguzi wa Ubora
+Quality Inspections,Ukaguzi wa Ubora
+Quantity,Idadi
+Quotation,Nukuu ya Bei
+Quotations,Nukuu za Bei
+Rate,Bei
+Read:,Zimesomwa:
+Received,Imepokelewa
+Record,Rekodi
+Record activity,Rekodi shughuli
+Recording…,Inarekodi…
+Reduction targets,Malengo ya kupunguza
+Refresh,Onyesha upya
+Reload,Pakia upya
+Remarks,Maelezo
+Remove,Ondoa
+Remove row,Ondoa safu
+Repeat,Rudia
+Repeats,Inajirudia
+Repeat…,Rudia…
+Replace,Badilisha
+Reports,Ripoti
+Request for Quotation,Ombi la Nukuu ya Bei
+Required by,Inahitajika kufikia
+Restart and update,Washa upya na usasishe
+Resume,Endelea
+Return,Marejesho
+Run,Endesha
+Run the report to see it.,Endesha ripoti ili uione.
+Running…,Inaendesha…
+Salary Slip,Hati ya Mshahara
+Salary Slips,Hati za Mshahara
+Sale complete,Mauzo yamekamilika
+Sales,Mauzo
+Sales Invoice,Ankara ya Mauzo
+Sales Invoices,Ankara za Mauzo
+Sales Order,Agizo la Mauzo
+Sales Orders,Maagizo ya Mauzo
+"Sales, last 30 days","Mauzo, siku 30 zilizopita"
+Save,Hifadhi
+Save as an Excel file in Downloads,Hifadhi kama faili la Excel kwenye Downloads
+Save PDF,Hifadhi PDF
+Save view,Hifadhi mwonekano
+Saved views,Mionekano iliyohifadhiwa
+Saving…,Inahifadhi…
+Scan a barcode or search items,Soma msimbopau au tafuta bidhaa
+Scan or tap items to start a sale.,Soma au gusa bidhaa kuanza mauzo.
+Scan or type an item code,Soma au andika msimbo wa bidhaa
+Scan the first item to start.,Soma bidhaa ya kwanza kuanza.
+"Search customers, items, invoices…","Tafuta wateja, bidhaa, ankara…"
+"Search documents, go anywhere, create, run a report…","Tafuta hati, nenda popote, unda, endesha ripoti…"
+Search {0}…,Tafuta {0}…
+Searching…,Inatafuta…
+Select all,Chagua zote
+Send,Tuma
+Send to KRA now,Tuma KRA sasa
+Sending…,Inatuma…
+Sent to KRA when the invoice is submitted.,Itatumwa KRA ankara ikiwasilishwa.
+Series,Mfululizo
+Set count,Weka hesabu
+Setting up…,Inaweka…
+Settings,Mipangilio
+Short,Pungufu
+Show every field,Onyesha sehemu zote
+Sign out,Ondoka
+Signature,Sahihi
+Signed in as,Umeingia kama
+Site,Tovuti
+Start counting,Anza kuhesabu
+Starting…,Inaanza…
+Status,Hali
+Still to pay,Bado kulipa
+Stock Entries,Maingizo ya Stoki
+Stock Entry,Ingizo la Stoki
+Stock Reconciliation,Ulinganisho wa Stoki
+Stock Reconciliations,Ulinganisho wa Stoki
+Stock Requisitions,Maombi ya Stoki
+Stock Take,Hesabu ya Stoki
+Stock take,Hesabu ya stoki
+Stop repeating,Acha kurudia
+Stop waiting,Acha kusubiri
+Subject,Kichwa
+Submit,Wasilisha
+Submitted,Imewasilishwa
+Supplier,Msambazaji
+Supplier Inquiries,Maulizo kwa Wasambazaji
+Supplier Invoices,Ankara za Wasambazaji
+Supplier Name,Jina la Msambazaji
+Supplier Offers,Ofa za Wasambazaji
+Supplier Quotation,Nukuu ya Msambazaji
+Suppliers,Wasambazaji
+Sustainability,Uendelevu
+Switch app…,Badilisha programu…
+Switch later from,Badilisha baadaye kupitia
+Sync now,Sawazisha sasa
+Synced {0},Imesawazishwa {0}
+Syncing {0}…,Inasawazisha {0}…
+Take M-Pesa at the till,Pokea M-Pesa kwenye kaunta
+Taken,Imechukuliwa
+Task,Kazi
+Tasks,Kazi
+Taxes,Kodi
+Territory,Eneo
+The assistant isn't turned on for you. A System Manager can turn it on in,Msaidizi hajawashwa kwa ajili yako. Msimamizi wa Mfumo anaweza kumwasha kwenye
+The buyer scans the code to check the receipt with KRA.,Mnunuzi anasoma msimbo huu kuthibitisha risiti na KRA.
+The customer cancelled,Mteja ameghairi
+"The disclosure the ESG app prepares from these figures: scopes, intensity, reductions and methods.","Ripoti ambayo programu ya ESG inaandaa kutoka kwa takwimu hizi: mawanda, kiwango, upunguzaji na mbinu."
+"The site can't be reached: this is the copy kept on this computer, read only.","Tovuti haipatikani: hii ni nakala iliyohifadhiwa kwenye kompyuta hii, ya kusoma tu."
+The usual fields of,Sehemu za kawaida za
+"Their invoices, payments and balance in one place.","Ankara, malipo na salio lao mahali pamoja."
+This window,Dirisha hili
+This year,Mwaka huu
+Tick the fields you want on the form. Required ones always show.,Weka alama kwenye sehemu unazotaka kwenye fomu. Zile za lazima huonekana kila wakati.
+Timesheet,Jedwali la Muda
+Timesheets,Majedwali ya Muda
+Title,Kichwa
+to,hadi
+To,Kwa
+To Bill,Ya kutoza
+To Deliver,Ya kuwasilisha
+To Deliver and Bill,Ya kuwasilisha na kutoza
+To pay,Ya kulipa
+Today,Leo
+Top customers,Wateja wakuu
+Top customers this month,Wateja wakuu mwezi huu
+Top items,Bidhaa zinazouzwa zaidi
+Top up,Ongeza salio
+Top up credits,Ongeza salio
+Total,Jumla
+Try again,Jaribu tena
+Try asking,Jaribu kuuliza
+Turn on the assistant,Washa msaidizi
+Type,Aina
+Type quantities,Andika idadi
+Unit,Kipimo
+Unpaid,Haijalipwa
+Until (optional),Hadi (si lazima)
+Update,Sasisha
+Updating…,Inasasisha…
+Uploading…,Inapakia…
+Use another email,Tumia barua pepe nyingine
+Usual fields only,Sehemu za kawaida tu
+Value,Thamani
+Value of the difference,Thamani ya tofauti
+Vehicle (optional),Gari (si lazima)
+Views…,Mionekano…
+Waiting for KRA to sign…,Inasubiri KRA kuthibitisha…
+Waiting for the customer,Inamsubiri mteja
+Waiting to be sent to KRA. It goes on its own; you can also send it now.,Inasubiri kutumwa KRA. Itatumwa yenyewe; unaweza pia kuituma sasa.
+Walk-in,Mteja wa papo hapo
+Warehouse,Ghala
+Warehouse to count,Ghala la kuhesabu
+Warehouses,Maghala
+What was used,Kilichotumika
+Where the figures come from,Takwimu zinatoka wapi
+Work Order,Agizo la Kazi
+Work Orders,Maagizo ya Kazi
+Workflow state,Hatua ya mtiririko wa kazi
+Yes,Ndiyo
+"You'll enter your card or PayPal details on the provider's secure checkout, which opens in its own window.","Utaweka maelezo ya kadi au PayPal kwenye ukurasa salama wa malipo wa mtoa huduma, utakaofunguka kwenye dirisha lake."
+Your credits update here as soon as Nergaa Cloud confirms the payment.,Salio lako litasasishwa hapa mara tu Nergaa Cloud itakapothibitisha malipo.
+"Your Daraja keys, so customers pay from their phone.","Funguo zako za Daraja, ili wateja walipe kutoka kwenye simu zao."
+"Your own language, the same setting as in ERPNext. A System Manager turns languages on, and corrects translations, in Desk (Language and Translation).","Lugha yako mwenyewe, mpangilio uleule wa ERPNext. Msimamizi wa Mfumo huwasha lugha, na kusahihisha tafsiri, ndani ya Desk (Language na Translation)."
+{0} of {1} done,{0} kati ya {1} zimekamilika
+· Check what it says before acting on it.,· Hakiki inachosema kabla ya kuchukua hatua.
+· set,· weka
+"· showing the last figures, updating…","· inaonyesha takwimu za mwisho, inasasisha…"

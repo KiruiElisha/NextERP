@@ -7,23 +7,23 @@
         <h3 class="flex-1 font-semibold text-slate-900">Email {{ name }}</h3>
       </div>
       <div class="space-y-3 p-5">
-        <div><label class="label">To</label><input v-model="form.recipients" class="input" placeholder="name@example.com, …" required /></div>
+        <div><label class="label">{{ __('To') }}</label><input v-model="form.recipients" class="input" :placeholder="__('name@example.com, …')" required /></div>
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="label">Cc</label><input v-model="form.cc" class="input" /></div>
-          <div><label class="label">Bcc</label><input v-model="form.bcc" class="input" /></div>
+          <div><label class="label">{{ __('Cc') }}</label><input v-model="form.cc" class="input" /></div>
+          <div><label class="label">{{ __('Bcc') }}</label><input v-model="form.bcc" class="input" /></div>
         </div>
-        <div><label class="label">Subject</label><input v-model="form.subject" class="input" required /></div>
-        <div><label class="label">Message</label><textarea v-model="form.content" class="input min-h-[160px]" /></div>
+        <div><label class="label">{{ __('Subject') }}</label><input v-model="form.subject" class="input" required /></div>
+        <div><label class="label">{{ __('Message') }}</label><textarea v-model="form.content" class="input min-h-[160px]" /></div>
         <div class="flex flex-wrap items-center gap-4">
-          <label class="flex items-center gap-2 text-sm text-slate-700"><input v-model="form.attach_print" type="checkbox" class="rounded border-slate-300" /> Attach the print</label>
+          <label class="flex items-center gap-2 text-sm text-slate-700"><input v-model="form.attach_print" type="checkbox" class="rounded border-slate-300" /> {{ __('Attach the print') }}</label>
           <select v-if="form.attach_print" v-model="form.print_format" class="input w-56">
             <option v-for="p in defaults.print_formats || ['Standard']" :key="p" :value="p">{{ p }}</option>
           </select>
         </div>
       </div>
       <div class="flex justify-end gap-2 border-t border-slate-100 p-4">
-        <button type="button" class="btn-subtle" @click="$emit('close')">Cancel</button>
-        <button class="btn-primary" :disabled="busy"><Send class="size-4" /> {{ busy ? 'Sending…' : 'Send' }}</button>
+        <button type="button" class="btn-subtle" @click="$emit('close')">{{ __('Cancel') }}</button>
+        <button class="btn-primary" :disabled="busy"><Send class="size-4" /> {{ busy ? __('Sending…') : __('Send') }}</button>
       </div>
     </form>
   </div>
