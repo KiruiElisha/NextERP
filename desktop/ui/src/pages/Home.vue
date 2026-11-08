@@ -8,6 +8,8 @@
       <RouterLink to="/form/Sales%20Invoice/new" class="btn-primary"><Plus class="size-4" /> New invoice</RouterLink>
     </div>
 
+    <GettingStarted />
+
     <div v-if="error && !data" class="card p-6 text-sm text-red-700">{{ error }}</div>
 
     <template v-if="data">
@@ -45,6 +47,7 @@
 </template>
 
 <script setup>
+import GettingStarted from '@/components/GettingStarted.vue'
 import { computed, ref, watch } from 'vue'
 import { Plus } from 'lucide-vue-next'
 import { cachedThenFresh, site } from '@/lib/backend'

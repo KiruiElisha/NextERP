@@ -71,6 +71,7 @@
         </div>
         <div v-if="hasSide" class="space-y-5 xl:sticky xl:top-4 xl:self-start">
           <PartySummary v-if="hasParty" :doc="doc" />
+          <EtimsCard v-if="doctype === 'Sales Invoice' && !isNew && session.boot?.etims" :name="doc.name" :docstatus="doc.docstatus" />
           <Timeline v-if="!isNew" :doctype="doctype" :name="doc.name" :info="docinfo" :can-write="Boolean(perms.write)" @changed="reload" />
         </div>
       </div>
@@ -90,6 +91,7 @@ import { ArrowLeft, Ban, CheckCircle2, ChevronRight, Copy, CopyPlus, LayoutList,
 import FormLayout from '@/components/form/FormLayout.vue'
 import Timeline from '@/components/form/Timeline.vue'
 import PartySummary from '@/components/form/PartySummary.vue'
+import EtimsCard from '@/components/form/EtimsCard.vue'
 import FieldPicker from '@/components/form/FieldPicker.vue'
 import EmailDialog from '@/components/form/EmailDialog.vue'
 import PrintDialog from '@/components/form/PrintDialog.vue'

@@ -221,6 +221,19 @@
           <div class="flex justify-between font-semibold"><span>Total</span><span>{{ money(receipt.grand_total) }}</span></div>
           <div v-for="p in receipt.payments" :key="p.mode_of_payment" class="flex justify-between"><span>{{ p.mode_of_payment }}</span><span>{{ money(p.amount) }}</span></div>
           <div v-if="receipt.change" class="flex justify-between"><span>Change</span><span>{{ money(receipt.change) }}</span></div>
+          <template v-if="receipt.etims?.enabled">
+            <div class="border-t" />
+            <div class="text-center font-semibold">KRA eTIMS</div>
+            <template v-if="receipt.etims.etims_status === 'Sent'">
+              <div class="flex justify-between"><span>CU Serial No</span><span>{{ receipt.etims.etims_sdc_id }}</span></div>
+              <div class="flex justify-between"><span>CU Invoice No</span><span>{{ receipt.etims.etims_sdc_id }}/{{ receipt.etims.etims_invoice_no }}</span></div>
+              <div class="flex justify-between"><span>Internal Data</span><span class="truncate">{{ receipt.etims.etims_internal_data }}</span></div>
+              <div class="flex justify-between"><span>Signature</span><span class="truncate">{{ receipt.etims.etims_receipt_signature }}</span></div>
+              <img v-if="receipt.etims.qr" :src="qrSrc(receipt.etims.qr)" alt="KRA receipt check" class="mx-auto mt-1 size-28" />
+            </template>
+            <div v-else-if="receipt.etims.etims_status === 'Failed'" class="text-center text-red-600">Not signed by KRA yet: send it again from the invoice.</div>
+            <div v-else class="text-center text-slate-400">Waiting for KRA to sign…</div>
+          </template>
           <div class="mt-2 text-center text-slate-400">Served by {{ receipt.cashier }}. Thank you.</div>
         </div>
         <div class="flex gap-2 border-t border-slate-100 p-4">
@@ -278,6 +291,7 @@ import LinkField from '@/components/form/LinkField.vue'
 import { toast } from '@/components/Toasts.vue'
 import { formRoute } from '@/lib/forms'
 import { session } from '@/lib/session'
+import { site } from '@/lib/backend'
 import { catalogue, complete, heldSales, mpesaCancel, mpesaPush, mpesaStatus, profiles, quote, saleId, saveHeld, today } from '@/lib/pos'
 
 const PROFILE_KEY = 'pos:profile'
@@ -313,6 +327,27 @@ const elapsed = ref(0)
 const busy = ref(false)
 const receipt = ref(null)
 const receiptBox = ref(null)
+// KRA signs the invoice a moment after the sale (etims_oscu sends it in the background): until it has,
+// the receipt asks again every few seconds, so the CU invoice number and QR appear before printing.
+const qrSrc = (svg) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+let etimsTimer = null
+onBeforeUnmount(() => clearTimeout(etimsTimer))
+function followEtims() {
+  clearTimeout(etimsTimer)
+  const r = receipt.value
+  if (!r?.etims?.enabled || r.etims.etims_status === 'Sent' || r.etims.etims_status === 'Failed') return
+  let tries = 0
+  const ask = async () => {
+    if (receipt.value !== r || tries++ > 15) return
+    try {
+      r.etims = await site('nexterp.api.etims.invoice', { name: r.name })
+    } catch {
+      /* offline for a moment: ask again */
+    }
+    if (r.etims?.etims_status !== 'Sent' && r.etims?.etims_status !== 'Failed') etimsTimer = setTimeout(ask, 3000)
+  }
+  etimsTimer = setTimeout(ask, 2000)
+}
 const newSaleBtn = ref(null)
 const amountBox = ref(null)
 const phoneBox = ref(null)
@@ -604,6 +639,7 @@ async function finish() {
   try {
     const mpesaRequests = payments.value.filter((p) => p.request).map((p) => p.request)
     receipt.value = await complete(profile.value.name, currentSale, cart.value, payments.value.map(({ mode_of_payment, amount: a }) => ({ mode_of_payment, amount: a })), customer.value || undefined, mpesaRequests)
+    followEtims()
     dialog.value = 'receipt'
     nextTick(() => newSaleBtn.value?.focus())
     items.value.forEach((it) => {

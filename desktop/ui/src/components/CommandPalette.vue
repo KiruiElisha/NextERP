@@ -3,7 +3,7 @@
     <div class="w-full max-w-xl overflow-hidden rounded-xl bg-white shadow-2xl">
       <div class="flex items-center gap-2 border-b border-slate-200 px-4">
         <Search class="size-4 text-slate-400" />
-        <input ref="box" v-model="text" class="h-12 flex-1 text-[15px] outline-none" placeholder="Search everything, or type a command…"
+        <input ref="box" v-model="text" class="h-12 flex-1 text-[15px] outline-none" placeholder="Search documents, go anywhere, create, run a report…"
           @keydown.down.prevent="move(1)" @keydown.up.prevent="move(-1)" @keydown.enter.prevent="go(results[active])" @keydown.esc="close" />
         <span v-if="took !== null" class="text-[11px] text-slate-400">{{ took }} ms</span>
       </div>
@@ -24,7 +24,9 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search } from 'lucide-vue-next'
 import { call, search } from '@/lib/backend'
-import { formRoute } from '@/lib/forms'
+import { formRoute, listRoute } from '@/lib/forms'
+import { DOCTYPES, NAV } from '@/lib/doctypes'
+import { canRead, session } from '@/lib/session'
 
 const open = defineModel({ type: Boolean, default: false })
 const router = useRouter()
@@ -34,19 +36,68 @@ const hits = ref([])
 const active = ref(0)
 const took = ref(null)
 
-const COMMANDS = [
-  { title: 'New sales invoice', hint: 'Ctrl N', run: () => router.push(formRoute('Sales Invoice', 'new')) },
-  { title: 'Sync now', hint: 'Command', run: () => call('sync_now') },
-  { title: 'Go to ESG', hint: 'Command', run: () => router.push('/esg') },
-  { title: 'Go to home', hint: 'Command', run: () => router.push('/home') },
-]
+// Everything the app can do, from the keyboard: every screen the user can open, "New …" for every
+// document they may create, every report they may run, the assistant, and the documents on this computer.
+const plural = (d) => (d.endsWith('y') ? `${d.slice(0, -1)}ies` : `${d}s`).replace(/ss$/, 'sses')
+const commands = computed(() => {
+  const boot = session.boot || {}
+  const readable = new Set(boot.readable || [])
+  const creatable = Object.entries(boot.can_create || {}).filter(([, ok]) => ok).map(([dt]) => dt)
+  const out = [
+    { title: 'New sales invoice', hint: 'Ctrl N', run: () => router.push(formRoute('Sales Invoice', 'new')), top: 1 },
+    { title: 'Sync now', hint: 'Command', run: () => call('sync_now'), top: 1 },
+  ]
+  for (const g of NAV) {
+    if (g.esg && !boot.esg) continue
+    for (const item of g.items) {
+      if (item.ai && !boot.ai?.enabled) continue
+      if (item.create && !boot.can_create?.[item.create]) continue
+      if (item.read && !readable.has(item.read)) continue
+      if (item.app && !(boot.installed_apps || []).includes(item.app)) continue
+      if (item.doctype) {
+        if (canRead(item.doctype)) out.push({ title: DOCTYPES[item.doctype].plural, hint: `Go to · ${g.label}`, run: () => router.push(`/list/${DOCTYPES[item.doctype].slug}`) })
+      } else if (item.list) {
+        if (readable.has(item.list)) out.push({ title: item.name, hint: `Go to · ${g.label}`, run: () => router.push(listRoute(item.list)) })
+      } else if (item.to) {
+        out.push({ title: item.name, hint: `Go to · ${g.label}`, run: () => router.push(item.to), top: ['/pos', '/inbox', '/assistant'].includes(item.to) ? 1 : 0 })
+      }
+    }
+  }
+  for (const dt of creatable.sort()) {
+    if (dt === 'Sales Invoice') continue
+    out.push({ title: `New ${dt.toLowerCase()}`, hint: 'Create', run: () => router.push(formRoute(dt, 'new')) })
+  }
+  for (const d of boot.reports || []) for (const r of d.reports) out.push({ title: r.name, hint: `Report · ${d.label}`, run: () => router.push(`/report/${encodeURIComponent(r.name)}`) })
+  out.push({ title: 'Plan, billing and apps', hint: 'Go to', run: () => router.push('/account') })
+  out.push({ title: 'Settings', hint: 'Go to', run: () => router.push('/settings') })
+  return out.map((c) => ({ ...c, key: `${c.hint}:${c.title}` }))
+})
+
+// Best first: the title starts with the words typed, then a word in it does, then it contains them.
+function score(title, q) {
+  const t = title.toLowerCase()
+  if (t.startsWith(q)) return 0
+  if (t.split(/[\s·/-]+/).some((w) => w.startsWith(q))) return 1
+  if (q.split(/\s+/).every((w) => t.includes(w))) return 2
+  return null
+}
 
 const results = computed(() => {
   const q = text.value.trim().toLowerCase()
-  const commands = COMMANDS.filter((c) => !q || c.title.toLowerCase().includes(q)).map((c) => ({ ...c, key: c.title }))
+  if (!q) return commands.value.filter((c) => c.top)
+  const ranked = commands.value
+    .map((c) => ({ c, s: score(c.title, q) }))
+    .filter((x) => x.s !== null)
+    .sort((a, b) => a.s - b.s || a.c.title.length - b.c.title.length)
+    .slice(0, 8)
+    .map((x) => x.c)
   const docs = hits.value.map((h) => ({ key: `${h.doctype}:${h.name}`, title: h.title, hint: `${h.doctype} · ${h.name}`,
     run: () => router.push(formRoute(h.doctype, h.name)) }))
-  return q ? [...docs, ...commands] : commands
+  // a question (several words), not a name being looked up
+  const ask = session.boot?.ai?.enabled && q.split(/\s+/).length >= 3
+    ? [{ key: 'ask', title: `Ask the assistant: “${text.value.trim()}”`, hint: 'Assistant', run: () => router.push({ path: '/assistant', query: { q: text.value.trim() } }) }]
+    : []
+  return [...ranked.filter((c) => score(c.title, q) === 0), ...docs, ...ranked.filter((c) => score(c.title, q) !== 0), ...ask]
 })
 
 // Every keystroke searches the local index; nothing waits on the network.

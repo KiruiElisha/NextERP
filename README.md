@@ -51,6 +51,21 @@ it and a daily limit per user. The server does everything (`nexterp/api/ai.py`):
 only through `frappe.get_list` and `has_permission` as the signed-in user, never saves, and the key
 never leaves the site. Conversations are kept in the app's memory only.
 
+## KRA eTIMS
+
+With the etims_oscu app on the site, every sales invoice is
+signed by KRA, and the app shows it: the invoice has a KRA eTIMS panel (signed, queued or failed, the CU
+invoice number and the QR the buyer scans), with **Send to KRA now** for one that isn't signed; the till's
+receipt carries the CU serial and invoice numbers, internal data, signature and QR, waiting the few
+seconds KRA takes to sign. Without etims_oscu nothing changes (`nexterp/api/etims.py`).
+
+## First steps and the keyboard
+
+A new site's Home shows **Get set up**: add items and a customer, make the first sale, invite the team,
+connect M-Pesa, the assistant and eTIMS, each step opening the screen where it's done and ticked off as
+the site records it. **Ctrl K** goes anywhere: every screen, **New …** for each document the user may
+create, every report, the documents on the computer, and (three words or more) the assistant.
+
 ## Server setup
 
 ```bash

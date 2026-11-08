@@ -93,3 +93,109 @@ def _daily_sales(base: dict, since) -> list[dict]:
 	return [
 		{"date": str(add_days(since, i)), "amount": rows.get(str(add_days(since, i)), 0.0)} for i in range(30)
 	]
+
+
+# ── Getting started ───────────────────────────────────────────────────────────
+
+SETUP_KEY = "nexterp-setup"
+
+
+def _exists(doctype: str, filters: dict | None = None) -> bool:
+	return bool(frappe.db.exists(doctype, filters or {})) if frappe.db.table_exists(doctype) else False
+
+
+@frappe.whitelist()
+def setup() -> dict:
+	"""The first steps a new site needs, done or not, each with where in the app to do it. Only done or
+	not done is told (never a count or a name), and only the steps this user can take are listed."""
+	import json
+
+	from frappe.model.utils.user_settings import get_user_settings
+
+	saved = json.loads(get_user_settings(SETUP_KEY) or "{}") or {}
+	if saved.get("dismissed"):
+		return {"dismissed": True, "steps": []}
+	admin = "System Manager" in frappe.get_roles()
+	can = lambda dt, p="create": bool(frappe.has_permission(dt, p))
+	settings = frappe.get_cached_doc("NextERP Settings") if admin else None
+	steps = [
+		(
+			"items",
+			"Add what you sell",
+			"Items with their prices; scan or type them at the till.",
+			"/form/Item/new",
+			can("Item"),
+			_exists("Item", {"is_sales_item": 1, "disabled": 0}),
+		),
+		(
+			"customers",
+			"Add a customer",
+			"Their invoices, payments and balance in one place.",
+			"/form/Customer/new",
+			can("Customer"),
+			_exists("Customer", {"disabled": 0}),
+		),
+		(
+			"sale",
+			"Make your first sale",
+			"At the till, or as an invoice.",
+			"/pos",
+			can("Sales Invoice"),
+			_exists("Sales Invoice", {"docstatus": 1}),
+		),
+		(
+			"team",
+			"Invite your team",
+			"Each person signs in with their own roles and permissions.",
+			"/form/User/new",
+			admin,
+			frappe.db.count(
+				"User",
+				{"enabled": 1, "user_type": "System User", "name": ["not in", ["Administrator", "Guest"]]},
+			)
+			> 1,
+		),
+		(
+			"mpesa",
+			"Take M-Pesa at the till",
+			"Your Daraja keys, so customers pay from their phone.",
+			"/form/NextERP%20Settings/NextERP%20Settings",
+			admin,
+			bool(settings and settings.mpesa_enabled),
+		),
+		(
+			"assistant",
+			"Turn on the assistant",
+			"Ask about your business; it drafts documents for you to check.",
+			"/form/NextERP%20Settings/NextERP%20Settings",
+			admin,
+			bool(settings and settings.ai_enabled),
+		),
+	]
+	from nexterp.api import etims
+
+	if "etims_oscu" in frappe.get_installed_apps():
+		steps.append(
+			(
+				"etims",
+				"Connect KRA eTIMS",
+				"Every invoice signed by KRA, with the QR on your receipts.",
+				"/l/eTIMS%20Device",
+				admin,
+				etims.enabled() and _exists("eTIMS Device"),
+			)
+		)
+	out = [
+		{"key": k, "title": t, "hint": h, "to": to, "done": bool(done)}
+		for k, t, h, to, allowed, done in steps
+		if allowed
+	]
+	return {"dismissed": False, "steps": out, "done": sum(s["done"] for s in out), "total": len(out)}
+
+
+@frappe.whitelist(methods=["POST"])
+def dismiss_setup() -> dict:
+	from frappe.model.utils.user_settings import update_user_settings
+
+	update_user_settings(SETUP_KEY, {"dismissed": 1})
+	return {"dismissed": True, "steps": []}

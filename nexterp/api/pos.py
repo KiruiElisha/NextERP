@@ -12,6 +12,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint, flt, nowdate
 
+from nexterp.api import etims
 from nexterp.api.mpesa import REQUEST
 
 SALE_KEY = "nexterp:pos:sale:{}:{}"  # user, till sale id: one cashier's id never answers another's
@@ -269,6 +270,8 @@ def _receipt(si) -> dict:
 		"payments": [{"mode_of_payment": m.mode_of_payment, "amount": flt(m.amount)} for m in si.payments],
 		"company": si.company,
 		"cashier": frappe.utils.get_fullname(si.owner),
+		# KRA eTIMS: the CU invoice number and QR a Kenyan receipt carries (when etims_oscu is installed)
+		"etims": etims.for_invoice(si),
 	}
 
 
