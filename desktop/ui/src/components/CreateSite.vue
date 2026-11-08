@@ -5,7 +5,7 @@
       <div class="flex items-center gap-3">
         <img src="/icon.png" class="size-10 rounded-xl shadow-sm" alt="" />
         <div>
-          <h1 class="text-lg font-semibold tracking-tight text-slate-900">New site on Nergaa Cloud</h1>
+          <h1 class="text-lg font-semibold tracking-tight text-slate-900">New site</h1>
           <p class="text-xs text-slate-500">{{ stepNote }}</p>
         </div>
       </div>
@@ -55,11 +55,23 @@
       <div class="grid gap-0 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <section class="space-y-4 p-6 md:border-r md:border-slate-100">
           <h2 class="section-title">Your site</h2>
+          <div v-if="hosts.length > 1">
+            <span class="label">Where it runs</span>
+            <div class="grid grid-cols-2 gap-2">
+              <label v-for="h in hosts" :key="h.id"
+                     class="cursor-pointer rounded-xl border p-3 transition"
+                     :class="host === h.id ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-slate-200 hover:border-slate-300'">
+                <input v-model="host" type="radio" :value="h.id" class="sr-only" @change="checkName" />
+                <span class="block text-sm font-semibold text-slate-900">{{ h.title }}</span>
+                <span class="block text-xs text-slate-500">{{ h.region ? `${h.region} · ` : '' }}.{{ h.domain }}</span>
+              </label>
+            </div>
+          </div>
           <div>
             <label class="label" for="cs-sub">Address</label>
             <div class="flex overflow-hidden rounded-lg border border-slate-300 bg-white shadow-sm focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100">
               <input id="cs-sub" v-model.trim="subdomain" class="min-w-0 flex-1 px-3 py-2.5 text-sm outline-none" placeholder="mycompany" required autofocus @input="checkName" />
-              <span class="flex items-center border-l border-slate-200 bg-slate-50 px-3 text-sm text-slate-500">.{{ options.domain }}</span>
+              <span class="flex items-center border-l border-slate-200 bg-slate-50 px-3 text-sm text-slate-500">.{{ chosen.domain }}</span>
             </div>
             <p class="mt-1.5 flex h-4 items-center gap-1 text-xs" :class="name.available ? 'text-emerald-600' : 'text-red-600'">
               <span v-if="name.reason">{{ name.available ? '✓' : '✕' }}</span>{{ name.reason }}
@@ -85,6 +97,13 @@
             <h2 class="section-title">Apps <span class="ml-1 font-normal normal-case tracking-normal text-slate-400">ERPNext is always included</span></h2>
             <span v-if="apps.length" class="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">{{ apps.length }} selected</span>
           </div>
+          <p v-if="localApps.length" class="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800 ring-1 ring-emerald-100">
+            KRA eTIMS comes with it, for invoices signed by KRA. You connect your eTIMS device after setup.
+          </p>
+          <p v-if="onFrappeCloud" class="mt-3 text-sm text-slate-600">
+            On Frappe Cloud the site comes with ERPNext, ESG (GHG emissions) and this app's server side. Add other apps later from Settings → Plan, billing and apps.
+          </p>
+          <template v-else>
           <input v-model.trim="appQuery" class="input-lg mt-3" placeholder="Search apps" />
           <div class="mt-3 grid max-h-[300px] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
             <label v-for="a in shownApps" :key="a.name"
@@ -108,12 +127,17 @@
             </label>
             <p v-if="!shownApps.length" class="col-span-full py-6 text-center text-sm text-slate-400">No app matches "{{ appQuery }}".</p>
           </div>
+          </template>
         </section>
       </div>
 
       <!-- Plan and payment -->
       <div class="border-t border-slate-100 bg-slate-50/70 p-6">
-        <div v-if="options.trial_days" class="flex items-center gap-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-100">
+        <div v-if="onFrappeCloud" class="rounded-xl bg-white p-4 ring-1 ring-slate-200">
+          <p class="text-sm font-semibold text-slate-900">{{ chosen.plan?.plan_title || 'Frappe Cloud site' }} · {{ chosen.plan ? price(chosen.plan) : '' }} a month</p>
+          <p class="mt-1 text-xs text-slate-500">Paid from your Nergaa Cloud credits, like any site. Hosted by Frappe Cloud in {{ chosen.region }}.</p>
+        </div>
+        <div v-else-if="options.trial_days" class="flex items-center gap-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-100">
           <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">✓</span>
           <span><span class="font-semibold">Free for {{ options.trial_days }} days.</span> No card needed now; pick a plan any time from your Nergaa Cloud dashboard.</span>
         </div>
@@ -128,16 +152,18 @@
               <span class="block text-xs text-slate-500">{{ price(p) }} a month</span>
             </label>
           </div>
-          <div v-if="options.blockers.length" class="mt-4 rounded-xl bg-white p-4 ring-1 ring-amber-200">
+        </template>
+        <div v-if="!options.trial_days || onFrappeCloud">
+          <div v-if="hostBlockers.length" class="mt-4 rounded-xl bg-white p-4 ring-1 ring-amber-200">
             <p class="text-sm font-medium text-slate-900">Add a way to pay first</p>
-            <p v-for="b in options.blockers" :key="b" class="mt-1 text-xs text-slate-600">{{ b }}</p>
+            <p v-for="b in hostBlockers" :key="b" class="mt-1 text-xs text-slate-600">{{ b }}</p>
             <div class="mt-3 flex flex-wrap gap-2">
               <button type="button" class="btn-primary" @click="topUp">Add a card</button>
               <button type="button" class="btn-subtle" @click="topUp">Add credits (M-PESA, PayPal, card)</button>
               <button type="button" class="btn-ghost" :disabled="busy" @click="recheck">I've paid, check again</button>
             </div>
           </div>
-        </template>
+        </div>
 
         <p v-if="error" class="mt-4 rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-700 ring-1 ring-red-100">{{ error }}</p>
         <div class="mt-5 flex items-center justify-between gap-3">
@@ -197,7 +223,8 @@ const firstName = ref('')
 const lastName = ref('')
 const country = ref('Kenya')
 
-const options = ref({ domain: '', apps: [], plans: [], ready: false, blockers: [] })
+const options = ref({ domain: '', apps: [], plans: [], ready: false, blockers: [], hosts: [], local_apps: [] })
+const host = ref('nergaa')
 const subdomain = ref('')
 const name = ref({ available: false, reason: '' })
 const company = ref('')
@@ -221,14 +248,23 @@ const stepNote = computed(() => ({
   building: 'Getting your site ready',
 })[step.value])
 
+// Where the site runs: Nergaa Cloud, or Frappe Cloud when Nergaa Cloud offers it (older servers send no hosts).
+const hosts = computed(() => options.value.hosts?.length ? options.value.hosts : [{ id: 'nergaa', title: 'Nergaa Cloud', domain: options.value.domain }])
+const chosen = computed(() => hosts.value.find((h) => h.id === host.value) || hosts.value[0])
+const onFrappeCloud = computed(() => chosen.value.id === 'frappe_cloud')
+const hostBlockers = computed(() => (onFrappeCloud.value ? chosen.value.blockers : options.value.blockers) || [])
+const localApps = computed(() => options.value.local_apps || [])
+
 const shownApps = computed(() => {
   const q = appQuery.value.toLowerCase()
   return options.value.apps.filter((a) => !q || `${a.title} ${a.description || ''}`.toLowerCase().includes(q))
 })
 
-const canCreate = computed(() =>
-  options.value.ready && name.value.available && password.value.length >= 8 && password.value === again.value
-  && (options.value.trial_days || (plan.value && !options.value.blockers.length)))
+const canCreate = computed(() => {
+  const ok = name.value.available && password.value.length >= 8 && password.value === again.value
+  if (onFrappeCloud.value) return ok && !hostBlockers.value.length
+  return ok && options.value.ready && (options.value.trial_days || (plan.value && !hostBlockers.value.length))
+})
 
 // A steady colour per app for the letter shown when its icon doesn't load.
 function tint(key) {
@@ -292,6 +328,13 @@ function checkName() {
   clearTimeout(nameCheck)
   name.value = { available: false, reason: '' }
   if (!subdomain.value) return
+  if (onFrappeCloud.value) {
+    // Frappe Cloud's names are checked there, when the site is created
+    name.value = /^[a-z0-9][a-z0-9-]{2,31}$/.test(subdomain.value)
+      ? { available: true, reason: '' }
+      : { available: false, reason: 'Use 3 to 32 lowercase letters, digits or hyphens' }
+    return
+  }
   nameCheck = setTimeout(async () => {
     try {
       const r = await cloud('is_available', { subdomain: subdomain.value, domain: options.value.domain })
@@ -311,7 +354,9 @@ const topUp = () => openCloudPage('/topup').catch((e) => (error.value = e.messag
 
 const create = () => run(async () => {
   if (password.value !== again.value) throw new Error('The two passwords are different')
-  const answer = await cloud('desktop_create_site', { subdomain: subdomain.value, apps: apps.value, plan: plan.value || null })
+  const answer = await cloud('desktop_create_site', onFrappeCloud.value
+    ? { subdomain: subdomain.value, host: 'frappe_cloud' }
+    : { subdomain: subdomain.value, apps: apps.value, plan: plan.value || null })
   site.value = answer.site
   step.value = 'building'
   poll()
@@ -323,7 +368,9 @@ async function poll() {
     const s = await cloud('desktop_site_status', { site: site.value })
     siteUrl.value = s.url
     stage.value = s.stage
-    progress.value = s.stage === 'building' ? Math.max(5, Math.round(s.progress * 0.7)) : s.stage === 'ready' ? 95 : 80
+    // Frappe Cloud doesn't say how far along a build is: creep forward instead
+    const built = s.progress ?? Math.min(90, progress.value / 0.7 + 4)
+    progress.value = s.stage === 'building' ? Math.max(5, Math.round(built * 0.7)) : s.stage === 'ready' ? 95 : 80
     if (s.stage === 'failed') {
       error.value = s.error || 'The site could not be set up.'
       return
