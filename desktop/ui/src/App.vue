@@ -8,6 +8,7 @@
   <div v-else class="flex h-full">
     <Sidebar />
     <div class="flex min-w-0 flex-1 flex-col">
+      <UpdateBanner />
       <TopBar @search="palette = true" />
       <main class="min-h-0 flex-1 overflow-y-auto">
         <router-view />
@@ -24,6 +25,8 @@ import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Sidebar from './components/Sidebar.vue'
 import TopBar from './components/TopBar.vue'
+import UpdateBanner from './components/UpdateBanner.vue'
+import { watchForUpdates } from './lib/updates'
 import CommandPalette from './components/CommandPalette.vue'
 import Toasts from './components/Toasts.vue'
 import SignIn from './pages/SignIn.vue'
@@ -55,6 +58,7 @@ watch(
 )
 
 onMounted(async () => {
+  watchForUpdates()
   await start()
   on('menu', (id) => session.signedIn && MENU[id]?.())
   window.addEventListener('keydown', (e) => {

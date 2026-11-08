@@ -1,7 +1,13 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "The bundled UI may call the app's commands and listen for its events.",
-  "windows": ["main"],
-  "permissions": ["core:default"]
+  "description": "The bundled UI may call the app's commands, listen for its events, and install a signed update.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "updater:default",
+    "process:allow-restart"
+  ]
 }

@@ -35,7 +35,14 @@ fn main() {
     safe_linux_rendering();
     tauri::Builder::default()
         .manage(AppState::default())
+        .plugin(tauri_plugin_process::init())
         .setup(|app| {
+            // Updates are signed: the release build adds the public key (plugins.updater) only when
+            // the signing key is set up, so a build without it starts normally and never updates.
+            if app.config().plugins.0.contains_key("updater") {
+                app.handle()
+                    .plugin(tauri_plugin_updater::Builder::new().build())?;
+            }
             if let Ok(dir) = app.path().app_data_dir() {
                 let restored = session::restore(&dir).map(std::sync::Arc::new);
                 app.state::<AppState>().replace(restored);

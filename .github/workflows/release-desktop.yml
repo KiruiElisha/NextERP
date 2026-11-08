@@ -45,6 +45,19 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
+      # Which signatures this release carries, for its notes (secrets can't be read in `if:`).
+      - name: What is signed
+        id: signed
+        env:
+          MAC: ${{ secrets.APPLE_CERTIFICATE }}
+          WIN_AZURE: ${{ secrets.AZURE_CLIENT_SECRET }}
+          WIN_PFX: ${{ secrets.WINDOWS_CERTIFICATE }}
+          UPD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          echo "mac=$([ -n "$MAC" ] && echo yes || echo no)" >> "$GITHUB_OUTPUT"
+          echo "win=$([ -n "$WIN_AZURE$WIN_PFX" ] && echo yes || echo no)" >> "$GITHUB_OUTPUT"
+          echo "updates=$([ -n "$UPD" ] && echo yes || echo no)" >> "$GITHUB_OUTPUT"
+
       # One draft before the builds start, published only when every build has uploaded.
       - name: Create draft release
         id: release
@@ -52,6 +65,9 @@ jobs:
         env:
           TAG: ${{ steps.version.outputs.tag }}
           VERSION: ${{ steps.version.outputs.version }}
+          MAC_SIGNED: ${{ steps.signed.outputs.mac }}
+          WIN_SIGNED: ${{ steps.signed.outputs.win }}
+          UPDATES: ${{ steps.signed.outputs.updates }}
         with:
           script: |
             const { data } = await github.rest.repos.createRelease({
@@ -69,7 +85,9 @@ jobs:
                 '- **macOS:** `.dmg` (universal: Apple silicon and Intel)',
                 '- **Linux:** `.AppImage`, `.deb` or `.rpm`',
                 '',
-                'Builds are not code-signed yet: Windows SmartScreen and macOS Gatekeeper warn on first open (macOS: right-click, Open).',
+                process.env.WIN_SIGNED === 'yes' ? '- Windows installers are code-signed.' : '- Windows installers are not code-signed: SmartScreen warns on first open (More info, Run anyway).',
+                process.env.MAC_SIGNED === 'yes' ? '- macOS app is signed with a Developer ID and notarized by Apple.' : '- macOS app is not signed: Gatekeeper warns on first open (right-click, Open).',
+                process.env.UPDATES === 'yes' ? '- Installed apps update themselves from here (updates are signed and checked before installing).' : '',
               ].join('\n'),
               draft: true,
               generate_release_notes: true,
@@ -121,6 +139,78 @@ jobs:
       - name: Install JavaScript dependencies
         shell: bash
         run: npm ci --prefix desktop && npm ci --prefix desktop/ui
+
+      # Signing: each part switches on only when its secrets are set (Settings, Secrets and variables,
+      # Actions), so a build without them still releases, unsigned. See docs/signing.md.
+      - name: Signed updates
+        shell: bash
+        env:
+          KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          PUBKEY: ${{ vars.UPDATER_PUBKEY }}
+        run: |
+          if [ -z "$KEY" ] || [ -z "$PUBKEY" ]; then echo "Updates not signed: TAURI_SIGNING_PRIVATE_KEY or UPDATER_PUBKEY missing"; exit 0; fi
+          conf=desktop/src-tauri/tauri.conf.json
+          jq --arg k "$PUBKEY" --arg u "https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/latest.json" \
+            '.bundle.createUpdaterArtifacts = true | .plugins.updater = {pubkey: $k, endpoints: [$u]}' "$conf" > conf.tmp && mv conf.tmp "$conf"
+          { echo "TAURI_SIGNING_PRIVATE_KEY<<KEY_END"; echo "$KEY"; echo "KEY_END"; echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=$KEY_PASSWORD"; } >> "$GITHUB_ENV"
+
+      - name: Sign for macOS (Developer ID, notarized)
+        if: matrix.platform == 'macos-latest'
+        shell: bash
+        env:
+          CERT: ${{ secrets.APPLE_CERTIFICATE }}
+          CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -z "$CERT" ]; then echo "macOS app not signed: APPLE_CERTIFICATE missing"; exit 0; fi
+          { echo "APPLE_CERTIFICATE<<CERT_END"; echo "$CERT"; echo "CERT_END"
+            echo "APPLE_CERTIFICATE_PASSWORD=$CERT_PASSWORD"; echo "APPLE_SIGNING_IDENTITY=$IDENTITY"; } >> "$GITHUB_ENV"
+          if [ -n "$APPLE_ID" ] && [ -n "$APPLE_PASSWORD" ] && [ -n "$APPLE_TEAM_ID" ]; then
+            { echo "APPLE_ID=$APPLE_ID"; echo "APPLE_PASSWORD=$APPLE_PASSWORD"; echo "APPLE_TEAM_ID=$APPLE_TEAM_ID"; } >> "$GITHUB_ENV"
+          else
+            echo "::warning::Signed but not notarized: APPLE_ID, APPLE_PASSWORD or APPLE_TEAM_ID missing"
+          fi
+
+      - name: Install Azure Trusted Signing client
+        if: matrix.platform == 'windows-latest' && vars.TRUSTED_SIGNING_ACCOUNT != ''
+        run: cargo install trusted-signing-cli --locked
+
+      - name: Sign for Windows
+        if: matrix.platform == 'windows-latest'
+        shell: bash
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          TS_ENDPOINT: ${{ vars.TRUSTED_SIGNING_ENDPOINT }}
+          TS_ACCOUNT: ${{ vars.TRUSTED_SIGNING_ACCOUNT }}
+          TS_PROFILE: ${{ vars.TRUSTED_SIGNING_PROFILE }}
+          PFX: ${{ secrets.WINDOWS_CERTIFICATE }}
+          PFX_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          conf=desktop/src-tauri/tauri.conf.json
+          if [ -n "$AZURE_CLIENT_SECRET" ] && [ -n "$TS_ACCOUNT" ]; then
+            # Azure Trusted Signing: the key stays in Azure; the build asks it to sign each file.
+            jq --arg c "trusted-signing-cli -e $TS_ENDPOINT -a $TS_ACCOUNT -c $TS_PROFILE -d ERPNext %1" \
+              '.bundle.windows.signCommand = $c' "$conf" > conf.tmp && mv conf.tmp "$conf"
+            { echo "AZURE_CLIENT_ID=$AZURE_CLIENT_ID"; echo "AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET"; echo "AZURE_TENANT_ID=$AZURE_TENANT_ID"; } >> "$GITHUB_ENV"
+            echo "Windows: signing with Azure Trusted Signing"
+          elif [ -n "$PFX" ]; then
+            # A .pfx certificate: imported for this run only, then signed by its thumbprint.
+            echo "$PFX" | base64 -d > cert.pfx
+            thumb=$(powershell -NoProfile -Command "\$p = ConvertTo-SecureString -String \$env:PFX_PASSWORD -AsPlainText -Force; (Import-PfxCertificate -FilePath cert.pfx -CertStoreLocation Cert:\\CurrentUser\\My -Password \$p).Thumbprint")
+            rm -f cert.pfx
+            jq --arg t "$(echo "$thumb" | tr -d '\r ')" \
+              '.bundle.windows.certificateThumbprint = $t | .bundle.windows.digestAlgorithm = "sha256" | .bundle.windows.timestampUrl = "http://timestamp.digicert.com"' \
+              "$conf" > conf.tmp && mv conf.tmp "$conf"
+            echo "Windows: signing with the imported certificate"
+          else
+            echo "Windows installers not signed: no Azure Trusted Signing or WINDOWS_CERTIFICATE"
+          fi
 
       - name: Build and upload to the release
         uses: tauri-apps/tauri-action@v0
