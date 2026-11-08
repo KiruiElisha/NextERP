@@ -63,7 +63,7 @@
                      :class="host === h.id ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-slate-200 hover:border-slate-300'">
                 <input v-model="host" type="radio" :value="h.id" class="sr-only" @change="checkName" />
                 <span class="block text-sm font-semibold text-slate-900">{{ h.title }}</span>
-                <span class="block text-xs text-slate-500">{{ h.region ? `${h.region} · ` : '' }}.{{ h.domain }}</span>
+                <span class="block text-xs text-slate-500">{{ h.tagline || 'Ready in minutes' }}</span>
               </label>
             </div>
           </div>
@@ -101,7 +101,7 @@
             KRA eTIMS comes with it, for invoices signed by KRA. You connect your eTIMS device after setup.
           </p>
           <p v-if="onFrappeCloud" class="mt-3 text-sm text-slate-600">
-            On Frappe Cloud the site comes with ERPNext, ESG (GHG emissions) and this app's server side. Add other apps later from Settings → Plan, billing and apps.
+            This site comes with ERPNext and ESG (GHG emissions). Add other apps later from Settings → Plan, billing and apps.
           </p>
           <template v-else>
           <input v-model.trim="appQuery" class="input-lg mt-3" placeholder="Search apps" />
@@ -134,8 +134,8 @@
       <!-- Plan and payment -->
       <div class="border-t border-slate-100 bg-slate-50/70 p-6">
         <div v-if="onFrappeCloud" class="rounded-xl bg-white p-4 ring-1 ring-slate-200">
-          <p class="text-sm font-semibold text-slate-900">{{ chosen.plan?.plan_title || 'Frappe Cloud site' }} · {{ chosen.plan ? price(chosen.plan) : '' }} a month</p>
-          <p class="mt-1 text-xs text-slate-500">Paid from your Nergaa Cloud credits, like any site. Hosted by Frappe Cloud in {{ chosen.region }}.</p>
+          <p class="text-sm font-semibold text-slate-900">{{ chosen.plan?.plan_title || chosen.title }} · {{ chosen.plan ? price(chosen.plan) : '' }} a month</p>
+          <p class="mt-1 text-xs text-slate-500">Paid from your Nergaa Cloud credits, like any site.</p>
         </div>
         <div v-else-if="options.trial_days" class="flex items-center gap-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-100">
           <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">✓</span>
