@@ -212,7 +212,26 @@ jobs:
             echo "Windows installers not signed: no Azure Trusted Signing or WINDOWS_CERTIFICATE"
           fi
 
+      # Bundling downloads its tools (WiX, linuxdeploy) from GitHub's release servers, which sometimes
+      # answer 503. That happens before anything is uploaded, so one more try after a pause is safe.
       - name: Build and upload to the release
+        id: build
+        continue-on-error: true
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: desktop
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          args: ${{ matrix.args }}
+
+      - name: Wait before trying again
+        if: steps.build.outcome == 'failure'
+        shell: bash
+        run: sleep 60
+
+      - name: Build and upload to the release (second try)
+        if: steps.build.outcome == 'failure'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
