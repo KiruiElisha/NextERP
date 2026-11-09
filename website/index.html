@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NextERP — the desktop app for ERPNext</title>
+  <meta name="description" content="NextERP is a free, open-source desktop app for ERPNext on Windows, macOS and Linux. Instant lists and search from a copy on your computer; every save goes to your own ERPNext site.">
+  <link rel="icon" href="assets/favicon.png">
+  <link rel="stylesheet" href="assets/style.css">
+  <meta property="og:title" content="NextERP — the desktop app for ERPNext">
+  <meta property="og:description" content="Free and open source. Windows, macOS and Linux.">
+  <meta property="og:image" content="assets/icon.png">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="assets/icon.png" alt="" width="30" height="30">NextERP</a>
+    <nav class="nav" aria-label="Main">
+      <a href="#features" class="hide-sm">Features</a>
+      <a href="#download">Download</a>
+      <a href="code-signing.html" class="hide-sm">Code signing policy</a>
+      <a href="privacy.html" class="hide-sm">Privacy</a>
+      <a href="https://github.com/KiruiElisha/NextERP">Source</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Free and open source · GPL v3</span>
+      <h1>ERPNext, at desktop speed.</h1>
+      <p class="lead">NextERP is a desktop app for ERPNext. Lists and search answer instantly from a copy kept on your computer, while every invoice, payment and stock entry is saved straight to your own ERPNext site, with your own permissions.</p>
+      <div class="cta">
+        <a class="btn btn-primary" id="hero-download" href="#download">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          <span id="hero-label">Download</span>
+        </a>
+        <a class="btn btn-ghost" href="#download">All platforms</a>
+      </div>
+      <p class="fine" id="hero-fine">Windows, macOS and Linux. <a href="code-signing.html">Code signing policy</a></p>
+    </div>
+
+    <div class="mock" role="img" aria-label="The NextERP window: home page with this month's sales, money owed, a sales chart and recent invoices">
+      <div class="mock-bar"><i></i><i></i><i></i><span>NextERP — Acme Traders Ltd</span></div>
+      <div class="mock-body">
+        <div class="mock-side">
+          <div class="on">Home</div>
+          <div>New invoice</div>
+          <b>Selling</b><div>Sales Invoices</div><div>Customers</div>
+          <b>Stock</b><div>Items</div><div>Point of Sale</div>
+          <b>Sustainability</b><div>ESG</div>
+        </div>
+        <div class="mock-main">
+          <div class="mock-search"><span>Search customers, items, invoices…</span><kbd>Ctrl K</kbd></div>
+          <div class="mock-kpis">
+            <div class="mock-kpi"><small>Sales this month</small><strong>412,500</strong><em>+18% on last month</em></div>
+            <div class="mock-kpi"><small>Customers owe</small><strong>96,200</strong><small>12 invoices</small></div>
+            <div class="mock-kpi"><small>Cash and bank</small><strong>238,940</strong><small>KES</small></div>
+          </div>
+          <div class="mock-chart"><small>Sales, last 30 days</small>
+            <div class="bars" aria-hidden="true">
+              <span style="height:30%"></span><span style="height:42%"></span><span style="height:28%"></span><span style="height:55%"></span><span style="height:47%"></span><span style="height:62%"></span><span style="height:38%"></span><span style="height:71%"></span><span style="height:58%"></span><span style="height:80%"></span><span style="height:66%"></span><span style="height:92%"></span><span style="height:74%"></span><span style="height:85%"></span>
+            </div>
+          </div>
+          <div class="mock-rows">
+            <div><span>Sample Hardware Co.</span><span>18,400 <span class="tag">Paid</span></span></div>
+            <div><span>Example Supplies Ltd</span><span>7,250 <span class="tag due">Due</span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2>Everything you do in ERPNext, without the wait</h2>
+    <p class="sub">NextERP connects to an ERPNext site you already have (version 15 or 16). The site stays in charge: the app reads from its local copy and sends every change to the site, where ERPNext checks it as usual.</p>
+    <div class="grid3">
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
+        <h3>Instant lists and search</h3><p>Customers, items and invoices open in milliseconds from a copy on your computer, kept in sync every few minutes and after every save.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div>
+        <h3>Your site, your permissions</h3><p>Each person signs in to your ERPNext site with their own account. The app never posts from its copy and never sees what ERPNext would not show you.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h3l3 8 4-16 3 8h7"/></svg></div>
+        <h3>Keeps working offline</h3><p>When the connection drops you can still read everything you had, and keep drafts on the computer. They go to the site when you're back online.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M7 20h10M12 16v4"/></svg></div>
+        <h3>Point of sale</h3><p>A till for the counter: scan barcodes, park sales, take cash, card or M-PESA, and print receipts.</p></div>
+      <div class="card"><div class="icon leaf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13c0-6 7-10 16-10 0 9-4 16-10 16z"/><path d="M4 21c4-4 7-7 11-10"/></svg></div>
+        <h3>ESG built in</h3><p>Greenhouse gas figures from your own purchases and fuel use, with a GRI 305 disclosure ready to share.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></div>
+        <h3>Your language, your tax</h3><p>Every language your ERPNext site has enabled. In Kenya, invoices signed by KRA eTIMS with the QR code on the receipt.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="download" class="soft">
+  <div class="wrap">
+    <h2>Download</h2>
+    <p class="sub">Free for any use. Every installer is built from the public source code by GitHub Actions.</p>
+    <p class="release" id="release-line">Latest release: see <a href="https://github.com/KiruiElisha/NextERP/releases/latest">GitHub releases</a>.</p>
+    <div class="dl">
+      <div class="card" data-os="windows">
+        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8"/></svg>Windows</h3>
+        <ul class="files" data-files="windows">
+          <li><a href="https://github.com/KiruiElisha/NextERP/releases/latest">Installer (.exe) <small>Windows 10 and 11</small></a></li>
+        </ul>
+        <p class="note">Or the <code>.msi</code> package, for installing across an organisation.</p>
+      </div>
+      <div class="card" data-os="mac">
+        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8"/></svg>macOS</h3>
+        <ul class="files" data-files="mac">
+          <li><a href="https://github.com/KiruiElisha/NextERP/releases/latest">Disk image (.dmg) <small>Apple silicon and Intel</small></a></li>
+        </ul>
+        <p class="note">One universal app for every Mac.</p>
+      </div>
+      <div class="card" data-os="linux">
+        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8"/></svg>Linux</h3>
+        <ul class="files" data-files="linux">
+          <li><a href="https://github.com/KiruiElisha/NextERP/releases/latest">AppImage, .deb or .rpm <small>64-bit</small></a></li>
+        </ul>
+        <p class="note">The AppImage runs on most distributions; .deb for Debian and Ubuntu, .rpm for Fedora and openSUSE.</p>
+      </div>
+    </div>
+    <p class="note" style="margin-top:22px">Check a download: compare its SHA-256 (shown under each file) with <code>sha256sum &lt;file&gt;</code>, or <code>Get-FileHash &lt;file&gt;</code> on Windows. Older versions are on <a href="https://github.com/KiruiElisha/NextERP/releases">GitHub releases</a>.</p>
+  </div>
+</section>
+
+<section id="start">
+  <div class="wrap two">
+    <div>
+      <h2>Getting started</h2>
+      <ol class="steps">
+        <li><strong>Install the app</strong> for your computer from the list above.</li>
+        <li><strong>Have an ERPNext site.</strong> Your site needs the open-source <code>nexterp</code> app installed next to ERPNext (and <code>ghg</code> for the ESG pages). No site yet? The app can create one for you on Nergaa Cloud.</li>
+        <li><strong>Sign in</strong> with your site's address, your email and your password. The first sync takes a minute; after that everything is instant.</li>
+      </ol>
+    </div>
+    <div>
+      <h2>Install and uninstall</h2>
+      <details open><summary>Windows</summary>
+        <p>Run the installer and follow the steps. To uninstall: <strong>Settings → Apps → Installed apps</strong>, find the app, then <strong>Uninstall</strong>. Local data lives in <code>%APPDATA%\com.nexterp.desktop</code>.</p></details>
+      <details><summary>macOS</summary>
+        <p>Open the .dmg and drag the app into Applications. To uninstall, drag it from Applications to the Bin. Its local copy of your data is in <code>~/Library/Application Support/com.nexterp.desktop</code>; delete that folder too to remove it.</p></details>
+      <details><summary>Linux</summary>
+        <p>AppImage: make it executable and run it; to uninstall, delete the file. .deb: <code>sudo apt install ./file.deb</code>, remove with <code>sudo apt remove erp-next</code>. .rpm: <code>sudo dnf install ./file.rpm</code>, remove with <code>sudo dnf remove erp-next</code>. Local data lives in <code>~/.local/share/com.nexterp.desktop</code>.</p></details>
+      <p class="note">The app keeps its copy of your site's records in its data folder until another person signs in on the same computer, when it is cleared. To remove it yourself, delete the data folder after uninstalling.</p>
+    </div>
+  </div>
+</section>
+
+<section id="code-signing" class="soft">
+  <div class="wrap">
+    <h2>Code signing policy</h2>
+    <div class="card policy">
+      <p class="quote">Free code signing provided by <a href="https://about.signpath.io/">SignPath.io</a>, certificate by <a href="https://signpath.org/">SignPath Foundation</a>.</p>
+      <ul>
+        <li>Committers and reviewers: <a href="https://github.com/KiruiElisha/NextERP/graphs/contributors">project maintainers</a> (<a href="https://github.com/KiruiElisha">@KiruiElisha</a>)</li>
+        <li>Approvers: <a href="https://github.com/KiruiElisha">@KiruiElisha</a></li>
+        <li>Privacy: see the <a href="privacy.html">privacy policy</a>. No analytics or telemetry: the app talks to the ERPNext site you sign in to, and checks GitHub for updates.</li>
+      </ul>
+      <p><a href="code-signing.html">Read the full code signing policy →</a></p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>© NextERP contributors · Released under the <a href="https://github.com/KiruiElisha/NextERP/blob/main/license.txt">GNU GPL v3</a></div>
+    <nav aria-label="Footer">
+      <a href="#download">Download</a>
+      <a href="code-signing.html">Code signing policy</a>
+      <a href="privacy.html">Privacy policy</a>
+      <a href="https://github.com/KiruiElisha/NextERP">Source code</a>
+      <a href="https://github.com/KiruiElisha/NextERP/issues">Report a problem</a>
+    </nav>
+    <p class="legal">ERPNext and Frappe are trademarks of Frappe Technologies Pvt. Ltd. NextERP is an independent open-source project that works with ERPNext; it is not made or endorsed by Frappe.</p>
+  </div>
+</footer>
+<script src="assets/download.js"></script>
+</body>
+</html>

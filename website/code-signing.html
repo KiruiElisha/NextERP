@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Code signing policy — NextERP</title>
+  <meta name="description" content="How NextERP's Windows releases are built and signed, and who approves them.">
+  <link rel="icon" href="assets/favicon.png">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="assets/icon.png" alt="" width="30" height="30">NextERP</a>
+    <nav class="nav" aria-label="Main">
+      <a href="./#download">Download</a>
+      <a href="privacy.html" class="hide-sm">Privacy</a>
+      <a href="https://github.com/KiruiElisha/NextERP">Source</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <div class="wrap">
+    <h1>Code signing policy</h1>
+    <div class="card policy">
+      <p class="quote">Free code signing provided by <a href="https://about.signpath.io/">SignPath.io</a>, certificate by <a href="https://signpath.org/">SignPath Foundation</a>.</p>
+    </div>
+
+    <h2>What is signed</h2>
+    <p>The Windows releases of the NextERP desktop app: the setup program (<code>.exe</code>), the Windows Installer package (<code>.msi</code>) and the app inside them. Only files built from this project's own source code are signed. Components from other open-source projects that are included in the installer keep their own signatures, or none.</p>
+    <p>Signing through SignPath Foundation starts with the first release after the project's application is approved. Until then, Windows releases are unsigned, and their release notes say so.</p>
+
+    <h2>How a release is built</h2>
+    <ol>
+      <li>Every change is made in the public repository <a href="https://github.com/KiruiElisha/NextERP">github.com/KiruiElisha/NextERP</a>.</li>
+      <li>A release is a version tag (<code>desktop-v…</code>) on the main branch. GitHub Actions builds the installers from that tagged commit, with the workflow in <code>.github/workflows/release-desktop.yml</code>; nothing built on a developer's computer is signed.</li>
+      <li>The unsigned Windows files go to SignPath, which checks that they came from that build of that repository.</li>
+      <li>An approver reviews the release and approves it in SignPath. Every release needs this manual approval.</li>
+      <li>The signed files are published on <a href="https://github.com/KiruiElisha/NextERP/releases">GitHub releases</a>, with their SHA-256 checksums, and offered on <a href="./#download">the download page</a>.</li>
+    </ol>
+    <p>All signed files carry the product name <em>NextERP</em> and the release's version number.</p>
+
+    <h2>Team roles</h2>
+    <table>
+      <thead><tr><th>Role</th><th>Who</th><th>What they do</th></tr></thead>
+      <tbody>
+        <tr><td>Committers</td><td><a href="https://github.com/KiruiElisha">@KiruiElisha</a></td><td>Trusted to change the source code without further review.</td></tr>
+        <tr><td>Reviewers</td><td><a href="https://github.com/KiruiElisha">@KiruiElisha</a></td><td>Review every change proposed by anyone who is not a committer (pull requests) before it is merged.</td></tr>
+        <tr><td>Approvers</td><td><a href="https://github.com/KiruiElisha">@KiruiElisha</a></td><td>Decide whether a release may be signed, and approve each signing request.</td></tr>
+      </tbody>
+    </table>
+    <p>Everyone in these roles uses multi-factor authentication on GitHub and on SignPath. The list of people with access is on the repository's <a href="https://github.com/KiruiElisha/NextERP/graphs/contributors">contributors page</a>.</p>
+
+    <h2>Privacy</h2>
+    <p>This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it. The details, including the services it contacts when you use them, are in the <a href="privacy.html">privacy policy</a>.</p>
+
+    <h2>Installing and removing</h2>
+    <p>The installer adds the app and a Start menu entry. If Microsoft Edge WebView2 (part of current Windows) is missing, it installs it from Microsoft, as the app needs it to draw its window. It changes nothing else on the system. It can be removed at any time from <strong>Settings → Apps → Installed apps</strong>. See <a href="./#start">install and uninstall</a> for every platform.</p>
+
+    <h2>Reporting a problem</h2>
+    <p>If you think a signed file is malicious, was not built from this repository, or breaks this policy, open an issue on <a href="https://github.com/KiruiElisha/NextERP/issues">GitHub</a> or write to SignPath Foundation through <a href="https://signpath.org/">signpath.org</a>. The team will help with any investigation.</p>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>© NextERP contributors · <a href="https://github.com/KiruiElisha/NextERP/blob/main/license.txt">GNU GPL v3</a></div>
+    <nav aria-label="Footer"><a href="./">Home</a><a href="privacy.html">Privacy policy</a><a href="https://github.com/KiruiElisha/NextERP">Source code</a></nav>
+    <p class="legal">ERPNext and Frappe are trademarks of Frappe Technologies Pvt. Ltd. NextERP is an independent open-source project that works with ERPNext; it is not made or endorsed by Frappe.</p>
+  </div>
+</footer>
+</body>
+</html>
