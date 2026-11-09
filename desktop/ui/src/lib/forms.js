@@ -188,6 +188,10 @@ export const saveDoc = (doc, action = 'Save') => site('nexterp.api.forms.save', 
 export const amendDoc = (doctype, name) => site('nexterp.api.forms.amend', { doctype, name }, true).then((d) => ({ ...d, __islocal: 1 }))
 export const duplicateDoc = (doctype, name) => site('nexterp.api.forms.duplicate', { doctype, name }).then((d) => ({ ...d, __islocal: 1 }))
 export const deleteDoc = (doctype, name) => site('frappe.client.delete', { doctype, name }, true)
+export const listMappings = (doctype, name) => site('nexterp.api.forms.mappings', { doctype, name })
+export const createFrom = (source_doctype, source_name, target, key) =>
+  site('nexterp.api.forms.create_from', { source_doctype, source_name, target, key }, true, false).then((d) => ({ ...d, __islocal: 1 }))
+export const listConnections = (doctype, name) => site('nexterp.api.forms.connections', { doctype, name })
 
 /** A document as the site expects it back: without the app's own markers. */
 export function strip(doc) {
@@ -229,10 +233,16 @@ function slim(d) {
 
 /** Values a link brings with it: fields whose fetch_from names this link field. */
 export async function fetchLinked(meta, doc, fieldname) {
+  if (!meta?.fields || !fieldname) return
   const df = meta.fields.find((f) => f.fieldname === fieldname)
   const value = doc[fieldname]
   const targets = meta.fields.filter((f) => f.fetch_from?.startsWith(`${fieldname}.`) && (!f.fetch_if_empty || !doc[f.fieldname]))
-  if (!df || !value || !targets.length) return
+  if (!df || !['Link', 'Dynamic Link'].includes(df.fieldtype)) return
+  if (!value) {
+    for (const t of targets) if (!t.fetch_if_empty) doc[t.fieldname] = null
+    return
+  }
+  if (!targets.length) return
   const source = df.fieldtype === 'Dynamic Link' ? doc[df.options] : df.options
   if (!source) return
   const values = await site('nexterp.api.forms.fetch', { doctype: source, name: value, fields: JSON.stringify(targets.map((t) => t.fetch_from.split('.')[1])) }).catch(() => ({}))
@@ -245,3 +255,19 @@ export async function fetchLinked(meta, doc, fieldname) {
 /** The route of a document's form here. */
 export const formRoute = (doctype, name) => `/form/${encodeURIComponent(doctype)}/${encodeURIComponent(name ?? 'new')}`
 export const listRoute = (doctype) => `/l/${encodeURIComponent(doctype)}`
+
+/** Desk's URL slug for a doctype (`Sales Invoice` → `sales-invoice`). */
+export function deskSlug(doctype) {
+  return String(doctype || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+/** Desk path for a document or list on the signed-in site. */
+export function deskPath(doctype, name) {
+  const slug = deskSlug(doctype)
+  if (!slug) return '/app'
+  return name ? `/app/${slug}/${encodeURIComponent(name)}` : `/app/${slug}`
+}

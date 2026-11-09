@@ -12,10 +12,11 @@
     </label>
 
     <!-- Read-only: the value as text, formatted for its type. -->
-    <div v-if="ro" class="min-h-[34px] rounded-lg bg-slate-50 px-3 py-1.5 text-sm text-slate-800" :class="isNumber && 'text-right tabular-nums'">
+    <div v-if="ro" class="min-h-[38px] rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2 text-sm text-slate-800" :class="isNumber && 'text-right tabular-nums'">
       <template v-if="isText"><div class="whitespace-pre-wrap" v-html="safe(value)" /></template>
       <template v-else-if="df.fieldtype === 'Attach' || df.fieldtype === 'Attach Image'">
         <button v-if="value" class="text-brand-700 hover:underline" @click="openFile">{{ fileName }}</button>
+        <span v-else class="text-slate-400">—</span>
       </template>
       <template v-else>{{ shown || '—' }}</template>
     </div>

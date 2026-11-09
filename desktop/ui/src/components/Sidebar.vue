@@ -4,7 +4,7 @@
     apps, groups fold open and closed (remembered), Reports has a section per department, and the
     user menu sits at the bottom. Only screens the user can open are listed (lib/doctypes NAV).
   -->
-  <aside class="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
+  <aside class="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
     <div class="relative p-2">
       <button class="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-slate-100" :aria-expanded="switcher" @click="switcher = !switcher">
         <img src="/icon.png" class="size-7 rounded-lg" alt="" />
@@ -72,6 +72,7 @@
         <RouterLink to="/account" class="menu" @click="userMenu = false"><CreditCard class="size-4 text-slate-400" /> {{ __('Plan, billing and apps') }}</RouterLink>
         <RouterLink to="/settings" class="menu" @click="userMenu = false"><Settings class="size-4 text-slate-400" /> {{ __('Settings') }}</RouterLink>
         <button class="menu" @click="openDesk('/app')"><ExternalLink class="size-4 text-slate-400" /> {{ __('ERPNext Desk') }}</button>
+        <button class="menu" @click="browseSite"><Globe class="size-4 text-slate-400" /> {{ __('Open site in browser') }}</button>
         <button class="menu" @click="choosePicker"><LayoutGrid class="size-4 text-slate-400" /> {{ __('Switch app…') }}</button>
         <div class="my-1 border-t border-slate-100" />
         <button class="menu text-red-600" @click="signOut"><LogOut class="size-4" /> {{ __('Sign out') }}</button>
@@ -90,11 +91,12 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { AppWindow, CreditCard, ChevronDown, ChevronRight, ChevronsUpDown, ExternalLink, LayoutGrid, List, LogOut, Settings,
+import { AppWindow, CreditCard, ChevronDown, ChevronRight, ChevronsUpDown, ExternalLink, Globe, LayoutGrid, List, LogOut, Settings,
   ArrowLeftRight, Banknote, BookOpen, Boxes, BrainCircuit, Building2, CalendarDays, ClipboardCheck, ClipboardList, Clock, Contact, Factory, FilePlus, FileText, FolderKanban, FolderTree, HandCoins, Handshake, Inbox, Landmark, Layers, LayoutDashboard, Leaf, Library, LifeBuoy, ListChecks, MapPin, MessagesSquare, PackageCheck, Receipt, Scale, ScanLine, ShieldCheck, ShoppingCart, Sparkles, Store, Tag, Tags, Target, TrendingUp, Truck, UserCheck, Users, WalletCards, Warehouse } from 'lucide-vue-next'
 import { DOCTYPES, NAV } from '@/lib/doctypes'
 import { badge, refreshCounts } from '@/lib/work'
-import { openDesk } from '@/lib/backend'
+import { openDesk, openInBrowser } from '@/lib/backend'
+import { toast } from '@/components/Toasts.vue'
 import { openApp, picker, siteApps } from '@/lib/apps'
 import { listRoute } from '@/lib/forms'
 import { canRead, session, signOut } from '@/lib/session'
@@ -198,6 +200,10 @@ function choosePicker() {
   switcher.value = false
   userMenu.value = false
   picker.open = true
+}
+function browseSite() {
+  userMenu.value = false
+  openInBrowser('/app').catch((e) => toast(e.message, true))
 }
 </script>
 

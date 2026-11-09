@@ -2,24 +2,25 @@
   <!-- Any document, native: ERPNext's own fields and layout, completed as you type (prices, taxes,
        totals, fetched values), saved, submitted, cancelled, amended, printed and mailed from here. -->
   <div class="flex h-full flex-col">
-    <header class="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-6 py-3 backdrop-blur">
+    <header class="sticky top-0 z-20 border-b border-slate-200/90 bg-white/90 px-6 py-3.5 shadow-sm shadow-slate-200/30 backdrop-blur">
       <div class="flex flex-wrap items-center gap-3">
         <RouterLink :to="backTo" class="btn-ghost -ml-2 px-2"><ArrowLeft class="size-4" /></RouterLink>
         <div class="min-w-0 flex-1">
-          <div class="flex items-center gap-1.5 text-xs text-slate-400">
-            <RouterLink :to="backTo" class="hover:text-slate-600 hover:underline">{{ __(plural) }}</RouterLink>
+          <div class="flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
+            <RouterLink :to="backTo" class="hover:text-brand-700 hover:underline">{{ __(plural) }}</RouterLink>
             <ChevronRight class="size-3" /><span class="truncate">{{ isNew ? __('New') : doc?.name }}</span>
           </div>
-          <div class="flex items-center gap-2">
-            <h1 class="truncate text-lg font-semibold text-slate-900">{{ heading }}</h1>
+          <div class="mt-0.5 flex flex-wrap items-center gap-2">
+            <h1 class="truncate text-lg font-semibold tracking-tight text-slate-900">{{ heading }}</h1>
             <span v-if="doc && !isNew" class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium" :class="status[1]">{{ __(status[0]) }}</span>
-            <span v-if="dirty" class="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">{{ __('Not saved') }}</span>
+            <span v-if="dirty" class="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 ring-1 ring-amber-100">{{ __('Not saved') }}</span>
             <span v-if="computing" class="shrink-0 text-[11px] text-slate-400">{{ __('Updating…') }}</span>
           </div>
         </div>
 
         <template v-if="doc && meta && !offline">
-          <button v-if="canSave" class="btn-primary" :disabled="busy" :title="__('Ctrl+S')" @click="save()"><Save class="size-4" /> {{ doc.docstatus === 1 ? __('Update') : __('Save') }}</button>
+          <div class="flex flex-wrap items-center gap-2">
+          <button v-if="canSave" class="btn-primary shadow-sm shadow-brand-600/20" :disabled="busy" :title="__('Ctrl+S')" @click="save()"><Save class="size-4" /> {{ doc.docstatus === 1 ? __('Update') : __('Save') }}</button>
           <template v-if="flow && !dirty">
             <span class="shrink-0 rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700" :title="__('Workflow state')">{{ flow.state }}</span>
             <button v-for="a in flow.actions" :key="a.action" class="btn-primary bg-violet-600 hover:bg-violet-700" :disabled="busy" :title="`Moves it to ${a.next_state}`" @click="takeAction(a.action)">{{ a.action }}</button>
@@ -28,14 +29,23 @@
             <CheckCircle2 class="size-4" /> {{ __('Submit') }}
           </button>
           <button v-if="doc.docstatus === 2 && perms.amend" class="btn-primary" :disabled="busy" @click="amend"><CopyPlus class="size-4" /> {{ __('Amend') }}</button>
+          <div v-if="!isNew && createTargets.length" class="relative">
+            <button class="btn-subtle" :disabled="busy" :aria-expanded="createMenu" @click="createMenu = !createMenu; menu = false">
+              <FilePlus2 class="size-4" /> {{ __('Create') }} <ChevronDown class="size-3.5 opacity-60" />
+            </button>
+            <div v-if="createMenu" class="absolute right-0 top-full z-30 mt-1 w-56 rounded-xl border border-slate-200 bg-white p-1 shadow-xl" @mouseleave="createMenu = false">
+              <button v-for="m in createTargets" :key="m.key" class="menu" @click="doCreate(m)"><FilePlus2 class="size-4 text-brand-600" /> {{ __(m.label) }}</button>
+            </div>
+          </div>
           <div class="relative">
-            <button class="btn-subtle" :aria-expanded="menu" @click="menu = !menu"><MoreHorizontal class="size-4" /></button>
+            <button class="btn-subtle" :aria-expanded="menu" @click="menu = !menu; createMenu = false"><MoreHorizontal class="size-4" /></button>
             <div v-if="menu" class="absolute right-0 top-full z-30 mt-1 w-56 rounded-xl border border-slate-200 bg-white p-1 shadow-xl" @mouseleave="menu = false">
               <button v-if="!isNew && session.boot?.ai?.enabled" class="menu" @click="router.push({ path: '/assistant', query: { doctype, name: doc.name } })"><Sparkles class="size-4" /> {{ __('Ask the assistant') }}</button>
               <button v-if="!isNew && perms.print" class="menu" @click="open('print')"><Printer class="size-4" /> {{ __('Print or PDF') }}</button>
               <button v-if="!isNew && perms.email" class="menu" @click="open('email')"><Mail class="size-4" /> {{ __('Email') }}</button>
               <button v-if="!isNew && meta.allow_auto_repeat" class="menu" @click="open('repeat')"><Repeat class="size-4" /> {{ __('Repeat…') }}</button>
               <button v-if="!isNew && perms.create" class="menu" @click="duplicate"><Copy class="size-4" /> {{ __('Duplicate') }}</button>
+              <button v-if="!isNew" class="menu" @click="openBrowser"><Globe class="size-4" /> {{ __('Open in browser') }}</button>
               <button class="menu" @click="open('fields')"><SlidersHorizontal class="size-4" /> {{ __('Choose fields…') }}</button>
               <button class="menu" @click="toggleAll"><LayoutList class="size-4" /> {{ all ? __('Usual fields only') : __('Show every field') }}</button>
               <button v-if="!isNew" class="menu" @click="reload"><RefreshCw class="size-4" /> {{ __('Reload') }}</button>
@@ -45,6 +55,7 @@
                 <button v-if="doc.docstatus !== 1 && perms.delete" class="menu text-red-600" @click="remove"><Trash2 class="size-4" /> {{ __('Delete') }}</button>
               </template>
             </div>
+          </div>
           </div>
         </template>
       </div>
@@ -74,6 +85,7 @@
         </div>
         <div v-if="hasSide" class="space-y-5 xl:sticky xl:top-4 xl:self-start">
           <PartySummary v-if="hasParty" :doc="doc" />
+          <Connections v-if="!isNew" ref="connectionsRef" :doctype="doctype" :name="doc.name" />
           <EtimsCard v-if="doctype === 'Sales Invoice' && !isNew && session.boot?.etims" :name="doc.name" :docstatus="doc.docstatus" />
           <Timeline v-if="!isNew" :doctype="doctype" :name="doc.name" :info="docinfo" :can-write="Boolean(perms.write)" @changed="reload" />
         </div>
@@ -90,10 +102,11 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, Ban, CheckCircle2, ChevronRight, Copy, CopyPlus, LayoutList, Mail, MoreHorizontal, Printer, RefreshCw, Repeat, Save, SlidersHorizontal, Sparkles, Trash2 } from 'lucide-vue-next'
+import { ArrowLeft, Ban, CheckCircle2, ChevronDown, ChevronRight, Copy, CopyPlus, FilePlus2, Globe, LayoutList, Mail, MoreHorizontal, Printer, RefreshCw, Repeat, Save, SlidersHorizontal, Sparkles, Trash2 } from 'lucide-vue-next'
 import FormLayout from '@/components/form/FormLayout.vue'
 import Timeline from '@/components/form/Timeline.vue'
 import PartySummary from '@/components/form/PartySummary.vue'
+import Connections from '@/components/form/Connections.vue'
 import EtimsCard from '@/components/form/EtimsCard.vue'
 import FieldPicker from '@/components/form/FieldPicker.vue'
 import EmailDialog from '@/components/form/EmailDialog.vue'
@@ -105,9 +118,9 @@ import { takeDraft } from '@/lib/ai'
 import { keep, pushNow, release, takeReopened } from '@/lib/outbox'
 import { __ } from '@/lib/i18n'
 import { session } from '@/lib/session'
-import { call, getDoc, site } from '@/lib/backend'
+import { call, getDoc, openInBrowser, site } from '@/lib/backend'
 import { DOCTYPES, statusOf } from '@/lib/doctypes'
-import { NO_VALUE, amendDoc, compute, deleteDoc, duplicateDoc, fetchLinked, formRoute, getMeta, isMandatory, isVisible, listRoute, loadDoc, newDoc, saveDoc, saveLayout } from '@/lib/forms'
+import { NO_VALUE, amendDoc, compute, createFrom, deleteDoc, deskPath, duplicateDoc, fetchLinked, formRoute, getMeta, isMandatory, isVisible, listMappings, listRoute, loadDoc, newDoc, saveDoc, saveLayout } from '@/lib/forms'
 
 const props = defineProps({ doctype: { type: String, required: true }, name: { type: String, required: true } })
 const route = useRoute()
@@ -124,6 +137,9 @@ const dirty = ref(false)
 const offline = ref(false)
 const showInvalid = ref(false)
 const menu = ref(false)
+const createMenu = ref(false)
+const createTargets = ref([])
+const connectionsRef = ref(null)
 const dialog = ref(null)
 // The document's workflow, when it has one: its state and the actions this user may take.
 const flow = ref(null)
@@ -195,6 +211,8 @@ async function start() {
   offline.value = false
   docPerms.value = null
   doc.value = null
+  createTargets.value = []
+  createMenu.value = false
   try {
     meta.value = await getMeta(props.doctype)
     if (props.name === 'new') {
@@ -240,9 +258,25 @@ async function reload() {
     docinfo.value = r.docinfo
     docPerms.value = r.perms
     flow.value = meta.value?.has_workflow ? await workflowOf(props.doctype, props.name).catch(() => null) : null
+    createTargets.value = await listMappings(props.doctype, props.name).catch(() => [])
+    connectionsRef.value?.reload?.()
   } catch (e) {
     if (e.kind === 'Network') return showCached(e)
     error.value = e.message
+  }
+}
+
+async function doCreate(m) {
+  createMenu.value = false
+  busy.value = true
+  try {
+    seed = await createFrom(props.doctype, doc.value.name, m.target, m.key)
+    dirty.value = false
+    await router.push(formRoute(m.target, 'new'))
+  } catch (e) {
+    toast(e.message, true)
+  } finally {
+    busy.value = false
   }
 }
 
@@ -288,13 +322,28 @@ function keepKeys(next, prev) {
 }
 
 async function changed(fieldname) {
-  if (completes.value) return recompute()
+  // Dynamic Link's type field: clearing the type clears the link; changing it drops a value that no longer fits.
+  const df = meta.value?.fields?.find((f) => f.fieldname === fieldname)
+  if (df?.fieldtype === 'Link' || df?.fieldtype === 'Select' || df?.fieldtype === 'Data') {
+    for (const link of meta.value.fields.filter((f) => f.fieldtype === 'Dynamic Link' && f.options === fieldname)) {
+      if (!doc.value[fieldname]) doc.value[link.fieldname] = null
+    }
+  }
   await fetchLinked(meta.value, doc.value, fieldname)
+  if (completes.value) recompute()
 }
 async function rowChanged({ table, row, fieldname }) {
-  if (completes.value) return recompute()
   const child = meta.value.children[meta.value.fields.find((f) => f.fieldname === table)?.options]
-  if (row && fieldname && child) await fetchLinked(child, row, fieldname)
+  if (row && fieldname && child) {
+    const df = child.fields?.find((f) => f.fieldname === fieldname)
+    if (df?.fieldtype === 'Link' || df?.fieldtype === 'Select' || df?.fieldtype === 'Data') {
+      for (const link of (child.fields || []).filter((f) => f.fieldtype === 'Dynamic Link' && f.options === fieldname)) {
+        if (!row[fieldname]) row[link.fieldname] = null
+      }
+    }
+    await fetchLinked(child, row, fieldname)
+  }
+  if (completes.value) recompute()
 }
 
 // ── Saving ──────────────────────────────────────────────────────────────────────────────────
@@ -334,6 +383,8 @@ async function save(action = 'Save') {
     docinfo.value = r.docinfo
     docPerms.value = r.perms
     showInvalid.value = false
+    createTargets.value = await listMappings(props.doctype, r.doc.name).catch(() => [])
+    connectionsRef.value?.reload?.()
     toast(action === 'Submit' ? `${r.doc.name} submitted` : action === 'Cancel' ? `${r.doc.name} cancelled` : `${r.doc.name} saved`)
     if (props.name === 'new' || props.name !== r.doc.name) router.replace(formRoute(props.doctype, r.doc.name))
   } catch (e) {
@@ -421,6 +472,10 @@ async function remove() {
 function open(what) {
   menu.value = false
   dialog.value = what
+}
+function openBrowser() {
+  menu.value = false
+  openInBrowser(deskPath(props.doctype, doc.value?.name)).catch((e) => toast(e.message, true))
 }
 async function toggleAll() {
   menu.value = false

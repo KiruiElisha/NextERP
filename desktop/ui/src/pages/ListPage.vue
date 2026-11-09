@@ -11,6 +11,7 @@
         <input ref="box" v-model="text" class="input w-64" :placeholder="`Search ${(meta?.plural || '').toLowerCase()}…`" @keydown.down.prevent="move(1)"
           @keydown.up.prevent="move(-1)" @keydown.enter.prevent="open(rows[active])" />
         <RouterLink :to="listRoute(doctype)" class="btn-subtle" :title="__('Filters, saved views, bulk edit and export, from the site')"><SlidersHorizontal class="size-4" /> {{ __('More') }}</RouterLink>
+        <button type="button" class="btn-subtle" :title="__('Open list in browser')" @click="browseList"><Globe class="size-4" /></button>
         <RouterLink v-if="canCreate" :to="formRoute(doctype, 'new')" class="btn-primary"><Plus class="size-4" /> {{ __('New') }}</RouterLink>
       </div>
     </div>
@@ -46,12 +47,13 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus, SlidersHorizontal } from 'lucide-vue-next'
-import { list, on } from '@/lib/backend'
+import { Globe, Plus, SlidersHorizontal } from 'lucide-vue-next'
+import { toast } from '@/components/Toasts.vue'
+import { list, on, openInBrowser } from '@/lib/backend'
 import { DOCTYPES, bySlug, statusOf } from '@/lib/doctypes'
 import { date, money } from '@/lib/format'
 import { session } from '@/lib/session'
-import { formRoute, getMeta, listRoute } from '@/lib/forms'
+import { deskPath, formRoute, getMeta, listRoute } from '@/lib/forms'
 
 const props = defineProps({ slug: { type: String, required: true } })
 const router = useRouter()
@@ -122,6 +124,9 @@ function move(by) {
 
 function open(r) {
   if (r) router.push(formRoute(doctype.value, r.name))
+}
+function browseList() {
+  openInBrowser(deskPath(doctype.value)).catch((e) => toast(e.message, true))
 }
 
 watch(() => props.slug, () => {

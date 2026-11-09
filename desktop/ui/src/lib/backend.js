@@ -32,6 +32,13 @@ export const list = (query) => call('list', { query })
 export const search = (text, limit = 20) => call('search', { text, limit })
 export const getDoc = (doctype, name, fresh = false) => call('get_doc', { doctype, name, fresh })
 export const openDesk = (path) => call('open_desk', { path })
+/** Opens a path on the signed-in site in the computer's default browser (with the session). */
+export const openInBrowser = (path = '/app') => call('open_in_browser', { path })
+
+/** Local ERPNext in Docker (v16): status, one-shot setup, and start. */
+export const localDockerStatus = () => call('local_docker_status')
+export const localDockerSetup = () => call('local_docker_setup')
+export const localDockerStart = () => call('local_docker_start')
 
 /** A step of creating a site on Nergaa Cloud (nergaa_cloud/desktop.py), and its pages. */
 export async function cloud(method, args = {}) {

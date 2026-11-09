@@ -226,6 +226,256 @@ def duplicate(doctype: str, name: str) -> dict:
 	return _clean(frappe.copy_doc(src))
 
 
+# ── Create from (ERPNext make_* / get_mapped_doc) and connections ─────────────
+
+# Whitelist of ERPNext makers the app may call. The method runs as the signed-in user.
+# `kind`: "make" → method(source_name); "payment" → get_payment_entry(doctype, name).
+MAPPINGS = {
+	"Opportunity": [
+		{
+			"target": "Quotation",
+			"label": "Quotation",
+			"method": "erpnext.crm.doctype.opportunity.opportunity.make_quotation",
+			"kind": "make",
+			"needs_submit": False,
+		},
+	],
+	"Quotation": [
+		{
+			"target": "Sales Order",
+			"label": "Sales Order",
+			"method": "erpnext.selling.doctype.quotation.quotation.make_sales_order",
+			"kind": "make",
+			"needs_submit": True,
+		},
+	],
+	"Sales Order": [
+		{
+			"target": "Delivery Note",
+			"label": "Delivery Note",
+			"method": "erpnext.selling.doctype.sales_order.sales_order.make_delivery_note",
+			"kind": "make",
+			"needs_submit": True,
+		},
+		{
+			"target": "Sales Invoice",
+			"label": "Sales Invoice",
+			"method": "erpnext.selling.doctype.sales_order.sales_order.make_sales_invoice",
+			"kind": "make",
+			"needs_submit": True,
+		},
+		{
+			"target": "Payment Entry",
+			"label": "Payment",
+			"method": "erpnext.accounts.doctype.payment_entry.payment_entry.get_payment_entry",
+			"kind": "payment",
+			"needs_submit": True,
+		},
+	],
+	"Delivery Note": [
+		{
+			"target": "Sales Invoice",
+			"label": "Sales Invoice",
+			"method": "erpnext.stock.doctype.delivery_note.delivery_note.make_sales_invoice",
+			"kind": "make",
+			"needs_submit": True,
+		},
+	],
+	"Sales Invoice": [
+		{
+			"target": "Payment Entry",
+			"label": "Payment",
+			"method": "erpnext.accounts.doctype.payment_entry.payment_entry.get_payment_entry",
+			"kind": "payment",
+			"needs_submit": True,
+		},
+		{
+			"target": "Sales Invoice",
+			"label": "Credit Note",
+			"method": "erpnext.accounts.doctype.sales_invoice.sales_invoice.make_sales_return",
+			"kind": "make",
+			"needs_submit": True,
+			"key": "credit_note",
+		},
+	],
+	"Purchase Order": [
+		{
+			"target": "Purchase Receipt",
+			"label": "Purchase Receipt",
+			"method": "erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_receipt",
+			"kind": "make",
+			"needs_submit": True,
+		},
+		{
+			"target": "Purchase Invoice",
+			"label": "Purchase Invoice",
+			"method": "erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice",
+			"kind": "make",
+			"needs_submit": True,
+		},
+		{
+			"target": "Payment Entry",
+			"label": "Payment",
+			"method": "erpnext.accounts.doctype.payment_entry.payment_entry.get_payment_entry",
+			"kind": "payment",
+			"needs_submit": True,
+		},
+	],
+	"Purchase Receipt": [
+		{
+			"target": "Purchase Invoice",
+			"label": "Purchase Invoice",
+			"method": "erpnext.stock.doctype.purchase_receipt.purchase_receipt.make_purchase_invoice",
+			"kind": "make",
+			"needs_submit": True,
+		},
+	],
+	"Purchase Invoice": [
+		{
+			"target": "Payment Entry",
+			"label": "Payment",
+			"method": "erpnext.accounts.doctype.payment_entry.payment_entry.get_payment_entry",
+			"kind": "payment",
+			"needs_submit": True,
+		},
+		{
+			"target": "Purchase Invoice",
+			"label": "Debit Note",
+			"method": "erpnext.accounts.doctype.purchase_invoice.purchase_invoice.make_purchase_return",
+			"kind": "make",
+			"needs_submit": True,
+			"key": "debit_note",
+		},
+	],
+	"Material Request": [
+		{
+			"target": "Purchase Order",
+			"label": "Purchase Order",
+			"method": "erpnext.stock.doctype.material_request.material_request.make_purchase_order",
+			"kind": "make",
+			"needs_submit": True,
+		},
+		{
+			"target": "Stock Entry",
+			"label": "Stock Entry",
+			"method": "erpnext.stock.doctype.material_request.material_request.make_stock_entry",
+			"kind": "make",
+			"needs_submit": True,
+		},
+	],
+	"Supplier Quotation": [
+		{
+			"target": "Purchase Order",
+			"label": "Purchase Order",
+			"method": "erpnext.buying.doctype.supplier_quotation.supplier_quotation.make_purchase_order",
+			"kind": "make",
+			"needs_submit": True,
+		},
+	],
+}
+
+
+def _mapping_available(m: dict, doc) -> bool:
+	"""Whether this Create target is offered for the document right now."""
+	if not frappe.db.exists("DocType", m["target"]):
+		return False
+	if not frappe.has_permission(m["target"], "create"):
+		return False
+	if m.get("needs_submit") and int(doc.docstatus or 0) != 1:
+		return False
+	if not m.get("needs_submit") and int(doc.docstatus or 0) == 2:
+		return False
+	# Credit/debit notes: only from a submitted non-return invoice with something outstanding.
+	if m.get("key") in ("credit_note", "debit_note"):
+		if int(getattr(doc, "is_return", 0) or 0):
+			return False
+	try:
+		frappe.get_attr(m["method"])
+	except Exception:
+		return False
+	return True
+
+
+@frappe.whitelist()
+def mappings(doctype: str, name: str) -> list[dict]:
+	"""Create-targets ERPNext offers from this document (Sales Order, Payment, …)."""
+	doc = frappe.get_doc(doctype, name)
+	doc.check_permission("read")
+	out = []
+	for m in MAPPINGS.get(doctype, []):
+		if not _mapping_available(m, doc):
+			continue
+		out.append(
+			{
+				"target": m["target"],
+				"label": m.get("label") or m["target"],
+				"key": m.get("key") or m["target"],
+			}
+		)
+	return out
+
+
+@frappe.whitelist(methods=["POST"])
+def create_from(source_doctype: str, source_name: str, target: str, key: str | None = None) -> dict:
+	"""An unsaved document filled by ERPNext's own mapper (get_mapped_doc / make_*)."""
+	doc = frappe.get_doc(source_doctype, source_name)
+	doc.check_permission("read")
+	chosen = None
+	for m in MAPPINGS.get(source_doctype, []):
+		mk = m.get("key") or m["target"]
+		if m["target"] == target and (not key or mk == key):
+			chosen = m
+			break
+	if not chosen or not _mapping_available(chosen, doc):
+		frappe.throw(_("Cannot create {0} from {1}").format(_(target), _(source_doctype)))
+	_require(chosen["target"], "create")
+	fn = frappe.get_attr(chosen["method"])
+	if chosen.get("kind") == "payment":
+		mapped = fn(source_doctype, source_name)
+	else:
+		mapped = fn(source_name)
+	# Maker methods return a Document or a plain dict; _clean needs a Document.
+	if isinstance(mapped, dict):
+		if not mapped.get("doctype"):
+			mapped["doctype"] = chosen["target"]
+		mapped = frappe.get_doc(mapped)
+	return _clean(mapped)
+
+
+@frappe.whitelist()
+def connections(doctype: str, name: str) -> list[dict]:
+	"""Documents linked to this one, as Desk's Connections shows (those the user may read)."""
+	frappe.get_doc(doctype, name).check_permission("read")
+	groups: list[dict] = []
+	try:
+		from frappe.desk.form.linked_with import get_linked_docs, get_linked_doctypes
+
+		linked_types = get_linked_doctypes(doctype) or {}
+		docs = get_linked_docs(doctype, name, linkinfo=linked_types) or {}
+		for dt, rows in docs.items():
+			if not rows or not frappe.has_permission(dt, "read"):
+				continue
+			items = []
+			for r in rows[:20]:
+				if isinstance(r, dict):
+					items.append(
+						{
+							"name": r.get("name") or r.get("docname"),
+							"title": r.get(frappe.get_meta(dt).title_field or "") or r.get("name"),
+							"status": r.get("status"),
+						}
+					)
+				else:
+					items.append({"name": r, "title": r, "status": None})
+			items = [i for i in items if i.get("name")]
+			if items:
+				groups.append({"doctype": dt, "label": _(dt), "docs": items})
+	except Exception:
+		# Older Frappe or a doctype without linkinfo: nothing to show is fine.
+		frappe.clear_messages()
+	return groups
+
+
 # ── Link fields ───────────────────────────────────────────────────────────────
 
 SELLING = {"Quotation", "Sales Order", "Delivery Note", "Sales Invoice", "POS Invoice"}

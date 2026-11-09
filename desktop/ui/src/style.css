@@ -2,15 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --surface: #ffffff;
+    --surface-muted: #f8fafc;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --selection: #dce6fd;
+  }
+  html.dark {
+    --surface: #0f172a;
+    --surface-muted: #1e293b;
+    --border: #334155;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --selection: #1e3a8a;
+  }
+  html.dark body {
+    @apply bg-slate-950 text-slate-100;
+  }
+}
+
 @layer components {
-  .card { @apply rounded-xl border border-slate-200 bg-white; }
+  .card { @apply rounded-xl border border-slate-200/90 bg-white shadow-sm shadow-slate-200/40; }
   .btn { @apply inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50; }
   .btn-primary { @apply btn bg-brand-600 text-white hover:bg-brand-700; }
   .btn-ghost { @apply btn text-slate-600 hover:bg-slate-100; }
   .btn-subtle { @apply btn bg-slate-100 text-slate-700 hover:bg-slate-200; }
-  .input { @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100; }
-  .label { @apply mb-1 block text-xs font-medium text-slate-500; }
+  .input { @apply w-full rounded-lg border border-slate-250 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-shadow placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100; }
+  .label { @apply mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500; }
+
+  html.dark .card { @apply border-slate-700 bg-slate-900 shadow-none; }
+  html.dark .btn-ghost { @apply text-slate-300 hover:bg-slate-800; }
+  html.dark .btn-subtle { @apply bg-slate-800 text-slate-200 hover:bg-slate-700; }
+  html.dark .input { @apply border-slate-600 bg-slate-900 text-slate-100 placeholder:text-slate-500 focus:border-brand-500 focus:ring-brand-900; }
+  html.dark .label { @apply text-slate-400; }
 }
 
 html, body, #app { height: 100%; }
-::selection { background: #DCE6FD; }
+::selection { background: var(--selection); }

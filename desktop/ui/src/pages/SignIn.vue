@@ -88,7 +88,13 @@
             <label class="label" for="site">Site address</label>
             <div class="field">
               <svg viewBox="0 0 24 24" class="field-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg>
-              <input id="site" v-model.trim="site" class="field-input" placeholder="mycompany.nergaa.cloud" autocomplete="url" required />
+              <input id="site" v-model.trim="site" class="field-input" placeholder="mycompany.nergaa.cloud or http://localhost:8000" autocomplete="url" required />
+            </div>
+            <div class="mt-1.5 flex flex-wrap items-center gap-2 text-[11px]">
+              <button type="button" class="rounded-md px-1.5 py-0.5 font-medium text-brand-700 hover:bg-brand-50" @click="useLocal">Use local Docker</button>
+              <span v-if="localStatus === 'ok'" class="text-leaf-600">Local site reachable</span>
+              <span v-else-if="localStatus === 'down'" class="text-slate-400">Local site not reachable yet</span>
+              <span v-else-if="localStatus === 'checking'" class="text-slate-400">Checking local…</span>
             </div>
           </div>
           <div>
@@ -124,7 +130,17 @@
           <span class="h-px flex-1 bg-slate-200" />New here?<span class="h-px flex-1 bg-slate-200" />
         </div>
 
-        <button type="button" class="group flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white p-3.5 text-left shadow-sm transition hover:border-brand-500 hover:shadow-md" @click="creating = true">
+        <button type="button" class="group flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white p-3.5 text-left shadow-sm transition hover:border-brand-500 hover:shadow-md disabled:opacity-60" :disabled="dockerBusy" @click="setupLocal">
+          <span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-700 to-slate-900 text-white shadow-sm">
+            <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2M12 12v.01"/></svg>
+          </span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm font-semibold text-slate-900">{{ dockerBusy ? 'Setting up local ERPNext…' : 'Set up local ERPNext (Docker)' }}</span>
+            <span class="block text-xs text-slate-500">{{ dockerStep || 'ERPNext v16 on this computer — automatic install when Docker Desktop is running.' }}</span>
+          </span>
+        </button>
+
+        <button type="button" class="group mt-3 flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white p-3.5 text-left shadow-sm transition hover:border-brand-500 hover:shadow-md" @click="creating = true">
           <span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-sm">
             <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.78A6 6 0 0 0 4.5 12.5 3.5 3.5 0 0 0 6 19h11.5Z" /><path d="M12 11v6M9 14h6" /></svg>
           </span>
@@ -140,11 +156,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { signIn } from '@/lib/session'
+import { localDockerSetup, localDockerStatus, on } from '@/lib/backend'
 import CreateSite from '@/components/CreateSite.vue'
 
 const SITE_KEY = 'erpnext:site'
+const AUTO_KEY = 'erpnext:local-docker-auto'
+const LOCAL = 'http://localhost:8000'
 const site = ref(localStorage.getItem(SITE_KEY) || '')
 const user = ref('')
 const password = ref('')
@@ -152,6 +171,64 @@ const showPassword = ref(false)
 const busy = ref(false)
 const creating = ref(false)
 const error = ref('')
+const localStatus = ref('')
+const dockerBusy = ref(false)
+const dockerStep = ref('')
+let stopDocker
+
+async function probeLocal() {
+  localStatus.value = 'checking'
+  try {
+    const ctrl = new AbortController()
+    const t = setTimeout(() => ctrl.abort(), 1500)
+    await fetch(LOCAL, { mode: 'no-cors', signal: ctrl.signal })
+    clearTimeout(t)
+    localStatus.value = 'ok'
+  } catch {
+    localStatus.value = 'down'
+  }
+}
+function useLocal() {
+  site.value = LOCAL
+  if (!user.value) user.value = 'Administrator'
+  if (!password.value) password.value = 'admin'
+  probeLocal()
+}
+
+async function setupLocal() {
+  dockerBusy.value = true
+  dockerStep.value = 'Starting…'
+  error.value = ''
+  try {
+    const r = await localDockerSetup()
+    site.value = r.url || LOCAL
+    user.value = r.user || 'Administrator'
+    password.value = r.password || 'admin'
+    localStorage.setItem(AUTO_KEY, '1')
+    await probeLocal()
+  } catch (e) {
+    error.value = e.message
+  } finally {
+    dockerBusy.value = false
+    dockerStep.value = ''
+  }
+}
+
+onMounted(async () => {
+  stopDocker = await on('local-docker', (p) => (dockerStep.value = p?.detail || ''))
+  if (/localhost|127\.0\.0\.1/.test(site.value)) probeLocal()
+  // First launch: if Docker is there and we have not set up yet, start automatically.
+  try {
+    const st = await localDockerStatus()
+    if (st.docker && !st.reachable && !localStorage.getItem(AUTO_KEY)) {
+      localStorage.setItem(AUTO_KEY, 'pending')
+      setupLocal()
+    }
+  } catch {
+    /* no docker bridge in browser-only preview */
+  }
+})
+onUnmounted(() => stopDocker?.())
 
 const kpis = [
   { label: 'Invoices', value: '326' },

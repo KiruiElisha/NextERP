@@ -83,3 +83,31 @@ class TestForms(FrappeTestCase):
 		self.assertIn(saved["name"], [r.name for r in s["invoices"]])
 		self.assertGreaterEqual(s["outstanding"], 400)
 		self.assertRaises(frappe.ValidationError, forms.party_summary, "Item", "x")
+
+	def test_fetch_brings_values_the_link_field_names(self):
+		customer = _customer("NX Fetch Customer")
+		frappe.db.set_value("Customer", customer.name, "tax_id", "P051234567X")
+		got = forms.fetch("Customer", customer.name, ["customer_name", "tax_id"])
+		self.assertEqual(got.get("customer_name"), customer.customer_name)
+		self.assertEqual(got.get("tax_id"), "P051234567X")
+
+	def test_mappings_appear_only_after_submit_and_create_from_builds_a_draft(self):
+		# Quotation → Sales Order needs a submitted quotation (ERPNext's make_sales_order).
+		q = forms.new("Quotation")
+		q.update(
+			{
+				"company": self.company,
+				"quotation_to": "Customer",
+				"party_name": _customer("NX Map Customer").name,
+				"items": [{"item_code": _item(), "qty": 1, "rate": 100}],
+			}
+		)
+		saved = forms.save(forms.compute(q))["doc"]
+		self.assertEqual(forms.mappings("Quotation", saved["name"]), [])
+		submitted = forms.save(saved, action="Submit")["doc"]
+		maps = forms.mappings("Quotation", submitted["name"])
+		self.assertTrue(any(m["target"] == "Sales Order" for m in maps))
+		order = forms.create_from("Quotation", submitted["name"], "Sales Order")
+		self.assertEqual(order["doctype"], "Sales Order")
+		self.assertEqual(order.get("docstatus", 0), 0)
+		self.assertTrue(order.get("items"))

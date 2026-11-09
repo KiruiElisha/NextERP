@@ -2,16 +2,21 @@
   <!-- A link, as in ERPNext: type to find, arrows and Enter to pick, the record's title beside its
        id. Cached doctypes answer from this computer at once; the site's own query then refines it. -->
   <div class="relative">
-    <div class="relative">
-      <input ref="box" :value="open ? text : modelValue || ''" :disabled="disabled" class="input pr-8" :class="invalid && 'border-red-400'"
-        :placeholder="placeholder || (target ? __('Search {0}…', [__(target).toLowerCase()]) : __('Choose the type first'))" autocomplete="off" spellcheck="false"
-        @focus="start" @input="type($event.target.value)" @blur="finish" @keydown.down.prevent="move(1)" @keydown.up.prevent="move(-1)"
-        @keydown.enter.prevent="choose(options[active])" @keydown.esc.prevent="close" @keydown.tab="finishWithActive" />
-      <button v-if="modelValue && !disabled" type="button" tabindex="-1" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500"
-        :title="__('Clear')" @mousedown.prevent="clear"><X class="size-3.5" /></button>
+    <div class="relative flex items-center gap-1">
+      <div class="relative min-w-0 flex-1">
+        <input ref="box" :value="open ? text : modelValue || ''" :disabled="disabled || !target" class="input pr-8" :class="invalid && 'border-red-400'"
+          :placeholder="placeholder || (target ? __('Search {0}…', [__(target).toLowerCase()]) : __('Choose the type first'))" autocomplete="off" spellcheck="false"
+          @focus="start" @input="type($event.target.value)" @blur="finish" @keydown.down.prevent="move(1)" @keydown.up.prevent="move(-1)"
+          @keydown.enter.prevent="choose(options[active])" @keydown.esc.prevent="close" @keydown.tab="finishWithActive" />
+        <button v-if="modelValue && !disabled" type="button" tabindex="-1" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500"
+          :title="__('Clear')" @mousedown.prevent="clear"><X class="size-3.5" /></button>
+      </div>
+      <button v-if="modelValue && target" type="button" tabindex="-1" class="btn-ghost shrink-0 px-1.5 text-slate-400 hover:text-brand-700" :title="__('Open {0}', [__(target)])" @mousedown.prevent="openLinked">
+        <ArrowUpRight class="size-3.5" />
+      </button>
     </div>
     <p v-if="title && !open" class="mt-0.5 truncate text-[11px] text-slate-400">{{ title }}</p>
-    <ul v-if="open && (options.length || text)" class="absolute z-40 mt-1 max-h-72 w-full min-w-[16rem] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+    <ul v-if="open && target && (options.length || text || loading)" class="absolute z-40 mt-1 max-h-72 w-full min-w-[16rem] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
       <li v-for="(o, i) in options" :key="o.value" class="cursor-pointer rounded-lg px-2.5 py-1.5 text-sm" :class="i === active ? 'bg-brand-50' : ''"
         @mousedown.prevent="choose(o)" @mouseenter="active = i">
         <div class="flex items-baseline gap-2">
@@ -31,10 +36,15 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus, X } from 'lucide-vue-next'
-import { formRoute, getMeta, linkOptions } from '@/lib/forms'
+import { ArrowUpRight, Plus, X } from 'lucide-vue-next'
+import { openInBrowser } from '@/lib/backend'
+import { DOCTYPES } from '@/lib/doctypes'
+import { deskPath, formRoute, getMeta, linkOptions } from '@/lib/forms'
+import { canRead } from '@/lib/session'
+import { toast } from '@/components/Toasts.vue'
+import { __ } from '@/lib/i18n'
 
 const props = defineProps({
   modelValue: { type: [String, null], default: '' },
@@ -58,10 +68,22 @@ const createAllowed = ref(false)
 let ask = 0
 
 const title = computed(() => titles.value[props.modelValue] || '')
-const canCreate = computed(() => createAllowed.value && !props.disabled)
+const canCreate = computed(() => createAllowed.value && !props.disabled && props.target)
+
+watch(
+  () => props.target,
+  (next, prev) => {
+    if (prev && next !== prev && props.modelValue) emit('update:modelValue', '')
+    createAllowed.value = false
+  },
+)
 
 async function find() {
-  if (!props.target) return
+  if (!props.target) {
+    options.value = []
+    loading.value = false
+    return
+  }
   const n = ++ask
   loading.value = true
   const local = await linkOptions(props.target, text.value, props.context, (fresh) => {
@@ -76,6 +98,12 @@ async function find() {
     options.value = local
     remember(local)
   }
+  if (n === ask && !local.length) {
+    // Site may still be answering; leave loading until onFresh or a quiet timeout.
+    setTimeout(() => {
+      if (n === ask) loading.value = false
+    }, 1200)
+  }
   active.value = 0
 }
 
@@ -84,11 +112,11 @@ function remember(list) {
 }
 
 function start() {
-  if (props.disabled) return
+  if (props.disabled || !props.target) return
   open.value = true
   text.value = props.modelValue || ''
   find()
-  if (props.target) getMeta(props.target).then((m) => (createAllowed.value = Boolean(m?.perms?.create))).catch(() => {})
+  getMeta(props.target).then((m) => (createAllowed.value = Boolean(m?.perms?.create))).catch(() => {})
 }
 function type(v) {
   text.value = v
@@ -131,6 +159,14 @@ function clear() {
 function create() {
   close()
   router.push({ path: formRoute(props.target, 'new'), query: text.value ? { prefill: text.value } : {} })
+}
+function openLinked() {
+  if (!props.modelValue || !props.target) return
+  if (canRead(props.target) || DOCTYPES[props.target]) {
+    router.push(formRoute(props.target, props.modelValue))
+    return
+  }
+  openInBrowser(deskPath(props.target, props.modelValue)).catch((e) => toast(e.message, true))
 }
 
 defineExpose({ focus: () => box.value?.focus() })

@@ -3,6 +3,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod commands;
+mod docker;
 mod session;
 
 use std::time::Duration;
@@ -87,7 +88,11 @@ fn main() {
             commands::cache_status,
             commands::clear_cache,
             commands::open_desk,
+            commands::open_in_browser,
             commands::save_file,
+            docker::local_docker_status,
+            docker::local_docker_setup,
+            docker::local_docker_start,
         ])
         .run(tauri::generate_context!())
         .expect("error while running NextERP");

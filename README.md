@@ -122,8 +122,14 @@ about 47 KB gzipped and is bundled into the app.
 ## Running ERPNext on the computer
 
 The app signs in to any address, so it works the same against a cloud site or a local one
-(`http://localhost:8000`, for example ERPNext in Docker). Keeping a local site and a cloud site
-in step is a separate problem: see the roadmap.
+(`http://localhost:8000`).
+
+A ready Docker package lives in [`docker/`](docker/): MariaDB, Redis, **ERPNext v16** and this
+repo's `nexterp` app. The desktop app can set it up automatically (Sign in → Set up local ERPNext,
+or Settings → Local Docker) when Docker Desktop is installed. You can also run
+`docker compose up` and bootstrap by hand — see [docker/README.md](docker/README.md).
+Sign in to `http://localhost:8000`. The local site is a full posting site; back it up with
+`bench backup` and keep the cloud for off-box copies — two-way ledger merge is not planned.
 
 ## Roadmap
 
@@ -134,12 +140,10 @@ in step is a separate problem: see the roadmap.
    can warn about stock before saving.
 3. **A drafts outbox**: invoices started offline are kept on the computer and saved to the site
    when it is back. Postings themselves still happen on the server.
-4. **Local site alongside the cloud**: ERPNext in Docker on the computer or the office network,
-   for speed and for working through outages. Recommended order: first a read-only local copy
-   kept up to date from the cloud (the cloud stays the only place documents are posted); only
-   then, if needed, a branch site that posts its own documents and sends them to the cloud as
-   whole documents. Two-way merging of one ERPNext database is not planned: stock levels,
-   numbering and the ledger cannot be merged safely.
+4. **Local site alongside the cloud**: the Docker package in `docker/` runs a full local site
+   today. Next: optional one-way push of whole documents to a cloud site for backup. Two-way
+   merging of one ERPNext database is not planned: stock levels, numbering and the ledger cannot
+   be merged safely.
 5. **Signed installers and auto-update** for Windows and macOS.
 
 ## Tests

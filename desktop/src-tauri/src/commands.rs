@@ -506,6 +506,17 @@ pub fn open_desk(
     Ok(())
 }
 
+/// The same Desk address as `open_desk`, but in the computer's default browser so the user can work
+/// there with their usual tabs and extensions.
+#[tauri::command]
+pub fn open_in_browser(state: State<'_, AppState>, path: Option<String>) -> Result<()> {
+    let s = state.current()?;
+    let path = path.unwrap_or_else(|| "/app".into());
+    let url = desk_url(&s.site, &path, &s.client.sid().unwrap_or_default())?;
+    open::that(url.as_str()).map_err(|e| Error::Server(e.to_string()))?;
+    Ok(())
+}
+
 /// The Desk address for a path on the signed-in site, with the session so Desk opens signed in.
 /// Only a path on that same site is accepted: the session id must never go to another host (a
 /// "path" like "@evil.example/" or "//evil.example/" would otherwise send it there).
