@@ -28,6 +28,8 @@ def boot() -> dict:
 		"full_name": frappe.db.get_value("User", user, "full_name") or user,
 		"roles": frappe.get_roles(user),
 		"companies": companies,
+		# a new site (the local Docker one, say) before ERPNext's setup wizard: the app runs the wizard
+		"setup_complete": setup_complete(),
 		"default_company": default if default in names else (names[0] if names else None),
 		"selling_price_list": frappe.db.get_single_value("Selling Settings", "selling_price_list"),
 		"manifest": manifest,
@@ -53,3 +55,11 @@ def boot() -> dict:
 			for dt in {"Sales Invoice", "Customer", "Item", "Payment Entry", *manifest, *nav}
 		},
 	}
+
+
+def setup_complete() -> bool:
+	"""Whether ERPNext's setup wizard has been finished on this site (Frappe 15 and 16)."""
+	try:
+		return bool(frappe.is_setup_complete())
+	except AttributeError:  # an older Frappe without the helper
+		return bool(frappe.db.get_single_value("System Settings", "setup_complete"))

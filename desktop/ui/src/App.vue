@@ -1,6 +1,7 @@
 <template>
   <div v-if="!session.ready" class="flex h-full items-center justify-center text-sm text-slate-400">Opening…</div>
   <SignIn v-else-if="!session.signedIn" />
+  <SiteSetup v-else-if="needsSetup()" />
   <div v-else-if="route.meta.bare" class="h-full">
     <router-view />
     <AppPicker v-if="picker.open" />
@@ -32,10 +33,11 @@ import { toast } from './components/Toasts.vue'
 import CommandPalette from './components/CommandPalette.vue'
 import Toasts from './components/Toasts.vue'
 import SignIn from './pages/SignIn.vue'
+import SiteSetup from './pages/SiteSetup.vue'
 import AppPicker from './components/AppPicker.vue'
 import { onSignedIn, picker } from './lib/apps'
 import { call, on, openDesk } from './lib/backend'
-import { session, signOut, start } from './lib/session'
+import { needsSetup, session, signOut, start } from './lib/session'
 
 const router = useRouter()
 const route = useRoute()

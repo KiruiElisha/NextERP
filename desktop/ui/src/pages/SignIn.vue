@@ -98,10 +98,10 @@
             </div>
           </div>
           <div>
-            <label class="label" for="email">Email</label>
+            <label class="label" for="email">Email or username</label>
             <div class="field">
               <svg viewBox="0 0 24 24" class="field-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
-              <input id="email" v-model.trim="user" class="field-input" type="email" placeholder="you@company.com" autocomplete="username" required />
+              <input id="email" v-model.trim="user" class="field-input" type="text" placeholder="you@company.com or Administrator" autocomplete="username" autocapitalize="off" spellcheck="false" required />
             </div>
           </div>
           <div>

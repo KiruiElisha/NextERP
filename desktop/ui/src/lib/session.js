@@ -26,9 +26,37 @@ function apply(info) {
   session.site = info?.site || ''
   session.user = info?.user || ''
   session.boot = info?.boot || null
+  pickCompany()
+}
+
+function pickCompany() {
   const companies = (session.boot?.companies || []).map((c) => c.name)
   const remembered = localStorage.getItem(COMPANY_KEY)
   session.company = companies.includes(remembered) ? remembered : session.boot?.default_company || companies[0] || ''
+}
+
+/**
+ * The site's ERPNext setup wizard hasn't run (a new local Docker site): the app shows its own setup
+ * screen first. A server app too old to say so counts as needing it when a System Manager sees no
+ * company at all, which only an unset site does.
+ */
+export function needsSetup() {
+  const b = session.boot
+  if (!b) return false
+  if (b.setup_complete === false) return true
+  const manager = session.user === 'Administrator' || (b.roles || []).includes('System Manager')
+  return b.setup_complete === undefined && manager && !(b.companies || []).length
+}
+
+/** After the wizard ran (here or in the browser): fresh details from the site, no restart. */
+export async function refreshAfterSetup() {
+  const boot = await call('refresh_boot').catch(() => null)
+  if (!boot) return false
+  session.boot = boot
+  pickCompany()
+  if (needsSetup()) return false
+  call('sync_now').catch(() => {})
+  return true
 }
 
 export function setCompany(name) {
