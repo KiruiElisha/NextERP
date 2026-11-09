@@ -13,7 +13,8 @@ type Result<T> = std::result::Result<T, Error>;
 
 const PROJECT: &str = "nexterp-local";
 const LOCAL_URL: &str = "http://localhost:8000";
-const DEFAULT_ADMIN_PASSWORD: &str = "admin";
+/// Sites set up before passwords were generated kept this one.
+const LEGACY_PASSWORD: &str = "admin";
 const ERPNEXT_VERSION: &str = "v16.54.0";
 
 fn err(msg: impl Into<String>) -> Error {
@@ -57,6 +58,7 @@ fn find_file(app: &AppHandle, candidates: &[PathBuf]) -> Option<PathBuf> {
                 res.join(&*name),
                 res.join("docker").join(&*name),
                 res.join("_up_").join("docker").join(&*name),
+                res.join("_up_").join("_up_").join("docker").join(&*name),
                 res.join("_up_").join("NextERP").join("docker").join(&*name),
             ] {
                 if c.exists() {
@@ -75,6 +77,8 @@ fn find_nexterp(app: &AppHandle) -> Result<PathBuf> {
         candidates.extend([
             res.join("nexterp"),
             res.join("_up_").join("nexterp"),
+            // tauri.conf.json bundles "../../nexterp": each "../" becomes "_up_"
+            res.join("_up_").join("_up_").join("nexterp"),
             res.join("_up_").join("NextERP").join("nexterp"),
         ]);
     }
@@ -100,6 +104,36 @@ fn copy_dir(from: &Path, to: &Path) -> Result<()> {
         }
     }
     Ok(())
+}
+
+/// The local site's Administrator (and MariaDB root) password: made once per computer and kept in the
+/// workspace, readable only by this user. A workspace from before (an .env, no password file) keeps
+/// the old fixed one, or its site would refuse it.
+fn admin_password(dir: &Path) -> Result<String> {
+    let file = dir.join("admin-password");
+    if let Ok(saved) = fs::read_to_string(&file) {
+        if !saved.trim().is_empty() {
+            return Ok(saved.trim().to_string());
+        }
+    }
+    let password = if dir.join(".env").exists() {
+        LEGACY_PASSWORD.to_string()
+    } else {
+        const ALPHABET: &[u8] = b"abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let mut bytes = [0u8; 20];
+        getrandom::getrandom(&mut bytes).map_err(|e| err(e.to_string()))?;
+        bytes
+            .iter()
+            .map(|b| ALPHABET[*b as usize % ALPHABET.len()] as char)
+            .collect()
+    };
+    fs::write(&file, &password).map_err(|e| err(e.to_string()))?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = fs::set_permissions(&file, fs::Permissions::from_mode(0o600));
+    }
+    Ok(password)
 }
 
 /// Place compose files and the nexterp app under app data so Docker can mount them.
@@ -129,6 +163,7 @@ fn ensure_workspace(app: &AppHandle) -> Result<PathBuf> {
         .to_string_lossy()
         .replace('\\', "/");
 
+    let password = admin_password(&dir)?;
     let env = format!(
         "HTTP_PORT=8000\n\
          MYSQL_ROOT_PASSWORD={pw}\n\
@@ -136,7 +171,7 @@ fn ensure_workspace(app: &AppHandle) -> Result<PathBuf> {
          SITE_NAME=localhost\n\
          ERPNEXT_VERSION={ver}\n\
          NEXTERP_APP_PATH={app}\n",
-        pw = DEFAULT_ADMIN_PASSWORD,
+        pw = password,
         ver = ERPNEXT_VERSION,
         app = nexterp_path,
     );
@@ -214,7 +249,8 @@ pub fn local_docker_status(app: AppHandle) -> Result<Value> {
         "reachable": site_reachable(),
         "url": LOCAL_URL,
         "user": "Administrator",
-        "password": DEFAULT_ADMIN_PASSWORD,
+        "password": dir.as_ref().and_then(|d| fs::read_to_string(d.join("admin-password")).ok())
+            .map(|p| p.trim().to_string()),
         "version": ERPNEXT_VERSION,
     }))
 }
@@ -236,6 +272,7 @@ pub async fn local_docker_setup(app: AppHandle) -> Result<Value> {
 fn setup_blocking(app: &AppHandle) -> Result<Value> {
     emit(app, "prepare", "Preparing local ERPNext files…");
     let dir = ensure_workspace(app)?;
+    let password = admin_password(&dir)?;
 
     emit(
         app,
@@ -293,9 +330,9 @@ fn setup_blocking(app: &AppHandle) -> Result<Value> {
                 "new-site",
                 "localhost",
                 "--mariadb-root-password",
-                DEFAULT_ADMIN_PASSWORD,
+                &password,
                 "--admin-password",
-                DEFAULT_ADMIN_PASSWORD,
+                &password,
                 "--no-mariadb-socket",
                 "--install-app",
                 "erpnext",
@@ -337,7 +374,10 @@ fn setup_blocking(app: &AppHandle) -> Result<Value> {
             LOCAL_URL,
         ],
     );
-    let _ = compose(&dir, &["exec", "-T", "backend", "bench", "use", "localhost"]);
+    let _ = compose(
+        &dir,
+        &["exec", "-T", "backend", "bench", "use", "localhost"],
+    );
 
     emit(app, "ready", "Local ERPNext is ready.");
     for _ in 0..30 {
@@ -351,7 +391,7 @@ fn setup_blocking(app: &AppHandle) -> Result<Value> {
         "ok": true,
         "url": LOCAL_URL,
         "user": "Administrator",
-        "password": DEFAULT_ADMIN_PASSWORD,
+        "password": password,
         "reachable": site_reachable(),
         "version": ERPNEXT_VERSION,
     }))

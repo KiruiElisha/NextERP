@@ -191,8 +191,9 @@ async function probeLocal() {
 function useLocal() {
   site.value = LOCAL
   if (!user.value) user.value = 'Administrator'
-  if (!password.value) password.value = 'admin'
   probeLocal()
+  // the password the app made when it set this site up (not a fixed one)
+  localDockerStatus().then((s) => { if (!password.value && s.password) password.value = s.password }).catch(() => {})
 }
 
 async function setupLocal() {
@@ -201,9 +202,9 @@ async function setupLocal() {
   error.value = ''
   try {
     const r = await localDockerSetup()
-    site.value = r.url || LOCAL
-    user.value = r.user || 'Administrator'
-    password.value = r.password || 'admin'
+    site.value = r?.url || LOCAL
+    user.value = r?.user || 'Administrator'
+    password.value = r?.password || ''
     localStorage.setItem(AUTO_KEY, '1')
     await probeLocal()
   } catch (e) {
@@ -217,16 +218,8 @@ async function setupLocal() {
 onMounted(async () => {
   stopDocker = await on('local-docker', (p) => (dockerStep.value = p?.detail || ''))
   if (/localhost|127\.0\.0\.1/.test(site.value)) probeLocal()
-  // First launch: if Docker is there and we have not set up yet, start automatically.
-  try {
-    const st = await localDockerStatus()
-    if (st.docker && !st.reachable && !localStorage.getItem(AUTO_KEY)) {
-      localStorage.setItem(AUTO_KEY, 'pending')
-      setupLocal()
-    }
-  } catch {
-    /* no docker bridge in browser-only preview */
-  }
+  // Local ERPNext is set up only when the user asks (the card below): it downloads several GB and
+  // starts containers, which nobody should get just by opening the app.
 })
 onUnmounted(() => stopDocker?.())
 

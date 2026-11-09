@@ -5,7 +5,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: { 50: '#EEF3FE', 100: '#DCE6FD', 500: '#2F5FE0', 600: '#1F4FD8', 700: '#1A41B0' },
+        brand: {
+          50: '#EEF3FE', 100: '#DCE6FD', 200: '#BFD0FB', 300: '#93AEF6', 400: '#5F86EC',
+          500: '#2F5FE0', 600: '#1F4FD8', 700: '#1A41B0', 800: '#17368F', 900: '#152F75', 950: '#0E1E4D',
+        },
         leaf: { 500: '#22B573', 600: '#1A9A61' },
         slate: { 250: '#E4E9F0' },
       },

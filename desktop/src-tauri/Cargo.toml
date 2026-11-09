@@ -17,6 +17,7 @@ tokio = { version = "1", features = ["time"] }
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
 open = "5"
+getrandom = "0.2"
 
 [[bin]]
 name = "erpnext-desktop"

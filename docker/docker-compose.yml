@@ -91,7 +91,8 @@ services:
       PROXY_READ_TIMEOUT: 120
       CLIENT_MAX_BODY_SIZE: 50m
     ports:
-      - "${HTTP_PORT:-8000}:8080"
+      # this computer only: the site's Administrator must not be reachable from the network
+      - "127.0.0.1:${HTTP_PORT:-8000}:8080"
     depends_on:
       - backend
       - websocket

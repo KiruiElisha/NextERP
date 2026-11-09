@@ -507,12 +507,13 @@ pub fn open_desk(
 }
 
 /// The same Desk address as `open_desk`, but in the computer's default browser so the user can work
-/// there with their usual tabs and extensions.
+/// there with their usual tabs and extensions. Without the session: a `?sid=` handed to another
+/// program would stay in its history and sync, so the browser signs in on its own (or already is).
 #[tauri::command]
 pub fn open_in_browser(state: State<'_, AppState>, path: Option<String>) -> Result<()> {
     let s = state.current()?;
     let path = path.unwrap_or_else(|| "/app".into());
-    let url = desk_url(&s.site, &path, &s.client.sid().unwrap_or_default())?;
+    let url = site_url(&s.site, &path)?;
     open::that(url.as_str()).map_err(|e| Error::Server(e.to_string()))?;
     Ok(())
 }
@@ -521,16 +522,22 @@ pub fn open_in_browser(state: State<'_, AppState>, path: Option<String>) -> Resu
 /// Only a path on that same site is accepted: the session id must never go to another host (a
 /// "path" like "@evil.example/" or "//evil.example/" would otherwise send it there).
 fn desk_url(site: &str, path: &str, sid: &str) -> Result<tauri::Url> {
+    let mut url = site_url(site, path)?;
+    url.query_pairs_mut().append_pair("sid", sid);
+    Ok(url)
+}
+
+/// An address on the signed-in site, refused unless it stays on that site.
+fn site_url(site: &str, path: &str) -> Result<tauri::Url> {
     let bad = || Error::Server("Not a valid Desk address".into());
     if !path.starts_with('/') || path.starts_with("//") || path.contains('\\') {
         return Err(bad());
     }
     let base: tauri::Url = site.parse().map_err(|_| bad())?;
-    let mut url = base.join(path).map_err(|_| bad())?;
+    let url = base.join(path).map_err(|_| bad())?;
     if url.origin() != base.origin() {
         return Err(bad());
     }
-    url.query_pairs_mut().append_pair("sid", sid);
     Ok(url)
 }
 

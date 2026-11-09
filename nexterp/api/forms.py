@@ -386,12 +386,11 @@ def _mapping_available(m: dict, doc) -> bool:
 	if not m.get("needs_submit") and int(doc.docstatus or 0) == 2:
 		return False
 	# Credit/debit notes: only from a submitted non-return invoice with something outstanding.
-	if m.get("key") in ("credit_note", "debit_note"):
-		if int(getattr(doc, "is_return", 0) or 0):
-			return False
+	if m.get("key") in ("credit_note", "debit_note") and int(getattr(doc, "is_return", 0) or 0):
+		return False
 	try:
 		frappe.get_attr(m["method"])
-	except Exception:
+	except (ImportError, AttributeError):  # an ERPNext version without this maker
 		return False
 	return True
 
@@ -467,11 +466,12 @@ def connections(doctype: str, name: str) -> list[dict]:
 					)
 				else:
 					items.append({"name": r, "title": r, "status": None})
-			items = [i for i in items if i.get("name")]
+			# Read access to the doctype isn't access to every document (user permissions, owner-only
+			# roles): list only the documents this user may open.
+			items = [i for i in items if i.get("name") and frappe.has_permission(dt, "read", doc=i["name"])]
 			if items:
 				groups.append({"doctype": dt, "label": _(dt), "docs": items})
-	except Exception:
-		# Older Frappe or a doctype without linkinfo: nothing to show is fine.
+	except Exception:  # noqa: BLE001 (older Frappe or a doctype without linkinfo: nothing to show is fine)
 		frappe.clear_messages()
 	return groups
 

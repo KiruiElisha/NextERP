@@ -15,7 +15,8 @@ You can also run it from the command line.
 2. Open **ERPNext** desktop.
 3. On first launch (or Sign in → **Set up local ERPNext**), the app pulls ERPNext v16, starts
    containers, creates the site, and installs `nexterp`.
-4. Sign in with `http://localhost:8000` / `Administrator` / `admin` (default).
+4. Sign in with `http://localhost:8000` / `Administrator` and the password the app shows (it makes one
+   per computer). Set up by hand with compose, it is `ADMIN_PASSWORD` from `.env`.
 
 Progress is shown on the sign-in screen; Settings → Local Docker can repair or restart the stack.
 
