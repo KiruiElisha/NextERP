@@ -2,8 +2,8 @@
 # Requires Docker Engine / Docker Desktop. Start: see README.md in this folder.
 #
 # Based on the frappe_docker single-server layout. The nexterp app is mounted from
-# NEXTERP_APP_PATH: a folder holding the `nexterp` package (repo: the checkout's root; desktop
-# install: a copy in app data). The image only knows the apps it was built with, so PYTHONPATH
+# NEXTERP_APP_PATH: a folder holding the `nexterp` package (repo: the checkout's root), or the
+# nexterp-app volume the desktop app copies the package into. The image only knows the apps it was built with, so PYTHONPATH
 # makes Python find this one in every container (web, workers, scheduler).
 
 name: nexterp-local
@@ -132,3 +132,5 @@ volumes:
   sites:
   logs:
   db-data:
+  # the desktop app sets NEXTERP_APP_PATH=nexterp-app and copies the app in (docker compose cp)
+  nexterp-app:
