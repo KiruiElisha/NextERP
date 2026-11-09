@@ -10,7 +10,7 @@
     <div class="flex min-w-0 flex-1 flex-col">
       <UpdateBanner />
       <TopBar @search="palette = true" />
-      <main class="min-h-0 flex-1 overflow-y-auto">
+      <main class="min-h-0 flex-1 overflow-y-auto bg-white">
         <router-view />
       </main>
     </div>

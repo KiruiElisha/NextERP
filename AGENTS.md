@@ -44,7 +44,9 @@ cd desktop && npm install && npm --prefix ui install && npm run dev   # the app
 - Python: tabs, `ruff check` and `ruff format`. Small functions; docstrings say why.
 - Rust: `cargo fmt`. Errors go through `nexterp_core::Error` so the UI can tell signed-out,
   refused and offline apart.
-- Vue: `<script setup>`, Tailwind classes, the `card`/`btn-*`/`input` components in `style.css`.
+- Vue: `<script setup>`, Tailwind classes, the `card`/`btn-*`/`input` components in `style.css`. The look
+  follows the JEMKAS desktop app (Frappe UI's neutral greys and green accent, set in `tailwind.config.js`
+  under the `slate`/`brand` names); dark mode remaps those colours in `style.css`.
 - Tests: names that say what broke; real records and a real site over mocks.
 - Commits: Conventional Commits with a scope, sentence case (`feat(sync): Send deletions`), and a
   short body saying why.

@@ -4,7 +4,7 @@
     apps, groups fold open and closed (remembered), Reports has a section per department, and the
     user menu sits at the bottom. Only screens the user can open are listed (lib/doctypes NAV).
   -->
-  <aside class="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+  <aside class="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
     <div class="relative p-2">
       <button class="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-slate-100" :aria-expanded="switcher" @click="switcher = !switcher">
         <img src="/icon.png" class="size-7 rounded-lg" alt="" />
@@ -208,8 +208,8 @@ function browseSite() {
 </script>
 
 <style scoped>
-.nav { @apply flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900; }
-.nav.active { @apply bg-brand-50 font-medium text-brand-700; }
+.nav { @apply flex items-center gap-2.5 rounded-md px-2 py-[5px] text-slate-700 hover:bg-slate-200/60 hover:text-slate-900; }
+.nav.active { @apply bg-white font-medium text-brand-700 shadow-sm ring-1 ring-slate-200; }
 .menu { @apply flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-100; }
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
