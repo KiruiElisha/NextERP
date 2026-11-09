@@ -6,6 +6,8 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, add_months, flt, get_first_day, getdate, nowdate
 
+from nexterp import aggregate
+
 
 def _require_company(company: str | None) -> str:
 	company = company or frappe.defaults.get_user_default("Company")
@@ -18,10 +20,9 @@ def _can(doctype: str) -> bool:
 	return bool(frappe.has_permission(doctype, "read"))
 
 
-def _sum(doctype: str, expr: str, filters: dict) -> float:
+def _sum(doctype: str, expr, filters: dict) -> float:
 	"""A total through frappe.get_list: the user's permissions and User Permissions apply."""
-	rows = frappe.get_list(doctype, filters=filters, fields=[f"sum({expr}) as v"])
-	return flt(rows[0].v) if rows else 0.0
+	return aggregate.total(doctype, expr, filters)
 
 
 @frappe.whitelist()
@@ -52,10 +53,10 @@ def summary(company: str | None = None) -> dict:
 		"daily_sales": _daily_sales(base, since) if sales else [],
 		"top_customers": [
 			{"label": r.customer_name, "amount": flt(r.amount)}
-			for r in frappe.get_list(
+			for r in aggregate.get_list(
 				"Sales Invoice",
 				filters={**base, "posting_date": [">=", month]},
-				fields=["customer_name", "sum(base_grand_total) as amount"],
+				fields=["customer_name", {"SUM": "base_grand_total", "as": "amount"}],
 				group_by="customer_name",
 				order_by="amount desc",
 				limit_page_length=5,
@@ -76,17 +77,19 @@ def _cash(company: str) -> float:
 	if not accounts:
 		return 0.0
 	return _sum(
-		"GL Entry", "debit - credit", {"company": company, "is_cancelled": 0, "account": ["in", accounts]}
+		"GL Entry",
+		{"SUB": [{"SUM": "debit"}, {"SUM": "credit"}]},
+		{"company": company, "is_cancelled": 0, "account": ["in", accounts]},
 	)
 
 
 def _daily_sales(base: dict, since) -> list[dict]:
 	rows = {
 		str(r.posting_date): flt(r.v)
-		for r in frappe.get_list(
+		for r in aggregate.get_list(
 			"Sales Invoice",
 			filters={**base, "posting_date": [">=", since]},
-			fields=["posting_date", "sum(base_grand_total) as v"],
+			fields=["posting_date", {"SUM": "base_grand_total", "as": "v"}],
 			group_by="posting_date",
 		)
 	}

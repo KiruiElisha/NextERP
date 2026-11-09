@@ -11,6 +11,8 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, add_months, date_diff, flt, get_first_day, getdate, nowdate
 
+from nexterp import aggregate
+
 TOP = 8
 
 
@@ -19,8 +21,17 @@ def _can(doctype: str) -> bool:
 
 
 def _sum(doctype: str, field: str, filters: dict) -> float:
-	rows = frappe.get_list(doctype, filters=filters, fields=[f"sum({field}) as v"])
-	return flt(rows[0].v) if rows else 0.0
+	return aggregate.total(doctype, field, filters)
+
+
+def _by_month(rows) -> dict[str, float]:
+	"""Daily totals ({posting_date, v}) added up per month. Grouping by month in SQL needs a date
+	function, which Frappe 16 doesn't allow in get_list; a period has at most ~1100 days."""
+	out: dict[str, float] = {}
+	for r in rows:
+		key = getdate(r.posting_date).strftime("%Y-%m")
+		out[key] = out.get(key, 0.0) + flt(r.v)
+	return out
 
 
 def _months(start, end) -> list[str]:
@@ -65,16 +76,17 @@ def dashboard(company: str | None = None, from_date: str | None = None, to_date:
 			if frappe.has_permission("Sales Invoice")
 			else 0
 		)
-		by_month = frappe.get_list(
+		by_month = aggregate.get_list(
 			"Sales Invoice",
 			filters={**base, **period},
-			fields=["DATE_FORMAT(posting_date, '%Y-%m') as month", "sum(base_net_total) as v"],
-			group_by="month",
+			fields=["posting_date", {"SUM": "base_net_total", "as": "v"}],
+			group_by="posting_date",
+			limit_page_length=0,
 		)
-		top_customers = frappe.get_list(
+		top_customers = aggregate.get_list(
 			"Sales Invoice",
 			filters={**base, **period},
-			fields=["customer", "customer_name", "sum(base_net_total) as v"],
+			fields=["customer", "customer_name", {"SUM": "base_net_total", "as": "v"}],
 			group_by="customer",
 			order_by="v desc",
 			limit_page_length=TOP,
@@ -85,17 +97,23 @@ def dashboard(company: str | None = None, from_date: str | None = None, to_date:
 			"growth": ((sales - before) / before * 100) if before else None,
 			"invoices": count,
 			"average": sales / count if count else 0,
-			"by_month": {r.month: flt(r.v) for r in by_month},
+			"by_month": _by_month(by_month),
 			"top_customers": [
 				{"name": r.customer, "label": r.customer_name, "value": flt(r.v)} for r in top_customers
 			],
 		}
 		out["receivables"] = _ageing("Sales Invoice", company, end)
 		if _can("Item"):
-			items = frappe.get_all(
+			items = aggregate.get_list(
 				"Sales Invoice Item",
+				getter=frappe.get_all,  # rows of invoices get_list already allowed (_names)
 				filters={"parent": ["in", _names("Sales Invoice", {**base, **period})]},
-				fields=["item_code", "item_name", "sum(base_net_amount) as v", "sum(stock_qty) as qty"],
+				fields=[
+					"item_code",
+					"item_name",
+					{"SUM": "base_net_amount", "as": "v"},
+					{"SUM": "stock_qty", "as": "qty"},
+				],
 				group_by="item_code",
 				order_by="v desc",
 				limit_page_length=TOP,
@@ -115,10 +133,7 @@ def dashboard(company: str | None = None, from_date: str | None = None, to_date:
 
 	if _can("Bin") and _can("Warehouse"):
 		warehouses = frappe.get_all("Warehouse", filters={"company": company, "is_group": 0}, pluck="name")
-		stock = frappe.get_list(
-			"Bin", filters={"warehouse": ["in", warehouses or [""]]}, fields=["sum(stock_value) as v"]
-		)
-		out["stock_value"] = flt(stock[0].v) if stock else 0.0
+		out["stock_value"] = _sum("Bin", "stock_value", {"warehouse": ["in", warehouses or [""]]})
 	return out
 
 
@@ -169,7 +184,7 @@ def _profit(company: str, start, end) -> dict:
 	"""Income and expenses from the general ledger, by month."""
 	out = {}
 	for root, sign in (("Income", -1), ("Expense", 1)):
-		rows = frappe.get_list(
+		rows = aggregate.get_list(
 			"GL Entry",
 			filters={
 				"company": company,
@@ -177,10 +192,11 @@ def _profit(company: str, start, end) -> dict:
 				"posting_date": ["between", [start, end]],
 				"account": ["in", _accounts(company, root_type=root)],
 			},
-			fields=["DATE_FORMAT(posting_date, '%Y-%m') as month", "sum(debit) - sum(credit) as v"],
-			group_by="month",
+			fields=["posting_date", {"SUB": [{"SUM": "debit"}, {"SUM": "credit"}], "as": "v"}],
+			group_by="posting_date",
+			limit_page_length=0,
 		)
-		out[root.lower()] = {r.month: flt(r.v) * sign for r in rows}
+		out[root.lower()] = {m: v * sign for m, v in _by_month(rows).items()}
 	income, expense = sum(out["income"].values()), sum(out["expense"].values())
 	return {
 		"income": income,
@@ -200,7 +216,7 @@ def _cash(company: str, on) -> dict:
 	)
 	if not accounts:
 		return {"total": 0.0, "accounts": []}
-	rows = frappe.get_list(
+	rows = aggregate.get_list(
 		"GL Entry",
 		filters={
 			"company": company,
@@ -208,7 +224,7 @@ def _cash(company: str, on) -> dict:
 			"posting_date": ["<=", on],
 			"account": ["in", [a.name for a in accounts]],
 		},
-		fields=["account", "sum(debit) - sum(credit) as v"],
+		fields=["account", {"SUB": [{"SUM": "debit"}, {"SUM": "credit"}], "as": "v"}],
 		group_by="account",
 	)
 	balances = sorted(({"name": r.account, "value": flt(r.v)} for r in rows), key=lambda x: -x["value"])

@@ -24,6 +24,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint, getdate, nowdate
 
+from nexterp import aggregate
 from nexterp.limits import per_user
 
 CLAUDE = "Anthropic (Claude)"
@@ -299,17 +300,17 @@ def summarise_records(run: Run, doctype, group_by=None, sum_field=None, filters=
 	"""Counts, and optionally totals of a number field, grouped by a field."""
 	doctype = _doctype(doctype)
 	readable = _readable_fields(doctype)
-	fields = ["count(name) as count"]
+	fields = [{"COUNT": "name", "as": "count"}]
 	if sum_field:
 		f = _field(doctype, sum_field, readable)
 		if f not in readable or readable[f].fieldtype not in NUMERIC:
 			raise ToolError(f"{sum_field} is not a number field")
-		fields.append(f"sum({f}) as total")
+		fields.append({"SUM": f, "as": "total"})
 	group = None
 	if group_by:
 		group = _field(doctype, group_by, readable)
 		fields.insert(0, group)
-	rows = frappe.get_list(
+	rows = aggregate.get_list(
 		doctype,
 		filters=_filters(doctype, filters, readable),
 		fields=fields,

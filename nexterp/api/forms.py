@@ -15,6 +15,8 @@ from frappe import _
 from frappe.model.utils.user_settings import get_user_settings, update_user_settings
 from frappe.model.workflow import get_workflow_name
 
+from nexterp import aggregate
+
 # What a field carries to the app: enough to draw it, check it and know when it shows.
 FIELD_KEYS = (
 	"fieldname",
@@ -696,10 +698,7 @@ def party_summary(party_type: str, party: str, company: str | None = None) -> di
 	def total(doctype, expr, extra):
 		if not frappe.has_permission(doctype, "read"):
 			return 0
-		rows = frappe.get_list(
-			doctype, filters={**base, "docstatus": 1, **extra}, fields=[f"sum({expr}) as v"]
-		)
-		return frappe.utils.flt(rows[0].v) if rows else 0
+		return aggregate.total(doctype, expr, {**base, "docstatus": 1, **extra})
 
 	def latest(doctype, fields, filters, n=6):
 		if not frappe.has_permission(doctype, "read"):
