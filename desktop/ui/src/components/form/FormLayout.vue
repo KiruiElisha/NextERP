@@ -19,7 +19,7 @@
               <ChildTable v-if="df.fieldtype === 'Table' || df.fieldtype === 'Table MultiSelect'" v-show="isVisible(df, doc, parent)" :df="df" :doc="doc" :meta="meta"
                 :read-only="isReadOnly(df, doc, parent, meta)" :show-invalid="showInvalid" class="col-span-full"
                 @change="(e) => $emit('row-change', { table: df.fieldname, ...e })" />
-              <Field v-else-if="isVisible(df, doc, parent)" :df="df" :doc="doc" :parent="parent" :meta="meta" :parent-doctype="parentDoctype" :show-invalid="showInvalid"
+              <Field v-else-if="isVisible(df, doc, parent) && !quiet(df)" :df="df" :doc="doc" :parent="parent" :meta="meta" :parent-doctype="parentDoctype" :show-invalid="showInvalid"
                 @change="(f) => $emit('change', f)" @picked="(f) => $emit('change', f)" @attach="(e) => $emit('attach', e)" />
             </template>
           </div>
@@ -34,7 +34,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { ChevronDown } from 'lucide-vue-next'
 import ChildTable from './ChildTable.vue'
 import Field from './Field.vue'
-import { holds, isReadOnly, isVisible, layout, shortFields } from '@/lib/forms'
+import { NO_VALUE, holds, isReadOnly, isVisible, layout, shortFields } from '@/lib/forms'
 
 const props = defineProps({
   meta: { type: Object, required: true },
@@ -52,9 +52,19 @@ const tabs = computed(() => {
   const keep = props.all ? null : shortFields(props.meta)
   const t = layout(props.meta.fields || [], keep)
   return t
-    .map((x) => ({ ...x, sections: x.sections.filter((s) => holds(s.depends_on, props.doc, props.parent) && s.columns.some((c) => c.fields.some((f) => isVisible(f, props.doc, props.parent)))) }))
+    .map((x) => ({ ...x, sections: x.sections.filter((s) => holds(s.depends_on, props.doc, props.parent) && s.columns.some((c) => c.fields.some((f) => isVisible(f, props.doc, props.parent) && !quiet(f)))) }))
     .filter((x) => holds(x.depends_on, props.doc, props.parent) && x.sections.length)
 })
+// On a saved document, a read-only field with nothing in it is just noise, and so is the naming
+// series. "Show every field" still shows them.
+function quiet(df) {
+  if (props.all || props.parent) return false
+  if (df.fieldname === 'naming_series') return !props.doc.__islocal
+  if (NO_VALUE.has(df.fieldtype) || df.fieldtype === 'Table' || df.fieldtype === 'Table MultiSelect') return false
+  if (!isReadOnly(df, props.doc, props.parent, props.meta)) return false
+  const v = props.doc[df.fieldname]
+  return v === null || v === undefined || v === '' || (df.fieldtype === 'Check' && !v)
+}
 watch(() => tabs.value.length, (n) => tab.value >= n && (tab.value = 0))
 
 // Collapsible sections start folded (as in ERPNext) unless they hold something worth seeing.

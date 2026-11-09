@@ -59,6 +59,13 @@
           </div>
         </template>
       </div>
+      <!-- The figures people open a document for, without scrolling to them -->
+      <dl v-if="facts.length" class="mt-3 flex flex-wrap gap-x-8 gap-y-2 border-t border-slate-100 pt-3">
+        <div v-for="f in facts" :key="f.label" class="min-w-0">
+          <dt class="text-[11px] font-medium uppercase tracking-wide text-slate-400">{{ __(f.label) }}</dt>
+          <dd class="text-sm font-semibold tabular-nums" :class="f.tone || 'text-slate-900'">{{ f.value }}</dd>
+        </div>
+      </dl>
     </header>
 
     <div v-if="offlineNew && isNew" class="border-b border-sky-200 bg-sky-50 px-6 py-2 text-sm text-sky-900">
@@ -120,6 +127,7 @@ import { __ } from '@/lib/i18n'
 import { session } from '@/lib/session'
 import { call, getDoc, openInBrowser, site } from '@/lib/backend'
 import { DOCTYPES, statusOf } from '@/lib/doctypes'
+import { date as fmtDate, money } from '@/lib/format'
 import { NO_VALUE, amendDoc, compute, createFrom, deleteDoc, deskPath, duplicateDoc, fetchLinked, formRoute, getMeta, isMandatory, isVisible, listMappings, listRoute, loadDoc, newDoc, saveDoc, saveLayout } from '@/lib/forms'
 
 const props = defineProps({ doctype: { type: String, required: true }, name: { type: String, required: true } })
@@ -138,6 +146,39 @@ const offline = ref(false)
 const showInvalid = ref(false)
 const menu = ref(false)
 const createMenu = ref(false)
+
+// Dates and amounts most documents are opened for, in the order people look for them. Only the ones
+// this doctype has, and only once there is something in them.
+const FACTS = [
+  ['posting_date', 'Date'], ['transaction_date', 'Date'],
+  ['due_date', 'Due'], ['delivery_date', 'Delivery'], ['schedule_date', 'Required by'], ['valid_till', 'Valid until'],
+  ['grand_total', 'Total'], ['rounded_total', 'Rounded total'], ['paid_amount', 'Paid'], ['total_debit', 'Total'],
+  ['outstanding_amount', 'Outstanding'], ['per_delivered', 'Delivered'], ['per_billed', 'Billed'],
+]
+const facts = computed(() => {
+  const d = doc.value
+  if (!d || !meta.value || isNew.value) return []
+  const has = new Set((meta.value.fields || []).map((f) => f.fieldname))
+  const currency = d.currency || d.company_currency || d.paid_from_account_currency || ''
+  const out = []
+  const seen = new Set()
+  for (const [field, label] of FACTS) {
+    const v = d[field]
+    if (!has.has(field) || v === null || v === undefined || v === '' || seen.has(label)) continue
+    if (field === 'rounded_total' && (!v || Number(v) === Number(d.grand_total))) continue
+    if (field === 'outstanding_amount' && d.docstatus !== 1) continue
+    seen.add(label)
+    if (field.startsWith('per_')) out.push({ label, value: `${Math.round(Number(v) || 0)}%` })
+    else if (field.endsWith('_date') || field === 'valid_till') {
+      const late = field === 'due_date' && d.docstatus === 1 && Number(d.outstanding_amount) > 0 && new Date(v) < new Date(new Date().toDateString())
+      out.push({ label, value: fmtDate(v), tone: late ? 'text-red-600' : '' })
+    } else {
+      const tone = field === 'outstanding_amount' && Number(v) > 0 ? 'text-amber-700' : ''
+      out.push({ label, value: money(v, currency), tone })
+    }
+  }
+  return out.slice(0, 6)
+})
 const createTargets = ref([])
 const connectionsRef = ref(null)
 const dialog = ref(null)

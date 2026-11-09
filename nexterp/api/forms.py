@@ -443,6 +443,22 @@ def create_from(source_doctype: str, source_name: str, target: str, key: str | N
 	return _clean(mapped)
 
 
+# Bookkeeping ERPNext writes behind a document: linked to it, but nothing a person opens. Desk's own
+# Connections leaves them out too.
+LEDGERS = {
+	"GL Entry",
+	"Payment Ledger Entry",
+	"Stock Ledger Entry",
+	"Serial and Batch Bundle",
+	"Repost Payment Ledger",
+	"Repost Item Valuation",
+	"Repost Accounting Ledger",
+	"Unreconcile Payment",
+	"Process Deferred Accounting",
+	"Advance Payment Ledger Entry",
+}
+
+
 @frappe.whitelist()
 def connections(doctype: str, name: str) -> list[dict]:
 	"""Documents linked to this one, as Desk's Connections shows (those the user may read)."""
@@ -454,7 +470,7 @@ def connections(doctype: str, name: str) -> list[dict]:
 		linked_types = get_linked_doctypes(doctype) or {}
 		docs = get_linked_docs(doctype, name, linkinfo=linked_types) or {}
 		for dt, rows in docs.items():
-			if not rows or not frappe.has_permission(dt, "read"):
+			if not rows or dt in LEDGERS or not frappe.has_permission(dt, "read"):
 				continue
 			items = []
 			for r in rows[:20]:

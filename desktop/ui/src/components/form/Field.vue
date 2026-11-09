@@ -11,13 +11,15 @@
       <span class="truncate">{{ __(df.label) || df.fieldname }}</span><span v-if="required" class="text-red-500">*</span>
     </label>
 
-    <!-- Read-only: the value as text, formatted for its type. -->
-    <div v-if="ro" class="min-h-[38px] rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2 text-sm text-slate-800" :class="isNumber && 'text-right tabular-nums'">
-      <template v-if="isText"><div class="whitespace-pre-wrap" v-html="safe(value)" /></template>
+    <!-- Read-only: the value as text, formatted for its type; a linked record opens in the app. -->
+    <div v-if="ro" class="min-h-[28px] border-b border-slate-100 pb-1.5 pt-0.5 text-[15px] text-slate-900" :class="isNumber && 'tabular-nums'">
+      <template v-if="isText"><div class="whitespace-pre-wrap text-sm" v-html="safe(value)" /></template>
       <template v-else-if="df.fieldtype === 'Attach' || df.fieldtype === 'Attach Image'">
         <button v-if="value" class="text-brand-700 hover:underline" @click="openFile">{{ fileName }}</button>
         <span v-else class="text-slate-400">—</span>
       </template>
+      <RouterLink v-else-if="linkTarget && value" :to="formRoute(linkTarget, value)" class="font-medium text-brand-700 hover:underline">{{ shown }}</RouterLink>
+      <template v-else-if="df.fieldtype === 'Check'">{{ value ? __('Yes') : __('No') }}</template>
       <template v-else>{{ shown || '—' }}</template>
     </div>
 
@@ -66,7 +68,7 @@ import { escapeHtml, sanitize } from '@/lib/sanitize'
 import { computed, ref } from 'vue'
 import { Paperclip, X } from 'lucide-vue-next'
 import LinkField from './LinkField.vue'
-import { isMandatory, isReadOnly } from '@/lib/forms'
+import { formRoute, isMandatory, isReadOnly } from '@/lib/forms'
 
 const props = defineProps({
   df: { type: Object, required: true },
@@ -118,6 +120,8 @@ const shown = computed(() => {
   if (props.df.fieldtype === 'Datetime') return new Date(String(v).replace(' ', 'T')).toLocaleString()
   return String(v)
 })
+// The doctype a Link (or Dynamic Link) points at, for opening the record.
+const linkTarget = computed(() => (props.df.fieldtype === 'Link' ? props.df.options : props.df.fieldtype === 'Dynamic Link' ? props.doc[props.df.options] : ''))
 const fileName = computed(() => String(value.value || '').split('/').pop())
 
 // Text Editor values are HTML from the site; only plain formatting is kept on screen (lib/sanitize).
