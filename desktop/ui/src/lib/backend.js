@@ -38,6 +38,8 @@ export const openInBrowser = (path = '/app') => call('open_in_browser', { path }
 /** Local ERPNext in Docker (v16): status, one-shot setup, and start. */
 export const localDockerStatus = () => call('local_docker_status')
 export const localDockerSetup = () => call('local_docker_setup')
+/** Installs Docker on this computer: only after the user agreed to it (the sign-in screen asks). */
+export const localDockerInstall = () => call('local_docker_install')
 export const localDockerStart = () => call('local_docker_start')
 
 /** A step of creating a site on Nergaa Cloud (nergaa_cloud/desktop.py), and its pages. */

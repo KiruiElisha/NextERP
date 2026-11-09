@@ -3,7 +3,8 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+
+use crate::docker_install;
 
 use nexterp_core::Error;
 use serde_json::{json, Value};
@@ -22,13 +23,7 @@ fn err(msg: impl Into<String>) -> Error {
 }
 
 fn docker_available() -> bool {
-    Command::new("docker")
-        .args(["info"])
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .status()
-        .map(|s| s.success())
-        .unwrap_or(false)
+    docker_install::running()
 }
 
 fn work_dir(app: &AppHandle) -> Result<PathBuf> {
@@ -180,13 +175,9 @@ fn ensure_workspace(app: &AppHandle) -> Result<PathBuf> {
 }
 
 fn compose(dir: &Path, args: &[&str]) -> Result<std::process::Output> {
-    Command::new("docker")
-        .arg("compose")
-        .arg("-p")
-        .arg(PROJECT)
-        .arg("-f")
-        .arg("docker-compose.yml")
-        .args(args)
+    let mut all = vec!["compose", "-p", PROJECT, "-f", "docker-compose.yml"];
+    all.extend_from_slice(args);
+    docker_install::docker(&all)
         .current_dir(dir)
         .output()
         .map_err(|e| {
@@ -244,6 +235,7 @@ pub fn local_docker_status(app: AppHandle) -> Result<Value> {
             .unwrap_or(false);
     Ok(json!({
         "docker": docker,
+        "installed": docker || docker_install::installed(),
         "prepared": prepared,
         "running": running,
         "reachable": site_reachable(),
@@ -255,14 +247,57 @@ pub fn local_docker_status(app: AppHandle) -> Result<Value> {
     }))
 }
 
+/// Install Docker on this computer. The UI calls this only after the user agreed to what it will
+/// install (see docker_install.rs). Emits `local-docker` progress.
+#[tauri::command]
+pub async fn local_docker_install(app: AppHandle) -> Result<Value> {
+    let app2 = app.clone();
+    tauri::async_runtime::spawn_blocking(move || -> Result<Value> {
+        if docker_install::running() {
+            return Ok(json!({ "ok": true, "restart_needed": false }));
+        }
+        let done = if docker_install::installed() {
+            docker_install::Installed::default()
+        } else {
+            docker_install::install(|m| emit(&app2, "install", m))?
+        };
+        if done.restart_needed {
+            return Ok(json!({ "ok": false, "restart_needed": true }));
+        }
+        ensure_running(&app2)?;
+        Ok(json!({ "ok": true, "restart_needed": false }))
+    })
+    .await
+    .map_err(|e| err(e.to_string()))?
+}
+
+/// Start Docker if it's installed but not running, and wait for it (Docker Desktop's first start can
+/// take a couple of minutes).
+fn ensure_running(app: &AppHandle) -> Result<()> {
+    if docker_install::running() {
+        return Ok(());
+    }
+    if !docker_install::installed() {
+        return Err(err("Docker isn't installed on this computer yet."));
+    }
+    emit(app, "start", "Starting Docker…");
+    docker_install::start();
+    let up = docker_install::wait_running(std::time::Duration::from_secs(300), |s| {
+        emit(app, "start", &format!("Starting Docker… ({s} s)"));
+    });
+    if up {
+        Ok(())
+    } else {
+        Err(err(
+            "Docker is installed but hasn't started. Open Docker Desktop once (it may ask you to accept \
+             its terms), then press Set up again.",
+        ))
+    }
+}
+
 /// Pull images, start the stack, create the site and install nexterp. Emits `local-docker` progress.
 #[tauri::command]
 pub async fn local_docker_setup(app: AppHandle) -> Result<Value> {
-    if !docker_available() {
-        return Err(err(
-            "Docker is not available. Install Docker Desktop, start it, then try again.",
-        ));
-    }
     let app2 = app.clone();
     tauri::async_runtime::spawn_blocking(move || setup_blocking(&app2))
         .await
@@ -270,6 +305,7 @@ pub async fn local_docker_setup(app: AppHandle) -> Result<Value> {
 }
 
 fn setup_blocking(app: &AppHandle) -> Result<Value> {
+    ensure_running(app)?;
     emit(app, "prepare", "Preparing local ERPNext files…");
     let dir = ensure_workspace(app)?;
     let password = admin_password(&dir)?;
@@ -400,9 +436,10 @@ fn setup_blocking(app: &AppHandle) -> Result<Value> {
 /// Start containers that were set up earlier (no site create).
 #[tauri::command]
 pub async fn local_docker_start(app: AppHandle) -> Result<Value> {
-    if !docker_available() {
-        return Err(err("Docker is not available."));
-    }
+    let app2 = app.clone();
+    tauri::async_runtime::spawn_blocking(move || ensure_running(&app2))
+        .await
+        .map_err(|e| err(e.to_string()))??;
     let dir = ensure_workspace(&app)?;
     let up = compose(&dir, &["up", "-d"])?;
     if !up.status.success() {

@@ -136,9 +136,30 @@
           </span>
           <span class="min-w-0 flex-1">
             <span class="block text-sm font-semibold text-slate-900">{{ dockerBusy ? 'Setting up local ERPNext…' : 'Set up local ERPNext (Docker)' }}</span>
-            <span class="block text-xs text-slate-500">{{ dockerStep || 'ERPNext v16 on this computer — automatic install when Docker Desktop is running.' }}</span>
+            <span class="block text-xs text-slate-500">{{ dockerStep || 'ERPNext v16 on this computer. NextERP installs Docker for it if needed.' }}</span>
           </span>
         </button>
+
+        <!-- Before anything is installed: what, from where, and that the system will ask -->
+        <div v-if="dockerConsent" class="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900" role="dialog" aria-labelledby="docker-consent-title">
+          <p id="docker-consent-title" class="font-semibold">Install Docker on this computer?</p>
+          <p class="mt-1.5 text-xs leading-relaxed">
+            The local ERPNext runs in Docker, which this computer doesn't have yet. NextERP will download and install
+            <strong>{{ dockerWhat }}</strong> from Docker<template v-if="isWindows">, and turn on WSL 2 if Windows doesn't have it (that may need a restart)</template>.
+            Your computer will ask for an administrator's permission. It then downloads ERPNext (a few GB in all).
+          </p>
+          <p v-if="!isLinux" class="mt-1.5 text-xs leading-relaxed">
+            Docker Desktop is free for personal use and small businesses; larger companies need a paid Docker subscription
+            (<span class="font-medium">docker.com/pricing</span>). You can uninstall it like any other program.
+          </p>
+          <div class="mt-3 flex gap-2">
+            <button type="button" class="btn-primary" @click="installDocker">Install Docker and set up</button>
+            <button type="button" class="btn-ghost" @click="dockerConsent = false">Not now</button>
+          </div>
+        </div>
+        <p v-if="needsRestart" class="mt-3 rounded-lg bg-brand-50 px-3 py-2.5 text-xs text-brand-800 ring-1 ring-brand-100">
+          WSL 2 is on, and Docker Desktop is installed. Restart the computer, open NextERP and press <strong>Set up local ERPNext</strong> again to finish.
+        </p>
 
         <button type="button" class="group mt-3 flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white p-3.5 text-left shadow-sm transition hover:border-brand-500 hover:shadow-md" @click="creating = true">
           <span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-sm">
@@ -158,7 +179,7 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
 import { signIn } from '@/lib/session'
-import { localDockerSetup, localDockerStatus, on } from '@/lib/backend'
+import { localDockerInstall, localDockerSetup, localDockerStatus, on } from '@/lib/backend'
 import CreateSite from '@/components/CreateSite.vue'
 
 const SITE_KEY = 'erpnext:site'
@@ -196,7 +217,51 @@ function useLocal() {
   localDockerStatus().then((s) => { if (!password.value && s.password) password.value = s.password }).catch(() => {})
 }
 
+const dockerConsent = ref(false)
+const needsRestart = ref(false)
+const isWindows = /win/i.test(navigator.userAgent)
+const isLinux = /linux/i.test(navigator.userAgent) && !/android/i.test(navigator.userAgent)
+const dockerWhat = isLinux ? 'Docker Engine and Docker Compose' : 'Docker Desktop (about 600 MB)'
+
+// Docker missing: ask first (nothing is installed without the user's yes). Installed but stopped:
+// the setup starts it. Running: straight to setup.
 async function setupLocal() {
+  error.value = ''
+  needsRestart.value = false
+  try {
+    const st = await localDockerStatus()
+    if (!st.docker && !st.installed) {
+      dockerConsent.value = true
+      return
+    }
+  } catch {
+    /* no bridge in a browser preview: let setup report it */
+  }
+  await runSetup()
+}
+
+async function installDocker() {
+  dockerConsent.value = false
+  dockerBusy.value = true
+  dockerStep.value = 'Installing Docker…'
+  error.value = ''
+  try {
+    const r = await localDockerInstall()
+    if (r?.restart_needed) {
+      needsRestart.value = true
+      return
+    }
+  } catch (e) {
+    error.value = e.message
+    return
+  } finally {
+    dockerBusy.value = false
+    dockerStep.value = ''
+  }
+  await runSetup()
+}
+
+async function runSetup() {
   dockerBusy.value = true
   dockerStep.value = 'Starting…'
   error.value = ''

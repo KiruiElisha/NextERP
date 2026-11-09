@@ -4,6 +4,7 @@
 
 mod commands;
 mod docker;
+mod docker_install;
 mod session;
 
 use std::time::Duration;
@@ -91,6 +92,7 @@ fn main() {
             commands::open_in_browser,
             commands::save_file,
             docker::local_docker_status,
+            docker::local_docker_install,
             docker::local_docker_setup,
             docker::local_docker_start,
         ])
