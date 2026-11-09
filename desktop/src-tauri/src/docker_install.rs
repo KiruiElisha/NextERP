@@ -11,7 +11,8 @@
 //! - Linux: Docker Engine and its Compose plugin with Docker's install script, run through pkexec
 //!   (the desktop's own password prompt); the user joins the docker group.
 
-use std::path::Path;
+use std::ffi::OsString;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 use std::time::{Duration, Instant};
 
@@ -65,9 +66,61 @@ pub fn docker(args: &[&str]) -> Command {
         cmd.args(["docker", "-c", &line]);
         return cmd;
     }
-    let mut cmd = hidden("docker");
+    let mut cmd = match docker_dir() {
+        Some(dir) => {
+            let mut cmd = hidden(&dir.join(exe("docker")).to_string_lossy());
+            cmd.env("PATH", path_with(&dir));
+            cmd
+        }
+        None => hidden("docker"),
+    };
     cmd.args(args);
     cmd
+}
+
+fn exe(name: &str) -> String {
+    if cfg!(windows) {
+        format!("{name}.exe")
+    } else {
+        name.to_string()
+    }
+}
+
+/// Where Docker puts its command-line tools. The app can't count on PATH for them: right after
+/// Docker installs, PATH is still the one the app started with (Windows), and an app opened from
+/// the Dock gets a short PATH without /usr/local/bin (macOS). Without this, `docker` stays "not
+/// found" until NextERP is closed and opened again.
+fn bin_dirs() -> Vec<PathBuf> {
+    if cfg!(windows) {
+        let base = std::env::var("ProgramFiles").unwrap_or_else(|_| r"C:\Program Files".into());
+        vec![Path::new(&base).join(r"Docker\Docker\resources\bin")]
+    } else if cfg!(target_os = "macos") {
+        let mut dirs = vec![
+            PathBuf::from("/usr/local/bin"),
+            PathBuf::from("/opt/homebrew/bin"),
+            PathBuf::from("/Applications/Docker.app/Contents/Resources/bin"),
+        ];
+        if let Some(home) = std::env::var_os("HOME") {
+            dirs.push(Path::new(&home).join(".docker/bin"));
+        }
+        dirs
+    } else {
+        vec![PathBuf::from("/usr/bin"), PathBuf::from("/usr/local/bin")]
+    }
+}
+
+/// The folder Docker's tools are in, when there is one.
+fn docker_dir() -> Option<PathBuf> {
+    bin_dirs()
+        .into_iter()
+        .find(|d| d.join(exe("docker")).is_file())
+}
+
+/// PATH with `dir` first, so `docker` finds its helpers (credentials, compose) the same way.
+fn path_with(dir: &Path) -> OsString {
+    let current = std::env::var_os("PATH").unwrap_or_default();
+    let dirs = std::iter::once(dir.to_path_buf()).chain(std::env::split_paths(&current));
+    std::env::join_paths(dirs).unwrap_or(current)
 }
 
 /// The user was added to the docker group but this login session doesn't have it yet.
@@ -112,7 +165,7 @@ pub fn running() -> bool {
 
 /// Docker is on this computer, running or not.
 pub fn installed() -> bool {
-    if on_path("docker") {
+    if docker_dir().is_some() || on_path("docker") {
         return true;
     }
     if cfg!(windows) {
@@ -346,6 +399,13 @@ fn install_linux(say: impl Fn(&str)) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn docker_found_outside_path_goes_first_on_its_path() {
+        let dir = std::env::temp_dir().join("nexterp-docker-bin");
+        let path = path_with(&dir);
+        assert_eq!(std::env::split_paths(&path).next(), Some(dir));
+    }
 
     #[test]
     fn quoting_keeps_each_argument_whole() {

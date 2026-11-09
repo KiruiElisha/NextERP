@@ -274,10 +274,14 @@ async function runSetup() {
     await probeLocal()
   } catch (e) {
     error.value = e.message
+    return
   } finally {
     dockerBusy.value = false
     dockerStep.value = ''
   }
+  // The site is ready and the app knows its password: sign in, which leads on to setting up the
+  // company. If the site isn't answering yet, the filled-in form waits for the user.
+  if (password.value) await submit()
 }
 
 onMounted(async () => {

@@ -44,7 +44,7 @@ else
 fi
 
 echo "Installing nexterp…"
-docker compose exec -T backend bench --site "${SITE}" install-app nexterp || true
+docker compose exec -T backend bench --site "${SITE}" install-app nexterp
 
 # Point the site at the published address (desktop Sign-in uses this host).
 docker compose exec -T backend bench --site "${SITE}" set-config host_name "http://localhost:${PORT}"

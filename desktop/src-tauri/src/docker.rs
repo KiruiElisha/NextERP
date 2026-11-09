@@ -87,6 +87,9 @@ fn copy_dir(from: &Path, to: &Path) -> Result<()> {
     fs::create_dir_all(to).map_err(|e| err(e.to_string()))?;
     for entry in fs::read_dir(from).map_err(|e| err(e.to_string()))? {
         let entry = entry.map_err(|e| err(e.to_string()))?;
+        if entry.file_name() == "__pycache__" {
+            continue;
+        }
         let ty = entry.file_type().map_err(|e| err(e.to_string()))?;
         let dest = to.join(entry.file_name());
         if ty.is_dir() {
@@ -131,8 +134,48 @@ fn admin_password(dir: &Path) -> Result<String> {
     Ok(password)
 }
 
-/// Place compose files and the nexterp app under app data so Docker can mount them.
-fn ensure_workspace(app: &AppHandle) -> Result<PathBuf> {
+/// Empty a folder but keep it: running containers have it mounted, and a new folder in its place
+/// would leave them looking at the old, deleted one.
+fn clear_dir(dir: &Path) -> Result<()> {
+    for entry in fs::read_dir(dir).map_err(|e| err(e.to_string()))? {
+        let path = entry.map_err(|e| err(e.to_string()))?.path();
+        let gone = if path.is_dir() {
+            fs::remove_dir_all(&path)
+        } else {
+            fs::remove_file(&path)
+        };
+        gone.map_err(|e| err(format!("Could not replace {}: {e}", path.display())))?;
+    }
+    Ok(())
+}
+
+/// Copy the nexterp app this version of NextERP ships into the workspace, as `apps/nexterp/nexterp`
+/// (the folder Docker mounts holds the package, which PYTHONPATH in the compose file points at).
+/// Copied again whenever NextERP was updated, so the local site gets the server side that goes with
+/// it. Returns whether the code changed.
+fn place_app(app: &AppHandle, dir: &Path) -> Result<(PathBuf, bool)> {
+    let app_dir = dir.join("apps").join("nexterp");
+    let stamp = dir.join("apps").join(".nexterp-version");
+    let version = app.package_info().version.to_string();
+    let current = app_dir.join("nexterp").join("hooks.py").exists()
+        && fs::read_to_string(&stamp)
+            .map(|s| s.trim() == version)
+            .unwrap_or(false);
+    if current && !cfg!(debug_assertions) {
+        return Ok((app_dir, false));
+    }
+    let src = find_nexterp(app)?;
+    fs::create_dir_all(&app_dir).map_err(|e| err(e.to_string()))?;
+    // also clears the layout of earlier versions, which put the package's files straight in here
+    clear_dir(&app_dir)?;
+    copy_dir(&src, &app_dir.join("nexterp"))?;
+    fs::write(&stamp, &version).map_err(|e| err(e.to_string()))?;
+    Ok((app_dir, true))
+}
+
+/// Place compose files and the nexterp app under app data so Docker can mount them. Also says
+/// whether the app's code changed (NextERP was updated), so the site can be brought up to date.
+fn ensure_workspace(app: &AppHandle) -> Result<(PathBuf, bool)> {
     let dir = work_dir(app)?;
     let root = repo_root();
     let compose_src = find_file(
@@ -146,11 +189,7 @@ fn ensure_workspace(app: &AppHandle) -> Result<PathBuf> {
 
     fs::copy(&compose_src, dir.join("docker-compose.yml")).map_err(|e| err(e.to_string()))?;
 
-    let nexterp_src = find_nexterp(app)?;
-    let nexterp_dest = dir.join("apps").join("nexterp");
-    if !nexterp_dest.join("hooks.py").exists() {
-        copy_dir(&nexterp_src, &nexterp_dest)?;
-    }
+    let (nexterp_dest, changed) = place_app(app, &dir)?;
 
     let nexterp_path = nexterp_dest
         .canonicalize()
@@ -171,7 +210,7 @@ fn ensure_workspace(app: &AppHandle) -> Result<PathBuf> {
         app = nexterp_path,
     );
     fs::write(dir.join(".env"), env).map_err(|e| err(e.to_string()))?;
-    Ok(dir)
+    Ok((dir, changed))
 }
 
 fn compose(dir: &Path, args: &[&str]) -> Result<std::process::Output> {
@@ -185,6 +224,103 @@ fn compose(dir: &Path, args: &[&str]) -> Result<std::process::Output> {
                 "Could not run Docker Compose ({e}). Install Docker Desktop and try again."
             ))
         })
+}
+
+/// What a failed command printed, for an error message: its last lines, where the reason is.
+fn tail(out: &std::process::Output) -> String {
+    let text = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let lines: Vec<&str> = text.lines().filter(|l| !l.trim().is_empty()).collect();
+    lines[lines.len().saturating_sub(12)..].join("\n")
+}
+
+/// `bench` in the backend container; an error with what it printed when it fails.
+fn bench(dir: &Path, args: &[&str], what: &str) -> Result<std::process::Output> {
+    let mut all = vec!["exec", "-T", "backend", "bench"];
+    all.extend_from_slice(args);
+    let out = compose(dir, &all)?;
+    if out.status.success() {
+        Ok(out)
+    } else {
+        Err(err(format!("{what} failed:\n{}", tail(&out))))
+    }
+}
+
+/// The Python processes (web, workers, scheduler) load the app once: after new code, restart them.
+fn restart_python(dir: &Path) -> Result<()> {
+    let out = compose(
+        dir,
+        &[
+            "restart",
+            "backend",
+            "queue-short",
+            "queue-long",
+            "scheduler",
+        ],
+    )?;
+    if out.status.success() {
+        Ok(())
+    } else {
+        Err(err(format!("Could not restart ERPNext:\n{}", tail(&out))))
+    }
+}
+
+fn wait_backend(dir: &Path) -> bool {
+    for _ in 0..90 {
+        if compose(dir, &["exec", "-T", "backend", "bench", "--version"])
+            .map(|o| o.status.success())
+            .unwrap_or(false)
+        {
+            return true;
+        }
+        std::thread::sleep(std::time::Duration::from_secs(2));
+    }
+    false
+}
+
+/// Install nexterp on the site, or bring it up to date when NextERP brought new code. Checked: a
+/// site without it answers every call from the app with "App nexterp is not installed".
+fn install_or_update_app(app: &AppHandle, dir: &Path, changed: bool) -> Result<()> {
+    let done = install_or_update(app, dir, changed);
+    if done.is_err() {
+        // try again next time, rather than take the site as up to date
+        let _ = fs::remove_file(dir.join("apps").join(".nexterp-version"));
+    }
+    done
+}
+
+fn install_or_update(app: &AppHandle, dir: &Path, changed: bool) -> Result<()> {
+    let apps = bench(
+        dir,
+        &["--site", "localhost", "list-apps"],
+        "Listing the site's apps",
+    )?;
+    let installed = String::from_utf8_lossy(&apps.stdout)
+        .lines()
+        .any(|l| l.split_whitespace().next() == Some("nexterp"));
+    if !installed {
+        emit(app, "nexterp", "Installing NextERP on the site…");
+        bench(
+            dir,
+            &["--site", "localhost", "install-app", "nexterp"],
+            "Installing NextERP on the site",
+        )?;
+    } else if changed {
+        emit(
+            app,
+            "nexterp",
+            "Updating the site for this version of NextERP…",
+        );
+        bench(
+            dir,
+            &["--site", "localhost", "migrate"],
+            "Updating the site",
+        )?;
+    }
+    Ok(())
 }
 
 fn emit(app: &AppHandle, step: &str, detail: &str) {
@@ -307,7 +443,7 @@ pub async fn local_docker_setup(app: AppHandle) -> Result<Value> {
 fn setup_blocking(app: &AppHandle) -> Result<Value> {
     ensure_running(app)?;
     emit(app, "prepare", "Preparing local ERPNext files…");
-    let dir = ensure_workspace(app)?;
+    let (dir, changed) = ensure_workspace(app)?;
     let password = admin_password(&dir)?;
 
     emit(
@@ -323,20 +459,12 @@ fn setup_blocking(app: &AppHandle) -> Result<Value> {
         let stderr = String::from_utf8_lossy(&up.stderr);
         return Err(err(format!("Docker Compose failed to start:\n{stderr}")));
     }
+    if changed {
+        restart_python(&dir)?;
+    }
 
     emit(app, "wait", "Waiting for the backend…");
-    let mut ready = false;
-    for _ in 0..90 {
-        if compose(&dir, &["exec", "-T", "backend", "bench", "--version"])
-            .map(|o| o.status.success())
-            .unwrap_or(false)
-        {
-            ready = true;
-            break;
-        }
-        std::thread::sleep(std::time::Duration::from_secs(2));
-    }
-    if !ready {
+    if !wait_backend(&dir) {
         return Err(err(
             "The backend did not become ready. Check Docker Desktop and try again.",
         ));
@@ -382,20 +510,7 @@ fn setup_blocking(app: &AppHandle) -> Result<Value> {
         emit(app, "site", "Site already exists.");
     }
 
-    emit(app, "nexterp", "Installing NextERP…");
-    let _ = compose(
-        &dir,
-        &[
-            "exec",
-            "-T",
-            "backend",
-            "bench",
-            "--site",
-            "localhost",
-            "install-app",
-            "nexterp",
-        ],
-    );
+    install_or_update_app(app, &dir, changed)?;
     let _ = compose(
         &dir,
         &[
@@ -440,10 +555,23 @@ pub async fn local_docker_start(app: AppHandle) -> Result<Value> {
     tauri::async_runtime::spawn_blocking(move || ensure_running(&app2))
         .await
         .map_err(|e| err(e.to_string()))??;
-    let dir = ensure_workspace(&app)?;
-    let up = compose(&dir, &["up", "-d"])?;
-    if !up.status.success() {
-        return Err(err(String::from_utf8_lossy(&up.stderr).to_string()));
-    }
+    let app2 = app.clone();
+    tauri::async_runtime::spawn_blocking(move || -> Result<()> {
+        let (dir, changed) = ensure_workspace(&app2)?;
+        let up = compose(&dir, &["up", "-d"])?;
+        if !up.status.success() {
+            return Err(err(String::from_utf8_lossy(&up.stderr).to_string()));
+        }
+        // NextERP was updated since the site last ran: its new server code, then the site's tables
+        if changed && site_exists(&dir) {
+            restart_python(&dir)?;
+            if wait_backend(&dir) {
+                install_or_update_app(&app2, &dir, true)?;
+            }
+        }
+        Ok(())
+    })
+    .await
+    .map_err(|e| err(e.to_string()))??;
     Ok(json!({ "ok": true, "url": LOCAL_URL, "reachable": site_reachable() }))
 }
