@@ -9,7 +9,7 @@
       <button class="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-slate-100" :aria-expanded="switcher" @click="switcher = !switcher">
         <img src="/icon.png" class="size-7 rounded-lg" alt="" />
         <span class="min-w-0 flex-1">
-          <span class="block truncate text-[15px] font-semibold tracking-tight text-slate-900">{{ __('ERPNext') }}</span>
+          <span class="block truncate text-[15px] font-semibold tracking-tight text-slate-900">NextERP</span>
           <span class="block truncate text-[11px] text-slate-400">{{ siteName }}</span>
         </span>
         <ChevronsUpDown class="size-4 shrink-0 text-slate-400" />

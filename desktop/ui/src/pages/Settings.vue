@@ -33,7 +33,7 @@
         </tr>
       </table>
     </section>
-    <p class="text-center text-xs text-slate-400">ERPNext desktop · server app {{ session.boot?.version }}</p>
+    <p class="text-center text-xs text-slate-400">NextERP · server app {{ session.boot?.version }}</p>
   </div>
 </template>
 

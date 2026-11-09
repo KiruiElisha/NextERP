@@ -1,7 +1,8 @@
 # NextERP: notes for anyone working here
 
-ERPNext as a fast desktop app, ESG built in. Installs and shows as **ERPNext**. See README.md for
-the architecture.
+A fast desktop app for ERPNext, ESG built in. Installs and shows as **NextERP** (ERPNext is Frappe's
+trademark; the app says it works *with* ERPNext). Website: `website/`, served at
+https://nexterp.nergaa.cloud. See README.md for the architecture.
 
 ## Rules that shape the design
 

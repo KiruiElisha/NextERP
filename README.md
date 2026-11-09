@@ -1,6 +1,7 @@
 # NextERP
 
-ERPNext as a fast desktop app, with ESG built in. Installs as **ERPNext**.
+A fast desktop app for ERPNext, with ESG built in. Installs as **NextERP**; download it from
+https://nexterp.nergaa.cloud.
 
 The desktop app keeps the data people look up all day (customers, suppliers, items, prices,
 invoices, orders, payments) in a local database on the computer, synced in the background. Lists,

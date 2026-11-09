@@ -1,4 +1,4 @@
-// ERPNext on the desktop. The window shows the bundled UI (desktop/ui); the data it shows comes from
+// NextERP, a desktop app for ERPNext. The window shows the bundled UI (desktop/ui); the data it shows comes from
 // the local cache (nexterp-core), kept in step with the site in the background.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -90,7 +90,7 @@ fn main() {
             commands::save_file,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running the ERPNext desktop app");
+        .expect("error while running NextERP");
 }
 
 /// The window's menu. File (new invoice, search, sync, Desk, sign out) only once a site is signed in:

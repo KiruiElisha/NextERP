@@ -82,6 +82,6 @@ AppImage, `.deb` and `.rpm` aren't code-signed by any store; nothing to do.
 
 ## Check a release
 
-The release notes list what was signed. On a Mac: `codesign -dv --verbose=4 /Applications/ERPNext.app`
-and `spctl -a -vv /Applications/ERPNext.app` (should say *Notarized Developer ID*). On Windows: the
+The release notes list what was signed. On a Mac: `codesign -dv --verbose=4 /Applications/NextERP.app`
+and `spctl -a -vv /Applications/NextERP.app` (should say *Notarized Developer ID*). On Windows: the
 installer's Properties → Digital Signatures tab.

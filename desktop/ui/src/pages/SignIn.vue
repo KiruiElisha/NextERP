@@ -16,7 +16,7 @@
       <div class="relative flex flex-1 flex-col px-12 py-10">
         <div class="flex items-center gap-3">
           <img src="/icon.png" class="size-10 rounded-xl shadow-lg shadow-black/20 ring-1 ring-white/20" alt="" />
-          <span class="text-lg font-semibold tracking-tight">ERPNext</span>
+          <span class="text-lg font-semibold tracking-tight">NextERP</span>
           <span class="rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white/80 ring-1 ring-white/15">Desktop</span>
         </div>
 
@@ -77,7 +77,7 @@
       <div v-else class="w-full max-w-[380px]">
         <div class="mb-8 flex items-center gap-3 lg:hidden">
           <img src="/icon.png" class="size-10 rounded-xl" alt="" />
-          <span class="text-lg font-semibold text-slate-900">ERPNext</span>
+          <span class="text-lg font-semibold text-slate-900">NextERP</span>
         </div>
 
         <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Welcome back</h1>

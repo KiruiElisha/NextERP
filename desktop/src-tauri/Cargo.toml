@@ -1,7 +1,7 @@
 [package]
 name = "erpnext-desktop"
 version = "0.1.0"
-description = "ERPNext on the desktop, with a local cache and ESG built in"
+description = "NextERP: a desktop app for ERPNext, with a local cache and ESG built in"
 edition = "2021"
 
 [build-dependencies]

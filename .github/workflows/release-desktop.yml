@@ -1,6 +1,6 @@
 name: Release desktop app
 
-# Builds the desktop app for Windows, macOS and Linux and publishes the installers, named ERPNext,
+# Builds the desktop app for Windows, macOS and Linux and publishes the installers, named NextERP,
 # to a GitHub Release. Runs on every push to main that touches desktop/, as version
 # <major>.<minor>.<run number> from tauri.conf.json (tag desktop-v0.1.N). A pushed v*.*.* tag
 # releases exactly that version; it can also be run by hand from the Actions tab.
@@ -75,9 +75,9 @@ jobs:
               repo: context.repo.repo,
               tag_name: process.env.TAG,
               target_commitish: context.sha,
-              name: `ERPNext desktop ${process.env.VERSION}`,
+              name: `NextERP ${process.env.VERSION}`,
               body: [
-                'ERPNext on the desktop, with a local cache for instant lists and search, and ESG built in.',
+                'NextERP, the desktop app for ERPNext: a local cache for instant lists and search, and ESG built in.',
                 '',
                 'Sign in with the address of your ERPNext site (it needs the `nexterp` and `ghg` apps installed).',
                 '',
@@ -195,7 +195,7 @@ jobs:
           conf=desktop/src-tauri/tauri.conf.json
           if [ -n "$AZURE_CLIENT_SECRET" ] && [ -n "$TS_ACCOUNT" ]; then
             # Azure Trusted Signing: the key stays in Azure; the build asks it to sign each file.
-            jq --arg c "trusted-signing-cli -e $TS_ENDPOINT -a $TS_ACCOUNT -c $TS_PROFILE -d ERPNext %1" \
+            jq --arg c "trusted-signing-cli -e $TS_ENDPOINT -a $TS_ACCOUNT -c $TS_PROFILE -d NextERP %1" \
               '.bundle.windows.signCommand = $c' "$conf" > conf.tmp && mv conf.tmp "$conf"
             { echo "AZURE_CLIENT_ID=$AZURE_CLIENT_ID"; echo "AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET"; echo "AZURE_TENANT_ID=$AZURE_TENANT_ID"; } >> "$GITHUB_ENV"
             echo "Windows: signing with Azure Trusted Signing"
