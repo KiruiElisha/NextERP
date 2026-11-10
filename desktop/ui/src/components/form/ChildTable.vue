@@ -6,30 +6,33 @@
       <span class="label mb-0">{{ __(df.label) }}<span v-if="required" class="text-red-500"> *</span></span>
       <span class="rounded-full bg-slate-100 px-1.5 text-[10px] font-medium tabular-nums text-slate-500">{{ rows.length }}</span>
     </div>
-    <div class="overflow-x-auto rounded-xl border border-slate-200/90 bg-white shadow-sm shadow-slate-200/30">
-      <table class="w-full text-sm">
-        <thead class="bg-slate-50/90 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-          <tr>
-            <th class="w-8 px-2 py-2.5 text-center">#</th>
-            <th v-for="c in columns" :key="c.fieldname" class="px-2 py-2.5" :class="numeric(c) && 'text-right'" :style="{ minWidth: width(c) }">{{ __(c.label) }}</th>
-            <th class="w-16" />
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(row, i) in rows" :key="row.name || row.__key" class="group border-t border-slate-100 align-top transition-colors hover:bg-brand-50/30">
-            <td class="px-2 py-2.5 text-center text-xs tabular-nums text-slate-400">{{ i + 1 }}</td>
-            <td v-for="c in columns" :key="c.fieldname" class="px-1.5 py-1.5">
-              <Field bare :df="c" :doc="row" :parent="doc" :meta="childMeta" :parent-doctype="doc.doctype" :show-invalid="showInvalid"
-                @change="(f) => $emit('change', { row, fieldname: f })" @picked="(f) => $emit('change', { row, fieldname: f, picked: true })" />
-            </td>
-            <td class="whitespace-nowrap px-1 py-2 text-right opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-              <button class="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" :title="__('All fields of this row')" @click="expanded = row"><Maximize2 class="size-3.5" /></button>
-              <button v-if="!readOnly" class="rounded-md p-1 text-slate-300 hover:bg-red-50 hover:text-red-600" :title="__('Remove row')" @click="remove(i)"><Trash2 class="size-3.5" /></button>
-            </td>
-          </tr>
-          <tr v-if="!rows.length"><td :colspan="columns.length + 2" class="px-3 py-8 text-center text-sm text-slate-400">{{ __('No rows yet.') }}</td></tr>
-        </tbody>
-      </table>
+    <!-- overflow-x only on an inner scroller so link menus (teleported) and row actions stay visible. -->
+    <div class="rounded-xl border border-slate-200/90 bg-white shadow-sm shadow-slate-200/30 dark:border-slate-700 dark:bg-slate-900">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50/90 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800/80">
+            <tr>
+              <th class="w-8 px-2 py-2.5 text-center">#</th>
+              <th v-for="c in columns" :key="c.fieldname" class="px-2 py-2.5" :class="numeric(c) && 'text-right'" :style="{ minWidth: width(c) }">{{ __(c.label) }}</th>
+              <th class="sticky right-0 w-20 bg-slate-50/90 px-1 dark:bg-slate-800/80" />
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, i) in rows" :key="row.name || row.__key" class="group border-t border-slate-100 align-top transition-colors hover:bg-brand-50/30 dark:border-slate-800 dark:hover:bg-brand-900/20">
+              <td class="px-2 py-2.5 text-center text-xs tabular-nums text-slate-400">{{ i + 1 }}</td>
+              <td v-for="c in columns" :key="c.fieldname" class="relative px-1.5 py-1.5">
+                <Field bare :df="c" :doc="row" :parent="doc" :meta="childMeta" :parent-doctype="doc.doctype" :show-invalid="showInvalid"
+                  @change="(f) => $emit('change', { row, fieldname: f })" @picked="(f) => $emit('change', { row, fieldname: f, picked: true })" />
+              </td>
+              <td class="sticky right-0 whitespace-nowrap bg-white px-1 py-2 text-right opacity-70 transition-opacity group-hover:opacity-100 focus-within:opacity-100 dark:bg-slate-900">
+                <button class="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800" :title="__('All fields of this row')" @click="expanded = row"><Maximize2 class="size-3.5" /></button>
+                <button v-if="!readOnly" class="rounded-md p-1 text-slate-300 hover:bg-red-50 hover:text-red-600" :title="__('Remove row')" @click="remove(i)"><Trash2 class="size-3.5" /></button>
+              </td>
+            </tr>
+            <tr v-if="!rows.length"><td :colspan="columns.length + 2" class="px-3 py-8 text-center text-sm text-slate-400">{{ __('No rows yet.') }}</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     <button v-if="!readOnly" class="btn-ghost mt-2 -ml-2 text-brand-700" @click="add"><Plus class="size-4" /> {{ __('Add row') }}</button>
 

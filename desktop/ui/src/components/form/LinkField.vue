@@ -1,6 +1,7 @@
 <template>
   <!-- A link, as in ERPNext: type to find, arrows and Enter to pick, the record's title beside its
-       id. Cached doctypes answer from this computer at once; the site's own query then refines it. -->
+       id. Cached doctypes answer from this computer at once; the site's own query then refines it.
+       The menu is teleported to the body so child-table overflow never clips it. -->
   <div class="relative">
     <div class="relative flex items-center gap-1">
       <div class="relative min-w-0 flex-1">
@@ -16,27 +17,30 @@
       </button>
     </div>
     <p v-if="title && !open" class="mt-0.5 truncate text-[11px] text-slate-400">{{ title }}</p>
-    <ul v-if="open && target && (options.length || text || loading)" class="absolute z-40 mt-1 max-h-72 w-full min-w-[16rem] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
-      <li v-for="(o, i) in options" :key="o.value" class="cursor-pointer rounded-lg px-2.5 py-1.5 text-sm" :class="i === active ? 'bg-brand-50' : ''"
-        @mousedown.prevent="choose(o)" @mouseenter="active = i">
-        <div class="flex items-baseline gap-2">
-          <span class="truncate font-medium text-slate-800">{{ o.label || o.value }}</span>
-          <span v-if="o.label" class="truncate text-xs text-slate-400">{{ o.value }}</span>
-        </div>
-        <div v-if="o.description" class="truncate text-xs text-slate-400">{{ o.description }}</div>
-      </li>
-      <li v-if="!options.length" class="px-2.5 py-2 text-sm text-slate-400">{{ loading ? __('Searching…') : `No ${target?.toLowerCase() || 'records'} match “${text}”.` }}</li>
-      <li v-if="canCreate" class="mt-1 border-t border-slate-100 pt-1">
-        <button type="button" class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm text-brand-700 hover:bg-brand-50" @mousedown.prevent="create">
-          <Plus class="size-3.5" /> New {{ target }}{{ text ? ` “${text}”` : '' }}
-        </button>
-      </li>
-    </ul>
+    <Teleport to="body">
+      <ul v-if="open && target && menuStyle && (options.length || text || loading)" ref="menu" class="fixed z-[200] max-h-72 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-600 dark:bg-slate-900"
+        :style="menuStyle">
+        <li v-for="(o, i) in options" :key="o.value" class="cursor-pointer rounded-lg px-2.5 py-1.5 text-sm" :class="i === active ? 'bg-brand-50 dark:bg-brand-900/40' : ''"
+          @mousedown.prevent="choose(o)" @mouseenter="active = i">
+          <div class="flex items-baseline gap-2">
+            <span class="truncate font-medium text-slate-800 dark:text-slate-100">{{ o.label || o.value }}</span>
+            <span v-if="o.label" class="truncate text-xs text-slate-400">{{ o.value }}</span>
+          </div>
+          <div v-if="o.description" class="truncate text-xs text-slate-400">{{ o.description }}</div>
+        </li>
+        <li v-if="!options.length" class="px-2.5 py-2 text-sm text-slate-400">{{ loading ? __('Searching…') : `No ${target?.toLowerCase() || 'records'} match “${text}”.` }}</li>
+        <li v-if="canCreate" class="mt-1 border-t border-slate-100 pt-1 dark:border-slate-700">
+          <button type="button" class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm text-brand-700 hover:bg-brand-50 dark:hover:bg-brand-900/30" @mousedown.prevent="create">
+            <Plus class="size-3.5" /> New {{ target }}{{ text ? ` “${text}”` : '' }}
+          </button>
+        </li>
+      </ul>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowUpRight, Plus, X } from 'lucide-vue-next'
 import { openInBrowser } from '@/lib/backend'
@@ -58,6 +62,7 @@ const emit = defineEmits(['update:modelValue', 'picked'])
 const router = useRouter()
 
 const box = ref(null)
+const menu = ref(null)
 const open = ref(false)
 const text = ref('')
 const options = ref([])
@@ -65,6 +70,7 @@ const active = ref(0)
 const loading = ref(false)
 const titles = ref({})
 const createAllowed = ref(false)
+const menuStyle = ref(null)
 let ask = 0
 
 const title = computed(() => titles.value[props.modelValue] || '')
@@ -77,6 +83,43 @@ watch(
     createAllowed.value = false
   },
 )
+
+function placeMenu() {
+  const el = box.value
+  if (!el) {
+    menuStyle.value = null
+    return
+  }
+  const r = el.getBoundingClientRect()
+  const gap = 4
+  const maxH = 288 // max-h-72
+  const spaceBelow = window.innerHeight - r.bottom - gap
+  const spaceAbove = r.top - gap
+  const openUp = spaceBelow < 160 && spaceAbove > spaceBelow
+  const width = Math.max(r.width, 256)
+  const left = Math.min(Math.max(8, r.left), window.innerWidth - width - 8)
+  menuStyle.value = {
+    left: `${left}px`,
+    width: `${width}px`,
+    maxHeight: `${Math.min(maxH, openUp ? spaceAbove : spaceBelow)}px`,
+    ...(openUp
+      ? { bottom: `${window.innerHeight - r.top + gap}px`, top: 'auto' }
+      : { top: `${r.bottom + gap}px`, bottom: 'auto' }),
+  }
+}
+
+function onReposition() {
+  if (open.value) placeMenu()
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', onReposition, true)
+  window.addEventListener('resize', onReposition)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onReposition, true)
+  window.removeEventListener('resize', onReposition)
+})
 
 async function find() {
   if (!props.target) {
@@ -93,18 +136,19 @@ async function find() {
     options.value = [...fresh, ...options.value.filter((o) => !seen.has(o.value))].slice(0, 12)
     loading.value = false
     remember(fresh)
+    nextTick(placeMenu)
   })
   if (n === ask && local.length) {
     options.value = local
     remember(local)
   }
   if (n === ask && !local.length) {
-    // Site may still be answering; leave loading until onFresh or a quiet timeout.
     setTimeout(() => {
       if (n === ask) loading.value = false
     }, 1200)
   }
   active.value = 0
+  nextTick(placeMenu)
 }
 
 function remember(list) {
@@ -115,6 +159,7 @@ function start() {
   if (props.disabled || !props.target) return
   open.value = true
   text.value = props.modelValue || ''
+  placeMenu()
   find()
   getMeta(props.target).then((m) => (createAllowed.value = Boolean(m?.perms?.create))).catch(() => {})
 }
@@ -135,6 +180,7 @@ function choose(o) {
 function close() {
   open.value = false
   options.value = []
+  menuStyle.value = null
 }
 // Leaving the box keeps what was picked; typed text that matches a record exactly picks it.
 function finish() {
