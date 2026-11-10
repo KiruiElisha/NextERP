@@ -259,8 +259,11 @@ fn restart_python(dir: &Path) -> Result<()> {
             "queue-short",
             "queue-long",
             "scheduler",
+            "websocket",
         ],
     )?;
+    // nginx looks the backend up when it starts: after a restart it may hold an old address
+    let _ = compose(dir, &["restart", "frontend"]);
     if out.status.success() {
         Ok(())
     } else {
@@ -323,7 +326,8 @@ fn sync_app(app: &AppHandle, dir: &Path, changed: bool) -> Result<bool> {
                 tail(&out)
             )));
         }
-        let _ = as_root(&format!("chown -R frappe:frappe {IN_CONTAINER}"));
+        // the image's frappe user is in group root (gid 0), not a frappe group
+        let _ = as_root(&format!("chown -R frappe:0 {IN_CONTAINER}"));
     }
     let check = compose(
         dir,
@@ -391,6 +395,45 @@ fn emit(app: &AppHandle, step: &str, detail: &str) {
     let _ = app.emit("local-docker", json!({ "step": step, "detail": detail }));
 }
 
+/// ERPNext itself answers (through nginx), not just the port: nginx alone answers 502 while the
+/// backend is down or starting.
+fn site_answers() -> bool {
+    use std::io::{Read, Write};
+    let Ok(mut s) = std::net::TcpStream::connect_timeout(
+        &"127.0.0.1:8000".parse().unwrap(),
+        std::time::Duration::from_secs(2),
+    ) else {
+        return false;
+    };
+    let _ = s.set_read_timeout(Some(std::time::Duration::from_secs(20)));
+    if s.write_all(b"GET /api/method/ping HTTP/1.0\r\nHost: localhost\r\n\r\n")
+        .is_err()
+    {
+        return false;
+    }
+    let mut head = [0u8; 16];
+    let n = s.read(&mut head).unwrap_or(0);
+    String::from_utf8_lossy(&head[..n]).contains(" 200")
+}
+
+/// Wait until ERPNext answers; on failure, say so with what the backend printed last.
+fn wait_answers(dir: &Path, seconds: u64) -> Result<()> {
+    let started = std::time::Instant::now();
+    while started.elapsed().as_secs() < seconds {
+        if site_answers() {
+            return Ok(());
+        }
+        std::thread::sleep(std::time::Duration::from_secs(2));
+    }
+    let logs = compose(dir, &["logs", "--tail", "15", "backend"])
+        .map(|o| tail(&o))
+        .unwrap_or_default();
+    Err(err(format!(
+        "ERPNext started but isn't answering yet. If Docker is short of memory, give it more in \
+         Docker Desktop's settings, then press Set up again.\n{logs}"
+    )))
+}
+
 fn site_reachable() -> bool {
     std::net::TcpStream::connect_timeout(
         &"127.0.0.1:8000".parse().unwrap(),
@@ -438,7 +481,7 @@ pub fn local_docker_status(app: AppHandle) -> Result<Value> {
         "installed": docker || docker_install::installed(),
         "prepared": prepared,
         "running": running,
-        "reachable": site_reachable(),
+        "reachable": site_answers(),
         "url": LOCAL_URL,
         "user": "Administrator",
         "password": dir.as_ref().and_then(|d| fs::read_to_string(d.join("admin-password")).ok())
@@ -599,13 +642,9 @@ fn setup_blocking(app: &AppHandle) -> Result<Value> {
         &["exec", "-T", "backend", "bench", "use", "localhost"],
     );
 
+    emit(app, "wait", "Waiting for ERPNext to answer…");
+    wait_answers(&dir, 180)?;
     emit(app, "ready", "Local ERPNext is ready.");
-    for _ in 0..30 {
-        if site_reachable() {
-            break;
-        }
-        std::thread::sleep(std::time::Duration::from_millis(500));
-    }
 
     Ok(json!({
         "ok": true,
@@ -638,9 +677,9 @@ pub async fn local_docker_start(app: AppHandle) -> Result<Value> {
                 install_or_update_app(&app2, &dir, changed)?;
             }
         }
-        Ok(())
+        wait_answers(&dir, 180)
     })
     .await
     .map_err(|e| err(e.to_string()))??;
-    Ok(json!({ "ok": true, "url": LOCAL_URL, "reachable": site_reachable() }))
+    Ok(json!({ "ok": true, "url": LOCAL_URL, "reachable": site_answers() }))
 }
